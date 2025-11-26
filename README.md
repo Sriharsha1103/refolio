@@ -1,4 +1,4 @@
-# BVRITH Search Engine for Research Publications
+# Refolio - Research Publications Portal by BVRITH
 It is a web application that shows the publications information in a formatted way and also can perform searches on the publication according to the filter, the user can also insert a new publication data into the web application.
 
 The resources required for developing this project include:
