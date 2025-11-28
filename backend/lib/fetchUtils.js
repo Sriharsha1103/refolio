@@ -1,4 +1,4 @@
-const config = require('../config');
+const { json } = require('express');
 const dataModal = require('../db/testData')
 
 module.exports.postData =async function(req,res) {
@@ -17,6 +17,54 @@ module.exports.postData =async function(req,res) {
         return res.status(500).json(error)
     }
 }
+module.exports.titles = async function(req,res){
+    try{
+        dataModal.find({}, 'title', function(err, result) {
+            if (err) throw err;
+            console.log("success")
+            const names = result.map(item => item.title);
+            return res.status(200).json(names)
+        })
+    }catch(error){
+        // console.log("ERROR",error)
+        return res.status(500).json(error)
+    }
+}
+module.exports.bulkUpload = async function(req,res){
+    try{
+        const object = req.body;
+        let result1 = [];
+       for (const key in object) {
+        // console.log("year",object[key].year)
+           object[key].year = new Date(object[key].year.toString());
+        //    console.log("year",object[key].year)
+           object[key].month = parseInt(object[key].month);
+           dataModal.create(object[key],function(err,result){
+               if(err) throw err;
+               result1.push(result);
+           })            
+       }
+        return res.status(200).json(result1)
+    }
+    catch(error){
+        // console.log("ERROR",error)
+        return res.status(500).json(error)
+    }
+}
+module.exports.deleteData = async function(req,res){
+    try{
+        const id = req.params.id;
+        dataModal.findByIdAndDelete(id,function(err,result){
+            if(err) throw err;
+            console.log("success")
+            return res.status(200).json(result);
+        })
+    }
+    catch(error){
+        return res.status(500).json(error)
+    }
+}
+
 module.exports.editData = async function(req,res){
     try{
         dataModal.findOneAndReplace({_id:req.body._id},req.body,{runValidators:true}, function(err,result){
@@ -32,12 +80,12 @@ module.exports.editData = async function(req,res){
 
 module.exports.getData = async function (req, res) {
     try{
-        console.log("IN GETDATA1",req.query);
+        // console.log("IN GETDATA1",req.query);
         let title = req.query.title || ""
         let branch = req.query.branch || ""
         let user = req.query.username || ""
         let cjb = req.query.cjb || ""
-        let year = parseInt(req.query.year) || 0
+        let year = req.query.year || 0
         let nation = req.query.nationality || ""
         let scl = req.query.scl || ""
         let author = req.query.author_no || ""
@@ -56,7 +104,7 @@ module.exports.getData = async function (req, res) {
             query["title"]= { $regex: '.*' + title + '.*', "$options" : "i" }
         }
         if (branch!=""){
-            console.log("IN BRANCH")
+            // console.log("IN BRANCH")
             query["branch"] = { $regex: '.*' + branch + '.*', "$options" : "i" }
         }
         if (user!=""){
@@ -83,13 +131,13 @@ module.exports.getData = async function (req, res) {
             query["year"] = {$lte: endDate, $gte: startDate}
             query["month"] = {$lte: endMonth+1, $gte: startMonth}
         }
-        console.log("WHERE",query)
+        // console.log("WHERE",query)
         if(limit==='0'){
             dataModal.paginate(query,{page:page,limit:0},function(err,result) {
                 if (err) res.status(500).send(err);
                 else{
                     limit=result.total
-                    console.log("Result",result)
+                    // console.log("Result",result)
                 // ...
                 // res.json(result)
                 // console.log("RESULT", result)

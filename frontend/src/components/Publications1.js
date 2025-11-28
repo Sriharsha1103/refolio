@@ -58,11 +58,14 @@ function Publications1(){
 
   useEffect(()=>{
     // console.log("IN USEEFFECT")
-    let tokens = localStorage.getItem("token")
-    if(!tokens){
-        navigate("/login")
+    var a=localStorage.getItem('status')
+    var b=localStorage.getItem('Verify')
+    if(a=='false'){
+        navigate("../")
+    if(b=='false'){
+            navigate("../verify")}
     }
-    service.get("api/data?title="+publicationFilterValue+"&branch="+branchFilterValue+"&username="+publishedByFilterValue+"&cjb="+c_j_bFilterValue+"&year="+yearFilterValue+"&nationality="+nationalityFilterValue+"&scl="+scopusFilterValue+"&author_no="+(authorsFilterValue==="ALL"?"":authorsFilterValue)+"&page="+pageNo+"&limit="+perPage).then((json)=>{
+    service.get("api/publications/data?title="+publicationFilterValue+"&branch="+branchFilterValue+"&username="+publishedByFilterValue+"&cjb="+c_j_bFilterValue+"&year="+yearFilterValue+"&nationality="+nationalityFilterValue+"&scl="+scopusFilterValue+"&author_no="+(authorsFilterValue==="ALL"?"":authorsFilterValue)+"&page="+pageNo+"&limit="+perPage).then((json)=>{
         console.log("JSON",json)
         setData(json.docs);
         setPageData(json.pages)

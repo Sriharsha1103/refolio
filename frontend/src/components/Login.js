@@ -85,7 +85,7 @@ function Login() {
           </MDBCol>
           <MDBCol md='5'>
           <MDBCardBody position='center' >
-          <MDBCardImage style={{height:'50%',width:'80%'}} position='center' src={require('./static/bvrit-logo.jpg')} />
+          <MDBCardImage style={{height:'50%',width:'80%'}} position='center' src={require('./static/bvrit-logo.png')} />
             <MDBCardTitle style={{"fontSize":"px80"}}>Research Publications Search Engine</MDBCardTitle>
             {login==="FAILED"?<MDBCardText style={{"color":"red"}}>Not AUTHORIZED User</MDBCardText>:""}
             <div>

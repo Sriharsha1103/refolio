@@ -1,30 +1,41 @@
 const mongoose=require('mongoose')
+var mongoosePaginate = require('mongoose-paginate');
 const Schema=mongoose.Schema
 
 const LoginSchema=new Schema({
     Name:{
         type : String,
-        require:true
+        required:true
     },
     Email:{
         type: String,
-        require:true,
+        required:true,
         unique:true
+    },
+    branch:{
+        type: String,
+        required: true,
+        enum: ['IT','CSE','ECE','EEE','AI/ML','BS&H']
     },
     Password:{
         type: String,
         require:true
     },
-    admin:{
-        type: Boolean,
-        default: false
+    role:{
+        type: String,
+        default: 'user',
+        enum: ['user', 'admin', 'super-admin']
     },
     verified:
     {
         type:Boolean,
         default: false
-    }
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+      },
 })
-
+LoginSchema.plugin(mongoosePaginate);
 const Login=mongoose.model('Login',LoginSchema,'LoginData')
 module.exports=Login

@@ -45,6 +45,8 @@
 }
 .bg-indigo {
   background-color: #82b059;
+  /* background-color: #869d71; */
+
 }
 .button-edit:hover {
   background-color: #809d38;
@@ -55,8 +57,17 @@
 .button-group{
   display: flex;
   gap: 8px;
+  justify-content: center;
+}
+.modal-content {
+  position: relative;
+  z-index: 1050; /* Adjust as needed to ensure it's above other elements */
 }
 
+/* Adjust the z-index of modal overlay */
+.modal-backdrop {
+  z-index: 1040; /* Ensure it's below the modal content */
+}
 @media (min-width: 1025px) {
   .h-custom {
     height: 90vh !important;

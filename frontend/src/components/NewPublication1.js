@@ -264,11 +264,12 @@ function FirstData1() {
         })
     }
     const onSubmit = (event) => {
-        console.log("ONSUBMIT", body)
+        // console.log("ONSUBMIT", body)
         service.post('api/data', body).then((json) => {
-            console.log("JSON", json)
+            // console.log("JSON", json)
 
         }).catch((error) => {
+            
             console.log(error);
         });
         // console.log("EVENT",body)
@@ -722,14 +723,13 @@ function FirstData1() {
                 cite: e.target.value
             })
         }
-        console.log("IN HANDLE CHANGE", body)
+        // console.log("IN HANDLE CHANGE", body)
     }
-    useEffect(() => {
-        let tokens = localStorage.getItem("token")
-        console.log("tokens")
-        if (!tokens) {
-            navigate("/login")
-        }
+    
+    useEffect(()=>{
+    var a=localStorage.getItem('status')
+    if(a==='false'){
+        navigate("../")}
     })
     return (
         <>

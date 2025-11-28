@@ -11,50 +11,56 @@ import {
 
 from 'mdb-react-ui-kit';
 import HomeNavbar from "./RNavbar";
-import {useSelector} from 'react-redux'
+import {useDispatch, useSelector} from 'react-redux'
 import { useNavigate } from 'react-router-dom';
-import image from './static/hompage.jpg'
-import logo from './static/bvrit-logo.jpg'
-import Reset from './Reset';
+import { Notifications, showNotification } from '@mantine/notifications';
+import Footer from './Footer';
+import { Tab } from './login/Actions';
+
 
 function Home() {
-  const login=useSelector(state=>state.Login)
+  // const login=useSelector(state=>state.Login)
+  const loggedIn = useSelector((state)=>state.logged);
+  const verify = useSelector((state)=>state.verify);
+  const dispatch=useDispatch();
+
     const navigate = useNavigate();
     useEffect(()=>{
-    var a=localStorage.getItem('status')
-    if(a=='false'){
-        navigate("../")}
+      dispatch(Tab('home'));
+      console.log("LOGGED IN",loggedIn,verify)
+   
+    if(loggedIn && !verify){
+      navigate("../verify")
+    }
     })
   
-  if(localStorage.getItem('status')=='true'){
+  // if(loggedIn){
   return (
     <>
     <HomeNavbar/>
     
-    {/* <div class="col d-flex justify-content-center" style={{height: "90vh",
+    <div class="col d-flex justify-content-center" style={{height: "79.5vh",
         width: "100vw",
-      "backgroundColor":"#c5d299", paddingTop:"90px"}}>
-
-      <MDBCard style={{ maxHeight: '390px', maxWidth: '900px'}}>
+      "backgroundColor":"#c5d299", paddingTop:"35px"}}>
+      <MDBCard style={{ maxHeight: '450px', maxWidth: '1200px'}}>
         <MDBRow className='g-0'>
 
           <MDBCol md='8'>
-          <MDBCardImage src={require('./static/hompage.jpg')} fluid />
+          <MDBCardImage style={{height:'450px',width:'800px'}}src={require('./static/hompage.jpg')} fluid />
           </MDBCol>
 
-          <MDBCol md='4'>
-          <MDBCardBody>
-          <MDBCardImage src={require('./static/bvrit-logo.jpg')} fluid />
-            <MDBCardTitle style={{"fontSize":"px100"}}>Research Publications Search Engine</MDBCardTitle>
-            <Main/>
+          <MDBCol md='4' >
+          <MDBCardBody style={{'display': 'flex', justifyContent: 'center',alignItems: 'center',height: '100%', width:'100%'}}>
+          {/* <MDBCardImage src={require('./static/bvrit-logo.jpg')} fluid /> */}
+            <p style={{"fontSize":"35px",'color':'#6C9449'}}>Research Publications Search Engine</p>
           </MDBCardBody>
           </MDBCol>
 
         </MDBRow>
       </MDBCard>
 
-    </div> */}
-    <div id='login_back'>
+    </div>
+    {/* <div id='login_back'>
             <div id='login_fore_row'>
                 <div id='login_fore_col1'> 
                     <img id='homepage_image' src={image}/>
@@ -73,10 +79,11 @@ function Home() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div> */}
+      {/* <Footer/> */}
     </>
   
-  )};}
+  )};
 
 
 export default Home;

@@ -1,7 +1,7 @@
 var mongoose = require('mongoose')
-var config = require('./config')
 
-const connection = config.MONGO_CONNECTION_STRING
+
+const connection = process.env.MONGO_CONNECTION_STRING
 
 module.exports.connect = function(auto_reconnect){
     console.log("Trying to connect to MONGODB");
