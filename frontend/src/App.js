@@ -31,7 +31,7 @@ function App() {
       <BrowserRouter basename='/refolio'>
         <Routes>
           <Route path="/" element={<Main/>}/>
-          <Route path="/refolio/home" element={<Home/>}/>
+          <Route path="/home" element={<Home/>}/>
 
           <Route path="/login" element={<Main/>}/>
           <Route path="/changepassword" element={<ChangePassword/>}/>
