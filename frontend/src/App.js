@@ -28,7 +28,7 @@ function App() {
     <div className="App">
       <Notifications position="top-right" zIndex={1000}/>
       
-      <BrowserRouter basename="/refolio">
+      <BrowserRouter basename={process.env.BASE_URL || '/'}>
         <Routes>
           <Route path="/" element={<Main/>}/>
           <Route path="/home" element={<Home/>}/>
