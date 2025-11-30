@@ -38,10 +38,10 @@ function HomeNavbar() {
             /></Navbar.Brand>
           <Nav className="me-auto">
             <Nav.Link href="/refolio/home" style={{"fontWeight":tab=='home'?'bold':'normal',color:tab=='home'?"#809d38":"gray"}}>Home</Nav.Link>
-          { loggedIn?<><Nav.Link href="/publications" style={{"fontWeight":tab=='publication'?'bold':'normal',color:tab=='publication'?"#809d38":"gray"}}>Publications</Nav.Link>
+          { loggedIn?<><Nav.Link href="/refolio/publications" style={{"fontWeight":tab=='publication'?'bold':'normal',color:tab=='publication'?"#809d38":"gray"}}>Publications</Nav.Link>
           <Nav.Link href="/refolio/patents"style={{"fontWeight":tab=='patent'?'bold':'normal',color:tab=='patent'?"#809d38":"gray"}}>Patents</Nav.Link>
           <Nav.Link href="/refolio/research"style={{"fontWeight":tab=='research'?'bold':'normal',color:tab=='research'?"#809d38":"gray"}}>Research Projects</Nav.Link>
-          <Nav.Link href="refolio/consultancy"style={{"fontWeight":tab=='consultancy'?'bold':'normal',color:tab=='consultancy'?"#809d38":"gray"}}>Consultancy Projects</Nav.Link>
+          <Nav.Link href="/refolio/consultancy"style={{"fontWeight":tab=='consultancy'?'bold':'normal',color:tab=='consultancy'?"#809d38":"gray"}}>Consultancy Projects</Nav.Link>
           {!isSuperAdmin?(<><Nav.Link href="/refolio/insertPublications" style={{"fontWeight":tab=='new-publication'?'bold':'normal',color:tab=='new-publication'?"#809d38":"gray"}}>New Publication</Nav.Link><Nav.Link href="/refolio/insertPatents"style={{"fontWeight":tab=='new-patent'?'bold':'normal',color:tab=='new-patent'?"#809d38":"gray"}}>New Patent</Nav.Link><Nav.Link href="/refolio/insertResearch" style={{"fontWeight":tab=='new-research'?'bold':'normal',color:tab=='new-research'?"#809d38":"gray"}}>New Research Project</Nav.Link><Nav.Link href="/refolio/insertConsultancy" style={{"fontWeight":tab=='new-consultancy'?'bold':'normal',color:tab=='new-consultancy'?"#809d38":"gray"}}>New Consultancy Project</Nav.Link></>):<Nav.Link href="/refolio/users" style={{"fontWeight":tab=='users'?'bold':'normal',color:tab=='users'?"#809d38":"gray"}}>Users List</Nav.Link>}</>:<></>}
           </Nav>
           <Nav>
