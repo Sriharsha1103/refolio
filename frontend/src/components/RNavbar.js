@@ -30,14 +30,14 @@ function HomeNavbar() {
     <>
       <Navbar className='NavBar'>
         <Container>
-          <Navbar.Brand href="/home"><img
+          <Navbar.Brand href="/refolio/home"><img
               src={require("./static/bvrit-logo.png")}
               width="150"
               height="50"
               className="d-inline-block align-top"
             /></Navbar.Brand>
           <Nav className="me-auto">
-            <Nav.Link href="/home" style={{"fontWeight":tab=='home'?'bold':'normal',color:tab=='home'?"#809d38":"gray"}}>Home</Nav.Link>
+            <Nav.Link href="/refolio/home" style={{"fontWeight":tab=='home'?'bold':'normal',color:tab=='home'?"#809d38":"gray"}}>Home</Nav.Link>
           { loggedIn?<><Nav.Link href="/publications" style={{"fontWeight":tab=='publication'?'bold':'normal',color:tab=='publication'?"#809d38":"gray"}}>Publications</Nav.Link>
           <Nav.Link href="/patents"style={{"fontWeight":tab=='patent'?'bold':'normal',color:tab=='patent'?"#809d38":"gray"}}>Patents</Nav.Link>
           <Nav.Link href="/research"style={{"fontWeight":tab=='research'?'bold':'normal',color:tab=='research'?"#809d38":"gray"}}>Research Projects</Nav.Link>
