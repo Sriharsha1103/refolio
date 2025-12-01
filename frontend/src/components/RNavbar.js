@@ -77,7 +77,7 @@ function HomeNavbar() {
             >
               <NavDropdown.Item href="/changepassword">Change Password
               </NavDropdown.Item>
-              <NavDropdown.Item  href="/"onClick={logOut}>Logout</NavDropdown.Item>
+              <NavDropdown.Item  href="/refolio/login"onClick={logOut}>Logout</NavDropdown.Item>
             </NavDropdown>
             </Stack>:
             <Nav.Link href="/refolio/login"style={{"fontWeight":tab=='login'?'bold':'normal',color:tab=='login'?"#809d38":"gray"}}>Login</Nav.Link>
