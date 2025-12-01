@@ -22,7 +22,7 @@ function Login() {
     const clientId = '1006405223734-89bsslid5t5ivhaspa7qpgp12v17d7f8.apps.googleusercontent.com';
     // console.log(token)
     if(token!==""){
-        navigate("/home");
+        navigate("/refolio/home");
     }
     useEffect(() => {
         const initClient = () => {
@@ -68,6 +68,9 @@ function Login() {
                 auth2.disconnect().then(this.props.onLogoutSuccess)
               )
             }
+            // navigate("/");
+            // navigate("/login");
+            navigate("/refolio/login");
           
     };
   return (
