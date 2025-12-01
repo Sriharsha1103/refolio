@@ -68,6 +68,9 @@ function Login() {
                 auth2.disconnect().then(this.props.onLogoutSuccess)
               )
             }
+            // navigate("/");
+            // navigate("/login");
+            navigate("/refolio/login");
           
     };
   return (
