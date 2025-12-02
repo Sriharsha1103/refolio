@@ -75,7 +75,7 @@ function HomeNavbar() {
               menuVariant="light"
 
             >
-              <NavDropdown.Item href="/changepassword">Change Password
+              <NavDropdown.Item href="/refolio/changepassword">Change Password
               </NavDropdown.Item>
               <NavDropdown.Item  href="/refolio/login"onClick={logOut}>Logout</NavDropdown.Item>
             </NavDropdown>
