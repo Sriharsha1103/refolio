@@ -178,7 +178,7 @@ function NewPatent() {
       .then((json) => {
         // console.log("JSON", json);
         window.alert("Succesfully Added "+body.title)
-        navigate(-1);
+        navigate("/patents");
       })
       .catch((error) => {
         window.alert("Error while adding "+body.title+ ". \nPlease Try again later.")

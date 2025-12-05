@@ -147,6 +147,11 @@ function Patents() {
 
         service.get("api/patents/data?title=" + publicationFilterValue + "&branch=" + branchFilterValue + "&authors=" + publishedByFilterValue + "&design=" + (c_j_bFilterValue==="ALL"?"":c_j_bFilterValue) + "&pat_no=" + yearFilterValue + "&country=" + nationalityFilterValue + "&page=" + pageNo + "&limit=" + perPage + "&startDate=" + startDate + "&endDate=" + endDate +"&advance="+advance).then((json) => {
             // console.log("JSON", json)
+            json.docs.sort((a, b) => {
+                if (a._id > b._id) return -1;
+                if (a._id < b._id) return 1;
+                return 0;
+            });
             setData(json.docs);
             setPageData(json.limit == 0 ? 1 : json.pages)
             // setEndDate("")
