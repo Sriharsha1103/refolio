@@ -69,6 +69,7 @@ function NewConsultancy() {
   
   const onSubmit = (event) => {
     console.log("HERE sub",event)
+    event.preventDefault();
     
     // if(body.year==""||body.year==null){
     //   window.alert('Select Year')
@@ -84,7 +85,7 @@ function NewConsultancy() {
       .then((json) => {
         // console.log("JSON", json);
         window.alert("Succesfully Added "+body.title)
-        navigate(-1);
+        navigate("/consultancy");
       })
       .catch((error) => {
         window.alert("Error while adding "+body.title+ ". \nPlease Try again later.")

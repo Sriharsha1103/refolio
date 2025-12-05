@@ -125,6 +125,11 @@ function Consultancy() {
 
         service.get("api/consultancy/data?title=" + publicationFilterValue + "&branch=" + branchFilterValue + "&authors=" + authorsFilterValue + "&co=" + publishedByFilterValue + "&industry=" +nationalityFilterValue+"&ngo="+scopusFilterValue+ "&page=" + pageNo + "&limit=" + perPage ).then((json) => {
             // console.log("JSON", json)
+            json.docs.sort((a, b) => {
+                if (a._id > b._id) return -1;
+                if (a._id < b._id) return 1;
+                return 0;
+            });
             setData(json.docs);
             setPageData(json.limit == 0 ? 1 : json.pages)
             // setEndDate("")
