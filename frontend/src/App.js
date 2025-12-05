@@ -28,7 +28,8 @@ function App() {
     <div className="App">
       <Notifications position="top-right" zIndex={1000}/>
       
-      <BrowserRouter basename='/refolio'>
+      <BrowserRouter>
+      {/* <BrowserRouter basename='/refolio'> */}
         <Routes>
           <Route path="/" element={<Main/>}/>
           <Route path="/home" element={<Home/>}/>
