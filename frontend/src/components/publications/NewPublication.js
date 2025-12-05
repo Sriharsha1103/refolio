@@ -388,7 +388,7 @@ function FirstData() {
       .post("api/publications/data", body)
       .then((json) => {
         window.alert("Succesfully Added "+body.title)
-        navigate("publications");
+        navigate("/publications");
       })
       .catch((error) => {
         console.log(error);
