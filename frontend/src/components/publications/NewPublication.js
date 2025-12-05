@@ -372,7 +372,8 @@ function FirstData() {
     });
   };
   const onSubmit = (event) => {
-    // console.log("ONSUBMIT-------", body);
+    event.preventDefault();
+    //console.log("ONSUBMIT-------", body);
     // // debug();
     // setInterval(() => {
     // console.log('Logs every minute');
@@ -386,12 +387,10 @@ function FirstData() {
     service
       .post("api/publications/data", body)
       .then((json) => {
-        // console.log("JSON", json);
         window.alert("Succesfully Added "+body.title)
-        navigate(-1);
+        navigate("publications");
       })
       .catch((error) => {
-        window.alert("Error while adding "+body.title+ ". \nPlease Try again later.")
         console.log(error);
       });
     }else{

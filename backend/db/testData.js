@@ -25,7 +25,7 @@ var dataSchema = new mongoose.Schema({
     citation_google                  : { type: String, default: "0"},
     link                              : { type: String, default: null},
     is_affilated                      : { type: String, default: "No"},
-    author_no                         : { type: String, default: null},
+    author_no                         : { type: [String], default: []},
     starting_page                     : { type: Number, default: 0},
     ending_page                       : { type: Number, default: 0},
     cite                              : { type: String, default: null},
