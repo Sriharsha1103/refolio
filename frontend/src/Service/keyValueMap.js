@@ -20,6 +20,7 @@ export let Publication = {
     nationality :  "International/National",
     cite : "Cite Article",
     link : "Publication Link",
+    proofingfile : "File ",
 }
 
 export let UsersKey = {

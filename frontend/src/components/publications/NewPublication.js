@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import TextField from "@mui/material/TextField";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
 import {
   MDBContainer,
   MDBRow,
@@ -892,6 +893,11 @@ function FirstData() {
     }
     // console.log("IN HANDLE CHANGE", body)
   };
+  const [file, setFile] = useState(null);
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
   // const navigate = useNavigate();
     useEffect(()=>{
       dispatch(Tab('new-publication'));
@@ -1449,6 +1455,26 @@ function FirstData() {
                               color="secondary"
                               onChange={handleChange}
                             />
+                          </MDBCol>
+                          <MDBCol md="6">
+                            <Button variant="contained" component="label" style={{marginTop:'8px'}}>
+                              Upload File
+                              <input
+                                type="file" accept=".pdf"
+                                hidden
+                                onChange={handleFileChange}
+                              />
+                            </Button>
+
+                          </MDBCol>
+                          <MDBCol md="6">
+                           
+                            {file && (
+                              <Typography variant="body2" sx={{ mt: 1 }}>
+                                Selected file: <strong>{file.name}</strong>
+                              </Typography>
+                            )}
+
                           </MDBCol>
                         </MDBRow>
                         <br />

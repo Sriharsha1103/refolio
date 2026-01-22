@@ -52,7 +52,7 @@ function Home() {
           <MDBCol md='4' >
           <MDBCardBody style={{'display': 'flex', justifyContent: 'center',alignItems: 'center',height: '100%', width:'100%'}}>
           {/* <MDBCardImage src={require('./static/bvrit-logo.jpg')} fluid /> */}
-            <p style={{"fontSize":"35px",'color':'#6C9449'}}>Research Publications Search Engine</p>
+            <p style={{"fontSize":"35px",'color':'#6C9449'}}>Research Publications Portfolio</p>
           </MDBCardBody>
           </MDBCol>
 
