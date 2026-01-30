@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer } from "react";
 import TextField from "@mui/material/TextField";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import Typography from "@mui/material/Typography";
 import {
   MDBContainer,
   MDBRow,
@@ -12,28 +11,203 @@ import {
 } from "mdb-react-ui-kit";
 import { useNavigate } from "react-router-dom";
 import HomeNavbar from "../RNavbar";
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import { Button } from '@mui/material';
-import Service from '../../Service/http';
-import { Publication } from '../../Service/keyValueMap';
-import { useDispatch, useSelector } from 'react-redux';
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import { Button } from "@mui/material";
+import Service from "../../Service/http";
+import { Publication } from "../../Service/keyValueMap";
+import { useDispatch, useSelector } from "react-redux";
 import { BulkUpload } from "./BulkUpload";
 import { Tab } from "../login/Actions";
+import FileUploadSection from "../fileUploader/FileUploadSection";
+import CustomSnackbar from "../CustomSnackbar";
+import CustomConfirmDialog from "../CustomConfirmDialog";
+
+// Move static configuration outside the component to avoid recreation on render
+const cjbOptions = [
+  { value: "C", label: "Conference" },
+  { value: "J", label: "Journal" },
+  { value: "B", label: "Book" },
+  { value: "BC", label: "Book Chapter" },
+];
+
+const branchOptions = ["CSE", "IT", "ECE", "EEE", "AI/ML", "BS&H"];
+const nationalityOptions = ["National", "International"];
+const binaryOptions = ["Yes", "No"];
+const authorPositionOptions = [
+  "Single",
+  "First",
+  "Second",
+  "Third",
+  "Fourth",
+  "Fifth",
+  "Others",
+];
+
+// Unified Form Configuration
+const FORM_CONFIG = {
+  // Simple body fields
+  publication: { bodyField: "title" },
+  authors: { bodyField: "username" },
+  "name_c-j-b": { bodyField: "name_cjb" },
+  vol: { bodyField: "vol" },
+  issue: { bodyField: "issue" },
+  issn: { bodyField: "doi" },
+  organizer: { bodyField: "organised_by" },
+  organizor: { bodyField: "organised_by" },
+  scopus: { bodyField: "scl" },
+  citationscopus: { bodyField: "citation_scopus" },
+  citationgoogle: { bodyField: "citation_google" },
+  link: { bodyField: "link" },
+  startingPage: { bodyField: "starting_page" },
+  endingPage: { bodyField: "ending_page" },
+  "article-cite": { bodyField: "cite" },
+
+  // Fields updating both root state and body (SET_FIELD)
+  cjb: { type: "SET_FIELD", field: "cjb", stateKey: "cjb" },
+  branch: { type: "SET_FIELD", field: "branch", stateKey: "branch" },
+  nationality: { type: "SET_FIELD", field: "nationality", stateKey: "nationality" },
+  proceedings: { type: "SET_FIELD", field: "is_proceeding", stateKey: "is_proceedings" },
+  published: { type: "SET_FIELD", field: "is_published", stateKey: "is_published" },
+  affiliated: { type: "SET_FIELD", field: "is_affilated", stateKey: "is_affilated" },
+  author_no: { type: "SET_FIELD", field: "author_no", stateKey: "author_no" },
+
+  // Special handlers
+  year: { type: "SET_YEAR" },
+  month: { type: "SET_MONTH" },
+};
+
+const initialState = {
+  body: {
+    username: "",
+    cjb: "",
+    branch: "",
+    nationality: "",
+    is_proceeding: "",
+    is_affilated: "",
+    is_published: "",
+    author_no: [],
+    title: "",
+    name_cjb: "",
+    vol: "",
+    issue: "",
+    year: "",
+    month: "",
+    doi: "",
+    organised_by: "",
+    scl: "",
+    citation_scopus: "",
+    citation_google: "",
+    link: "",
+    starting_page: 0,
+    ending_page: 0,
+    cite: "",
+  },
+  yearvalue: "",
+  monthvalue: "",
+  cjb: "",
+  branch: "",
+  nationality: "",
+  is_proceedings: "",
+  is_published: "",
+  is_affilated: "",
+  author_no: [],
+  date: "",
+  yearInput: "",
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "SET_FIELD":
+      return {
+        ...state,
+        body: { ...state.body, [action.field]: action.value },
+        [action.stateKey]: action.value,
+      };
+    case "SET_BODY_FIELD":
+      return {
+        ...state,
+        body: { ...state.body, [action.field]: action.value },
+      };
+    case "SET_YEAR": {
+      const { value } = action;
+      const computedYear = new Date(
+        value +
+          "-" +
+          (state.body.month === "" ? "01" : state.body.month) +
+          "-01"
+      ).toLocaleDateString();
+      return {
+        ...state,
+        yearvalue: value,
+        body: { ...state.body, year: computedYear },
+      };
+    }
+    case "SET_MONTH": {
+      const { value } = action;
+      const computedYear =
+        state.yearvalue !== ""
+          ? new Date(
+              state.yearvalue +
+                "-" +
+                (value.length === 1
+                  ? "0" + value
+                  : value.length === 0
+                  ? "01"
+                  : value) +
+                "-01"
+            ).toLocaleDateString()
+          : state.body.year;
+      return {
+        ...state,
+        monthvalue: value,
+        body: { ...state.body, month: value, year: computedYear },
+      };
+    }
+    case "SET_DATE_INPUT": {
+      const { value, rawDate } = action;
+      const computedYear =
+        2000 < value && value < 2100
+          ? new Date(
+              value +
+                "-" +
+                (state.body.month === "" ? "01" : state.body.month) +
+                "-01"
+            ).toLocaleDateString()
+          : "";
+      return {
+        ...state,
+        date: rawDate,
+        yearInput: value,
+        body: { ...state.body, year: computedYear },
+      };
+    }
+    case "SET_DATE_PICKER":
+      return {
+        ...state,
+        date: action.value,
+        body: {
+          ...state.body,
+          year: new Date(action.value).toLocaleDateString(),
+        },
+      };
+    default:
+      return state;
+  }
+}
+
 function FirstData() {
-  // const classes = useStyles();
-  const loggedIn = useSelector((state)=>state.logged);
-  const verify = useSelector((state)=>state.verify);
-  const isSuperAdmin = useSelector((state)=>state.isSuperAdmin);
-  const isAdmin = useSelector((state)=>state.isAdmin);
+  const loggedIn = useSelector((state) => state.logged);
+  const verify = useSelector((state) => state.verify);
+  const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
+  const isAdmin = useSelector((state) => state.isAdmin);
+  const username = useSelector((state) => state.Name);
   const service = new Service();
   const yearpre = new Date();
-  const dispatch=useDispatch();
+  const dispatch = useDispatch();
   const here = new Date(
     "Sun Jan 01 2023 00:00:00 GMT+0530 (India Standard Time)"
   ).toLocaleDateString();
-  // console.log("HERE", here)
-  // const username = query.get('')
   const formRef = React.useRef();
   const [month, setMonth] = useState([
     "None",
@@ -50,897 +224,202 @@ function FirstData() {
     11,
     12,
   ]);
-  const [date, setDate] = useState("");
-  const [year, setYear] = useState("");
-  const [yearvalue, setYearvalue] = useState("");
+
+  const [state, dispatchReducer] = useReducer(reducer, initialState);
+  const {
+    body,
+    yearvalue,
+    monthvalue,
+    cjb,
+    branch,
+    nationality,
+    is_proceedings,
+    is_published,
+    is_affilated,
+    author_no,
+    date,
+    yearInput,
+  } = state;
+
   const years = ["None"];
   for (let step = 2012; step < 1 + yearpre.getFullYear(); step++) {
     years.push(step);
   }
-  // console.log("YEARS",years)
-  const [body, setBody] = useState({
-    username: "",
-    cjb: "",
-    branch: "",
-    nationality: "",
-    is_proceeding: "",
-    is_affilated: "",
-    is_published: "",
-    author_no: "",
-    title: "",
-    name_cjb: "",
-    vol: "",
-    issue: "",
-    year: "",
-    month: "",
-    doi: "",
-    organised_by: "",
-    scl: "",
-    citation_scopus: "",
-    citation_google: "",
-    link: "",
-    starting_page: 0,
-    ending_page: 0,
-    cite: "",
-  });
-  const [monthvalue, setMonthValue] = useState("");
-  const [cjb, setCjb] = useState("");
-  const [branch, setBranch] = useState("");
-  const [nationality, setNational] = useState("");
-  const [is_proceedings, setProceedings] = useState("");
-  const [is_published, setPublished] = useState("");
-  const [is_affilated, setAffiliated] = useState("");
-  const [author_no, setAuthorNo] = useState([]);
+
   const [titles, setTitles] = useState([]);
   const [send, setSend] = useState(0);
-  const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
   const navigate = useNavigate();
 
-  const handleChangeCjb = (event) => {
-    setCjb(event.target.value);
-    setBody({
-      username: body.username,
-      cjb: event.target.value,
-      branch: body.branch,
-      nationality: body.nationality,
-      is_proceeding: body.is_proceeding,
-      is_affilated: body.is_affilated,
-      is_published: body.is_published,
-      author_no: body.author_no,
-      title: body.title,
-      name_cjb: body.name_cjb,
-      vol: body.vol,
-      issue: body.issue,
-      year: body.year,
-      month: body.month,
-      doi: body.doi,
-      organised_by: body.organised_by,
-      scl: body.scl,
-      citation_scopus: body.citation_scopus,
-      citation_google: body.citation_google,
-      link: body.link,
-      starting_page: body.starting_page,
-      ending_page: body.ending_page,
-      cite: body.cite,
-    });
-  };
-  const handleChangeYear = (event) => {
-    setYearvalue(event.target.value);
-    setBody({
-      username: body.username,
-      cjb: body.cjb,
-      branch: body.branch,
-      nationality: body.nationality,
-      is_proceeding: body.is_proceeding,
-      is_affilated: body.is_affilated,
-      is_published: body.is_published,
-      author_no: body.author_no,
-      title: body.title,
-      name_cjb: body.name_cjb,
-      vol: body.vol,
-      issue: body.issue,
-      year: new Date(
-        event.target.value +
-          "-" +
-          (body.month === "" ? "01" : body.month) +
-          "-01"
-      ).toLocaleDateString(),
-      month: body.month,
-      doi: body.doi,
-      organised_by: body.organised_by,
-      scl: body.scl,
-      citation_scopus: body.citation_scopus,
-      citation_google: body.citation_google,
-      link: body.link,
-      starting_page: body.starting_page,
-      ending_page: body.ending_page,
-      cite: body.cite,
-    });
-  };
-  const handleChangeMonth = (event) => {
-    setMonthValue(event.target.value);
-    setBody({
-      username: body.username,
-      cjb: body.cjb,
-      branch: body.branch,
-      nationality: body.nationality,
-      is_proceeding: body.is_proceeding,
-      is_affilated: body.is_affilated,
-      is_published: body.is_published,
-      author_no: body.author_no,
-      title: body.title,
-      name_cjb: body.name_cjb,
-      vol: body.vol,
-      issue: body.issue,
-      year:
-        yearvalue != ""
-          ? new Date(
-              yearvalue +
-                "-" +
-                (event.target.value.length === 1
-                  ? "0" + event.target.value
-                  : event.target.value.length === 0
-                  ? "01"
-                  : event.target.value) +
-                "-01"
-            ).toLocaleDateString()
-          : body.year,
-      month: event.target.value,
-      doi: body.doi,
-      organised_by: body.organised_by,
-      scl: body.scl,
-      citation_scopus: body.citation_scopus,
-      citation_google: body.citation_google,
-      link: body.link,
-      starting_page: body.starting_page,
-      ending_page: body.ending_page,
-      cite: body.cite,
-    });
-  };
-  const handleChangeBranch = (event) => {
-    setBranch(event.target.value);
-    setBody({
-      username: body.username,
-      cjb: body.cjb,
-      branch: event.target.value,
-      nationality: body.nationality,
-      is_proceeding: body.is_proceeding,
-      is_affilated: body.is_affilated,
-      is_published: body.is_published,
-      author_no: body.author_no,
-      title: body.title,
-      name_cjb: body.name_cjb,
-      vol: body.vol,
-      issue: body.issue,
-      year: body.year,
-      month: body.month,
-      doi: body.doi,
-      organised_by: body.organised_by,
-      scl: body.scl,
-      citation_scopus: body.citation_scopus,
-      citation_google: body.citation_google,
-      link: body.link,
-      starting_page: body.starting_page,
-      ending_page: body.ending_page,
-      cite: body.cite,
-    });
-  };
-  const handleChangeNationality = (event) => {
-    setNational(event.target.value);
-    // body.nationality = event.target.value;
-    setBody({
-      username: body.username,
-      cjb: body.cjb,
-      branch: body.branch,
-      nationality: event.target.value,
-      is_proceeding: body.is_proceeding,
-      is_affilated: body.is_affilated,
-      is_published: body.is_published,
-      author_no: body.author_no,
-      title: body.title,
-      name_cjb: body.name_cjb,
-      vol: body.vol,
-      issue: body.issue,
-      year: body.year,
-      month: body.month,
-      doi: body.doi,
-      organised_by: body.organised_by,
-      scl: body.scl,
-      citation_scopus: body.citation_scopus,
-      citation_google: body.citation_google,
-      link: body.link,
-      starting_page: body.starting_page,
-      ending_page: body.ending_page,
-      cite: body.cite,
-    });
-  };
-  const handleChangeProceedings = (event) => {
-    setProceedings(event.target.value);
-    // body.is_proceeding= event.target.value;
-    setBody({
-      username: body.username,
-      cjb: body.cjb,
-      branch: body.branch,
-      nationality: body.nationality,
-      is_proceeding: event.target.value,
-      is_affilated: body.is_affilated,
-      is_published: body.is_published,
-      author_no: body.author_no,
-      title: body.title,
-      name_cjb: body.name_cjb,
-      vol: body.vol,
-      issue: body.issue,
-      year: body.year,
-      month: body.month,
-      doi: body.doi,
-      organised_by: body.organised_by,
-      scl: body.scl,
-      citation_scopus: body.citation_scopus,
-      citation_google: body.citation_google,
-      link: body.link,
-      starting_page: body.starting_page,
-      ending_page: body.ending_page,
-      cite: body.cite,
-    });
-  };
-  const handleChangePublished = (event) => {
-    setPublished(event.target.value);
-    // body.is_published= event.target.value
-    setBody({
-      username: body.username,
-      cjb: body.cjb,
-      branch: body.branch,
-      nationality: body.nationality,
-      is_proceeding: body.is_proceeding,
-      is_affilated: body.is_affilated,
-      is_published: event.target.value,
-      author_no: body.author_no,
-      title: body.title,
-      name_cjb: body.name_cjb,
-      vol: body.vol,
-      issue: body.issue,
-      year: body.year,
-      month: body.month,
-      doi: body.doi,
-      organised_by: body.organised_by,
-      scl: body.scl,
-      citation_scopus: body.citation_scopus,
-      citation_google: body.citation_google,
-      link: body.link,
-      starting_page: body.starting_page,
-      ending_page: body.ending_page,
-      cite: body.cite,
-    });
-  };
-  const handleChangeAffiliated = (event) => {
-    setAffiliated(event.target.value);
-    // body.is_affilated = event.target.value
-    setBody({
-      username: body.username,
-      cjb: body.cjb,
-      branch: body.branch,
-      nationality: body.nationality,
-      is_proceeding: body.is_proceeding,
-      is_affilated: event.target.value,
-      is_published: body.is_published,
-      author_no: body.author_no,
-      title: body.title,
-      name_cjb: body.name_cjb,
-      vol: body.vol,
-      issue: body.issue,
-      year: body.year,
-      month: body.month,
-      doi: body.doi,
-      organised_by: body.organised_by,
-      scl: body.scl,
-      citation_scopus: body.citation_scopus,
-      citation_google: body.citation_google,
-      link: body.link,
-      starting_page: body.starting_page,
-      ending_page: body.ending_page,
-      cite: body.cite,
-    });
-  };
-  const handleChangeAuthorNo = (event) => {
-    setAuthorNo(event.target.value);
-    // body.author_no = event.target.value
-    setBody({
-      username: body.username,
-      cjb: body.cjb,
-      branch: body.branch,
-      nationality: body.nationality,
-      is_proceeding: body.is_proceeding,
-      is_affilated: body.is_affilated,
-      is_published: body.is_published,
-      author_no: event.target.value,
-      title: body.title,
-      name_cjb: body.name_cjb,
-      vol: body.vol,
-      issue: body.issue,
-      year: body.year,
-      month: body.month,
-      doi: body.doi,
-      organised_by: body.organised_by,
-      scl: body.scl,
-      citation_scopus: body.citation_scopus,
-      citation_google: body.citation_google,
-      link: body.link,
-      starting_page: body.starting_page,
-      ending_page: body.ending_page,
-      cite: body.cite,
-    });
-  };
-  const onSubmit = (event) => {
-    event.preventDefault();
-    //console.log("ONSUBMIT-------", body);
-    // // debug();
-    // setInterval(() => {
-    // console.log('Logs every minute');
-    //   },10000)
-    if(titles.includes(body.title)){
-      window.alert('Duplicate Title')
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    status: 0,
+    message: "",
+  });
+
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
     }
-    else{
-      let confirm = window.confirm("This action will add the data into the Database")
-      if(confirm){
-    service
-      .post("api/publications/data", body)
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialogOpen(false);
+    showSnackbar(400, "Cancelled the insert action.");
+  };
+
+  const handleConfirmSubmit = () => {
+    setConfirmDialogOpen(false);
+    const formData = new FormData();
+    Object.keys(body).forEach((key) => {
+      formData.append(key, body[key]);
+    });
+    if (file) {
+      const timestamp = new Date();
+      const fileName = file.name.split(".")[0].substring(0, 10);
+      const newFileName = `${username}_${fileName}_${timestamp.getDate()}-${
+        timestamp.getMonth() + 1
+      }-${timestamp.getFullYear()}.${file.name.split(".").pop()}`;
+      formData.append("file", file, newFileName);
+      formData.append("fileName", newFileName);
+    }
+    const payload = file ? formData : body;
+    fetch("http://localhost:8001/api/publications/data", {
+      method: "POST",
+      body: payload,
+    })
       .then((json) => {
-        window.alert("Succesfully Added "+body.title)
-        navigate("/publications");
+        showSnackbar(200, "Successfully Added " + body.title);
+        setTimeout(() => {
+          navigate("/publications");
+        }, 1000);
       })
       .catch((error) => {
         console.log(error);
+        showSnackbar(500, "Error adding publication");
       });
-    }else{
-      window.alert("Cancelled the insert action."); 
-    }
-    }
-    // console.log("EVENT",body)
   };
-  const handleChange = (e) => {
-    // console.log("EEEE", e)
+
+  const showSnackbar = (status, message) => {
+    setSnackbar({ open: true, status, message });
+  };
+
+  const handleUploadError = (message) => {
+    showSnackbar(400, message);
+  };
+
+  const handleFieldChange = (e) => {
+    // Handle specific Date Picker case if it returns raw event or object
     if (!e.target) {
-      setDate(e);
-      // body.year = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: new Date(e).toLocaleDateString(),
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "publication") {
-      // body.title = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: e.target.value,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "authors") {
-      // body.username = e.target.value
-      setBody({
-        username: e.target.value,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "name_c-j-b") {
-      // body.name_cjb = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: e.target.value,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "vol") {
-      // body.vol = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: e.target.value,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "issue") {
-      // body.issue = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: e.target.value,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "month") {
-      // body.month = e.target.value
-      // console.log("MONTH",(body.month.length===1?"0"+e.target.value:e.target.value))
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year:
-          1 <= e.target.value && e.target.value <= 12
-            ? year != ""
-              ? new Date(
-                  year +
-                    "-" +
-                    (e.target.value.length === 1
-                      ? "0" + e.target.value
-                      : e.target.value.length === 0
-                      ? "01"
-                      : e.target.value) +
-                    "-01"
-                ).toLocaleDateString()
-              : body.year
-            : body.year,
-        month:
-          1 <= e.target.value && e.target.value <= 12 ? e.target.value : "",
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "issn") {
-      // body.doi = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: e.target.value,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "organizor") {
-      // body.organised_by = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: e.target.value,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "scopus") {
-      // body.scl = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: e.target.value,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "citationscopus") {
-      // body.citation_scopus = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: e.target.value,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "citationgoogle") {
-      // body.citation_google = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: e.target.value,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "link") {
-      // body.link = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: e.target.value,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "startingPage") {
-      // body.starting_page = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: e.target.value,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "endingPage") {
-      // body.ending_page = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: e.target.value,
-        cite: body.cite,
-      });
-    } else if (e.target.id === "article-cite") {
-      // body.cite = e.target.value
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year: body.year,
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: e.target.value,
-      });
-    } else {
-      // body.year = e.target.value
-      // console.log("IN ELSE 1",e.target.value+"-"+(body.month===''?"01":body.month))
-      // console.log("IN ELSE", ""+e.target.value+"-"+body.month===''?"01":body.month+"-01")
-      setDate(e);
-      setYear(e.target.value);
-      setBody({
-        username: body.username,
-        cjb: body.cjb,
-        branch: body.branch,
-        nationality: body.nationality,
-        is_proceeding: body.is_proceeding,
-        is_affilated: body.is_affilated,
-        is_published: body.is_published,
-        author_no: body.author_no,
-        title: body.title,
-        name_cjb: body.name_cjb,
-        vol: body.vol,
-        issue: body.issue,
-        year:
-          2000 < e.target.value && e.target.value < 2100
-            ? new Date(
-                e.target.value +
-                  "-" +
-                  (body.month === "" ? "01" : body.month) +
-                  "-01"
-              ).toLocaleDateString()
-            : "",
-        month: body.month,
-        doi: body.doi,
-        organised_by: body.organised_by,
-        scl: body.scl,
-        citation_scopus: body.citation_scopus,
-        citation_google: body.citation_google,
-        link: body.link,
-        starting_page: body.starting_page,
-        ending_page: body.ending_page,
-        cite: body.cite,
-      });
+      dispatchReducer({ type: "SET_DATE_PICKER", value: e });
+      return;
     }
-    // console.log("IN HANDLE CHANGE", body)
+
+    const { name, value, id } = e.target;
+    // Use name as primary key, fallback to id
+    const key = name || id;
+
+    // Clear errors
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: false }));
+    }
+
+    const config = FORM_CONFIG[key];
+
+    if (!config) {
+        // Fallback or unmapped fields (e.g. raw date input)
+        dispatchReducer({ type: "SET_DATE_INPUT", value: value, rawDate: e });
+        return;
+    }
+
+    if (config.type === "SET_YEAR" || config.type === "SET_MONTH") {
+        dispatchReducer({ type: config.type, value });
+    } else if (config.type === "SET_FIELD") {
+        dispatchReducer({ 
+            type: "SET_FIELD", 
+            field: config.field, 
+            value, 
+            stateKey: config.stateKey 
+        });
+    } else if (config.bodyField) {
+        dispatchReducer({ 
+            type: "SET_BODY_FIELD", 
+            field: config.bodyField, 
+            value 
+        });
+    }
   };
+
+  const onSubmit = (event) => {
+    event.preventDefault();
+    const mandatoryFields = [
+      { value: body.title, id: "publication", name: Publication.title },
+      { value: body.username, id: "authors", name: Publication.username },
+      { value: cjb, id: "cjb", name: Publication.cjb },
+      { value: branch, id: "branch", name: Publication.branch },
+      { value: nationality, id: "nationality", name: Publication.nationality },
+      { value: body.name_cjb, id: "name_c-j-b", name: Publication.name_cjb },
+      { value: body.doi, id: "issn", name: Publication.doi },
+      { value: body.cite, id: "article-cite", name: Publication.cite },
+      { value: body.link, id: "link", name: Publication.link },
+      { value: yearvalue, id: "year", name: Publication.year },
+      { value: monthvalue, id: "month", name: Publication.month },
+      { value: body.scl, id: "scopus", name: Publication.scl },
+      { value: file, id: "file", name: "File Upload" },
+    ];
+
+    const newErrors = {};
+    const missingFields = [];
+    mandatoryFields.forEach((field) => {
+      if (!field.value) {
+        newErrors[field.id] = true;
+        missingFields.push(field.name);
+      }
+    });
+
+    setErrors(newErrors);
+
+    if (missingFields.length > 0) {
+      showSnackbar(400, `Missing mandatory fields: ${missingFields.join(", ")}`);
+    } else if (titles.includes(body.title)) {
+      showSnackbar(409, "Duplicate Title"); 
+    } else {
+      setConfirmDialogOpen(true);
+    }
+  };
+
   const [file, setFile] = useState(null);
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
+    if (errors.file) setErrors({ ...errors, file: false });
   };
 
-  // const navigate = useNavigate();
-    useEffect(()=>{
-      dispatch(Tab('new-publication'));
-      if(!loggedIn){
-          navigate("../")}
-      else if(!verify){
-        navigate("../verify")
-      }else if(isSuperAdmin){
-        navigate("../publications")
-      }
-      if(titles.length==0){
-      service.get('api/publications/titles').then((res)=>{
-        // console.log('titles',res)
-        setTitles(res);
-        // console.log("inside",titles)
-      }).catch((error)=>{
-        console.log("ERROR",error)
-      })
+  useEffect(() => {
+    dispatch(Tab("new-publication"));
+    if (!loggedIn) {
+      navigate("../");
+    } else if (!verify) {
+      navigate("../verify");
+    } else if (isSuperAdmin) {
+      navigate("../publications");
     }
-    },[])
+    if (titles.length == 0) {
+      service
+        .get("api/publications/titles")
+        .then((res) => {
+          setTitles(res);
+        })
+        .catch((error) => {
+          console.log("ERROR", error);
+        });
+    }
+  }, []);
   return (
     <>
-      {/* <Modal show={show} onHide={handleClose} size="xl">
-        <Modal.Header closeButton>
-          <Modal.Title>Sample Publication Data</Modal.Title>
-        </Modal.Header>
-        <Modal.Body
-          style={{
-            overflowY: "scroll",
-            paddingBottom: "20px",
-            backgroundColor: "#c5d299",
-          }}
-        >
-          <HelpModal />
-          <br />
-          <br />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="contained" color="error" onClick={handleClose}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal> */}
       <HomeNavbar />
       <div
         style={{
@@ -950,22 +429,18 @@ function FirstData() {
           paddingBottom: "150px",
         }}
       >
-        {/* <br/> */}
         <MDBContainer fluid className="h-custom">
           <MDBRow className="d-flex justify-content-center align-items-center h-100">
             <MDBCol col="12" className="m-4">
-       {isAdmin?<MDBRow end>
-                    {/* <MDBCol md="4">
-                        <ExportCSV csvData={data} fileName={"Publications"} />
-                    </MDBCol>
-                    <MDBCol md="4" >
-                        <Button  variant="contained" color='secondary' onClick={handleShow}>Advance Search</Button>
-                    </MDBCol> */}
-                    <MDBCol md="4">
-                        <BulkUpload titles={titles}/>
-                    </MDBCol>
-                </MDBRow>:"" }
-                <br/>
+              {isAdmin ? (
+                <MDBRow end className="mb-4">
+                  <MDBCol md="4">
+                    <BulkUpload titles={titles} />
+                  </MDBCol>
+                </MDBRow>
+              ) : (
+                ""
+              )}
               <MDBCard
                 className="card-registration card-registration-2"
                 style={{ borderRadius: "15px" }}
@@ -987,45 +462,54 @@ function FirstData() {
                           label={Publication.title}
                           fullWidth
                           variant="standard"
-                          onChange={handleChange}
+                          sx={{ mb: 4 }}
+                          onChange={handleFieldChange}
+                          error={!!errors.publication}
                         />
-                        <br />
-                        <br />
                         <TextField
                           required
                           id="authors"
                           name="authors"
-                          label={Publication.username+' (Add multiple authors seperated by ",")'}
+                          label={
+                            Publication.username +
+                            ' (Add multiple authors seperated by ",")'
+                          }
                           fullWidth
                           variant="standard"
-                          onChange={handleChange}
+                          sx={{ mb: 4 }}
+                          onChange={handleFieldChange}
+                          error={!!errors.authors}
                         />
-                        <br />
-                        <br />
-                        <MDBRow>
+                        <MDBRow className="mb-4">
                           <MDBCol md="4">
                             <FormControl
                               variant="standard"
                               sx={{ minWidth: 120 }}
+                              error={!!errors.cjb}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
-                                {Publication.cjb+"*"}
+                                {Publication.cjb + "*"}
                               </InputLabel>
                               <Select
-                                labelId="c/j/b/bc"
-                                id="c/j/b/bc"
+                                labelId="cjb"
+                                id="cjb"
+                                name="cjb"
                                 value={cjb}
-                                onChange={handleChangeCjb}
+                                onChange={handleFieldChange}
                                 label={Publication.cjb}
                                 required
                               >
                                 <MenuItem value="">
                                   <em>None</em>
                                 </MenuItem>
-                                <MenuItem value={"C"}>C</MenuItem>
-                                <MenuItem value={"J"}>J</MenuItem>
-                                <MenuItem value={"B"}>B</MenuItem>
-                                <MenuItem value={"BC"}>BC</MenuItem>
+                                {cjbOptions.map((option) => (
+                                  <MenuItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </MenuItem>
+                                ))}
                               </Select>
                             </FormControl>
                           </MDBCol>
@@ -1034,27 +518,28 @@ function FirstData() {
                             <FormControl
                               variant="standard"
                               sx={{ minWidth: 120 }}
+                              error={!!errors.branch}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
-                                {Publication.branch+"*"}
+                                {Publication.branch + "*"}
                               </InputLabel>
                               <Select
                                 labelId="branch"
                                 id="branch"
+                                name="branch"
                                 value={branch}
-                                onChange={handleChangeBranch}
+                                onChange={handleFieldChange}
                                 label={Publication.branch}
                                 required
                               >
                                 <MenuItem value="">
                                   <em>None</em>
                                 </MenuItem>
-                                <MenuItem value={"CSE"}>CSE</MenuItem>
-                                <MenuItem value={"IT"}>IT</MenuItem>
-                                <MenuItem value={"ECE"}>ECE</MenuItem>
-                                <MenuItem value={"EEE"}>EEE</MenuItem>
-                                <MenuItem value={"AI/ML"}>AI/ML</MenuItem>
-                                <MenuItem value={"BS&H"}>BS&H</MenuItem>
+                                {branchOptions.map((option) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                ))}
                               </Select>
                             </FormControl>
                           </MDBCol>
@@ -1062,30 +547,32 @@ function FirstData() {
                             <FormControl
                               variant="standard"
                               sx={{ minWidth: 120 }}
+                              error={!!errors.nationality}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
-                               {Publication.nationality+"*"}
+                                {Publication.nationality + "*"}
                               </InputLabel>
                               <Select
                                 labelId="nationality"
                                 id="nationality"
+                                name="nationality"
                                 value={nationality}
-                                onChange={handleChangeNationality}
+                                onChange={handleFieldChange}
                                 label={Publication.nationality}
                                 required
                               >
                                 <MenuItem value="">
                                   <em>None</em>
                                 </MenuItem>
-                                <MenuItem value={"National"}>National</MenuItem>
-                                <MenuItem value={"International"}>
-                                  International
-                                </MenuItem>
+                                {nationalityOptions.map((option) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                ))}
                               </Select>
                             </FormControl>
                           </MDBCol>
                         </MDBRow>
-                        <br />
 
                         <TextField
                           required
@@ -1094,10 +581,10 @@ function FirstData() {
                           label={Publication.name_cjb}
                           fullWidth
                           variant="standard"
-                          onChange={handleChange}
+                          sx={{ mb: 4 }}
+                          onChange={handleFieldChange}
+                          error={!!errors["name_c-j-b"]}
                         />
-                        <br />
-                        <br />
                         <TextField
                           required
                           id="issn"
@@ -1105,10 +592,10 @@ function FirstData() {
                           label={Publication.doi}
                           fullWidth
                           variant="standard"
-                          onChange={handleChange}
+                          sx={{ mb: 4 }}
+                          onChange={handleFieldChange}
+                          error={!!errors.issn}
                         />
-                        <br />
-                        <br />
                         <TextField
                           required
                           id="article-cite"
@@ -1116,23 +603,22 @@ function FirstData() {
                           label={Publication.cite}
                           fullWidth
                           variant="standard"
-                          onChange={handleChange}
+                          onChange={handleFieldChange}
+                          error={!!errors["article-cite"]}
                         />
                       </MDBCol>
 
                       <MDBCol md="6" className="bg-indigo p-5">
                         <TextField
-                          //required
                           id="organizer"
                           name="organizer"
                           label={Publication.organised_by}
                           fullWidth
                           variant="standard"
                           color="secondary"
-                          onChange={handleChange}
+                          sx={{ mb: 4 }}
+                          onChange={handleFieldChange}
                         />
-                        <br />
-                        <br />
                         <TextField
                           required
                           id="link"
@@ -1141,14 +627,13 @@ function FirstData() {
                           fullWidth
                           variant="standard"
                           color="secondary"
-                          onChange={handleChange}
+                          sx={{ mb: 4 }}
+                          onChange={handleFieldChange}
+                          error={!!errors.link}
                         />
-                        <br />
-                        <br />
-                        <MDBRow>
+                        <MDBRow className="mb-4">
                           <MDBCol md="3">
                             <TextField
-                              //required
                               id="vol"
                               name="vol"
                               label={Publication.vol}
@@ -1156,13 +641,11 @@ function FirstData() {
                               variant="standard"
                               color="secondary"
                               type="number"
-                              onChange={handleChange}
+                              onChange={handleFieldChange}
                             />
                           </MDBCol>
-
                           <MDBCol md="3">
                             <TextField
-                              //required
                               id="issue"
                               name="issue"
                               label={Publication.issue}
@@ -1170,30 +653,24 @@ function FirstData() {
                               variant="standard"
                               color="secondary"
                               type="number"
-                              onChange={handleChange}
+                              onChange={handleFieldChange}
                             />
                           </MDBCol>
                           <MDBCol md="3">
-                            {/* <DatePicker
-                                                            selected={date}
-                                                            onChange={handleChange}
-                                                            dateFormat="MM/yyyy"
-                                                            showMonthYearPicker
-                                                            required
-                                                            label="Month-Year"
-                                                        /> */}
                             <FormControl
                               variant="standard"
                               sx={{ minWidth: 120 }}
+                              error={!!errors.year}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
-                                {Publication.year+"*"}
+                                {Publication.year + "*"}
                               </InputLabel>
                               <Select
                                 labelId="year"
                                 id="year"
+                                name="year"
                                 value={yearvalue}
-                                onChange={handleChangeYear}
+                                onChange={handleFieldChange}
                                 label={Publication.year}
                                 required
                               >
@@ -1202,40 +679,24 @@ function FirstData() {
                                     {item}
                                   </MenuItem>
                                 ))}
-                                {/* <MenuItem value="">
-                                                                    <em>None</em>
-                                                                </MenuItem>
-                                                                <MenuItem value={"C"}>C</MenuItem>
-                                                                <MenuItem value={"J"}>J</MenuItem>
-                                                                <MenuItem value={"B"}>B</MenuItem>
-                                                                <MenuItem value={"BC"}>BC</MenuItem> */}
                               </Select>
                             </FormControl>
-                            {/* <TextField
-                                                required
-                                                id="year"
-                                                name="year"
-                                                label="Year"
-                                                fullWidth
-                                                variant="standard"
-                                                color='secondary'
-                                                type="number"
-                                                onChange={handleChange}
-                                            /> */}
                           </MDBCol>
                           <MDBCol md="3">
                             <FormControl
                               variant="standard"
                               sx={{ minWidth: 120 }}
+                              error={!!errors.month}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
-                                {Publication.month+"*"}
+                                {Publication.month + "*"}
                               </InputLabel>
                               <Select
                                 labelId="month"
                                 id="month"
+                                name="month"
                                 value={monthvalue}
-                                onChange={handleChangeMonth}
+                                onChange={handleFieldChange}
                                 label="month"
                                 required
                               >
@@ -1244,30 +705,12 @@ function FirstData() {
                                     {item}
                                   </MenuItem>
                                 ))}
-                                {/* <MenuItem value="">
-                                                                    <em>None</em>
-                                                                </MenuItem>
-                                                                <MenuItem value={"C"}>C</MenuItem>
-                                                                <MenuItem value={"J"}>J</MenuItem>
-                                                                <MenuItem value={"B"}>B</MenuItem>
-                                                                <MenuItem value={"BC"}>BC</MenuItem> */}
                               </Select>
                             </FormControl>
-                            {/* <TextField
-                                                id="month"
-                                                name="month"
-                                                label="Month"
-                                                fullWidth
-                                                variant="standard"
-                                                color='secondary'
-                                                type="number"
-                                                onChange={handleChange}
-                                            />  */}
                           </MDBCol>
                         </MDBRow>
-                        <br />
 
-                        <MDBRow>
+                        <MDBRow className="mb-4">
                           <MDBCol md="4">
                             <FormControl
                               variant="standard"
@@ -1282,23 +725,25 @@ function FirstData() {
                               <Select
                                 labelId="proceedings"
                                 id="proceedings"
+                                name="proceedings"
                                 value={is_proceedings}
-                                onChange={handleChangeProceedings}
+                                onChange={handleFieldChange}
                                 label="In Proceedings?"
                                 color="secondary"
-                                //required
                               >
                                 <MenuItem value="">
                                   <em>None</em>
                                 </MenuItem>
-                                <MenuItem value={"Yes"}>Yes</MenuItem>
-                                <MenuItem value={"No"}>No</MenuItem>
+                                {binaryOptions.map((option) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                ))}
                               </Select>
                             </FormControl>
                           </MDBCol>
 
                           <MDBCol md="4">
-                            {/* <MDBInput wrapperClass='mb-4' labelClass='text-white' label='Phone Number' size='lg' id='form10' type='text' /> */}
                             <FormControl
                               variant="standard"
                               sx={{ minWidth: 120 }}
@@ -1312,17 +757,20 @@ function FirstData() {
                               <Select
                                 labelId="published"
                                 id="published"
+                                name="published"
                                 value={is_published}
-                                onChange={handleChangePublished}
+                                onChange={handleFieldChange}
                                 label="Abstract Published?"
                                 color="secondary"
-                                //required
                               >
                                 <MenuItem value="">
                                   <em>None</em>
                                 </MenuItem>
-                                <MenuItem value={"Yes"}>Yes</MenuItem>
-                                <MenuItem value={"No"}>No</MenuItem>
+                                {binaryOptions.map((option) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                ))}
                               </Select>
                             </FormControl>
                           </MDBCol>
@@ -1337,24 +785,26 @@ function FirstData() {
                               <Select
                                 labelId="affiliated"
                                 id="affiliated"
+                                name="affiliated"
                                 value={is_affilated}
-                                onChange={handleChangeAffiliated}
+                                onChange={handleFieldChange}
                                 label="Affiliated?"
                                 color="secondary"
-                                //required
                               >
                                 <MenuItem value="">
                                   <em>None</em>
                                 </MenuItem>
-                                <MenuItem value={"Yes"}>Yes</MenuItem>
-                                <MenuItem value={"No"}>No</MenuItem>
+                                {binaryOptions.map((option) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                ))}
                               </Select>
                             </FormControl>
                           </MDBCol>
                         </MDBRow>
-                        <br />
 
-                        <MDBRow>
+                        <MDBRow className="mb-4">
                           <MDBCol md="4">
                             <FormControl
                               variant="standard"
@@ -1369,30 +819,27 @@ function FirstData() {
                               <Select
                                 labelId="author_no"
                                 id="author_no"
+                                name="author_no"
                                 value={author_no}
-                                onChange={handleChangeAuthorNo}
+                                onChange={handleFieldChange}
                                 label="Author Order"
                                 color="secondary"
                                 multiple
-                                // required
                               >
                                 <MenuItem value={""}>
                                   <em>None</em>
                                 </MenuItem>
-                                <MenuItem value={"Single"}>Single</MenuItem>
-                                <MenuItem value={"First"}>First</MenuItem>
-                                <MenuItem value={"Second"}>Second</MenuItem>
-                                <MenuItem value={"Third"}>Third</MenuItem>
-                                <MenuItem value={"Fourth"}>Fourth</MenuItem>
-                                <MenuItem value={"Fifth"}>Fifth</MenuItem>
-                                <MenuItem value={"Others"}>Others</MenuItem>
+                                {authorPositionOptions.map((option) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                ))}
                               </Select>
                             </FormControl>
                           </MDBCol>
 
                           <MDBCol md="4">
                             <TextField
-                              //required
                               id="startingPage"
                               name="startingPage"
                               label="Starting Page"
@@ -1400,12 +847,11 @@ function FirstData() {
                               variant="standard"
                               color="secondary"
                               type="number"
-                              onChange={handleChange}
+                              onChange={handleFieldChange}
                             />
                           </MDBCol>
                           <MDBCol md="4">
                             <TextField
-                              // required
                               id="endingPage"
                               name="endingPage"
                               label="Ending Page"
@@ -1413,12 +859,11 @@ function FirstData() {
                               variant="standard"
                               color="secondary"
                               type="number"
-                              onChange={handleChange}
+                              onChange={handleFieldChange}
                             />
                           </MDBCol>
                         </MDBRow>
-                        <br />
-                        <MDBRow>
+                        <MDBRow className="mb-4">
                           <MDBCol md="4">
                             <TextField
                               required
@@ -1428,64 +873,41 @@ function FirstData() {
                               fullWidth
                               variant="standard"
                               color="secondary"
-                              onChange={handleChange}
+                              onChange={handleFieldChange}
+                              error={!!errors.scopus}
                             />
                           </MDBCol>
 
                           <MDBCol md="4">
                             <TextField
-                              // required
                               id="citationscopus"
                               name="citationscopus"
                               label={Publication.citation_scopus}
                               fullWidth
                               variant="standard"
                               color="secondary"
-                              onChange={handleChange}
+                              onChange={handleFieldChange}
                             />
                           </MDBCol>
                           <MDBCol md="4">
                             <TextField
-                              // required
                               id="citationgoogle"
                               name="citationgoogle"
                               label={Publication.citation_google}
                               fullWidth
                               variant="standard"
                               color="secondary"
-                              onChange={handleChange}
+                              onChange={handleFieldChange}
                             />
                           </MDBCol>
-                          <MDBCol md="6">
-                            <Button variant="contained" component="label" style={{marginTop:'8px'}}>
-                              Upload File
-                              <input
-                                type="file" accept=".pdf"
-                                hidden
-                                onChange={handleFileChange}
-                              />
-                            </Button>
 
-                          </MDBCol>
-                          <MDBCol md="6">
-                           
-                            {file && (
-                              <Typography variant="body2" sx={{ mt: 1 }}>
-                                Selected file: <strong>{file.name}</strong>
-                              </Typography>
-                            )}
-
-                          </MDBCol>
                         </MDBRow>
-                        <br />
-                        {/* <MDBCheckbox name='flexCheck' id='flexCheckDefault' labelClass='text-white mb-4' label='' /> */}
-                        {/* <MDBBtn color='light' size='lg'>Publish insert</MDBBtn> */}
-                        {/* <MDBRow> */}
-
-                        {/* <MDBCol md='6'>
-                                            <Button variant='contained' color='warning' onClick={handleShow}>Help</Button>
-                                            </MDBCol> */}
-                        {/* <MDBCol md='6'> */}
+                          <FileUploadSection
+                            file={file}
+                            handleFileChange={handleFileChange}
+                            error={!!errors.file}
+                            onError={handleUploadError}
+                          />
                         <Button
                           variant="contained"
                           color="secondary"
@@ -1498,8 +920,6 @@ function FirstData() {
                         >
                           Submit
                         </Button>
-                        {/* </MDBCol> */}
-                        {/* </MDBRow> */}
                       </MDBCol>
                     </MDBRow>
                   </form>
@@ -1508,6 +928,19 @@ function FirstData() {
             </MDBCol>
           </MDBRow>
         </MDBContainer>
+        <CustomSnackbar
+          open={snackbar.open}
+          handleClose={handleCloseSnackbar}
+          status={snackbar.status}
+          message={snackbar.message}
+        />
+        <CustomConfirmDialog
+          open={confirmDialogOpen}
+          handleClose={handleCloseConfirmDialog}
+          handleConfirm={handleConfirmSubmit}
+          title="Confirm Submission"
+          content="This action will add the data into the Database"
+        />
       </div>
     </>
   );

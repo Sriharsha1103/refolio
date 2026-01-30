@@ -1,4 +1,3 @@
-
 const cors = require('cors');
 var express = require('express');
 require('dotenv').config()
@@ -22,6 +21,18 @@ const path = require('path');
 dbConnect.connect(true)
 var app = express();
 app.use(cors());
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     // Allow requests with no origin (like mobile apps or curl requests)
+//     if (!origin) return callback(null, true);
+//     // Allow any origin by returning true
+//     callback(null, true);
+//   },
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+//   credentials: true
+// }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/api/publications',apiRouter)
 app.use('/api/users',usersRouter)
@@ -59,4 +70,3 @@ app.get('/*', (req, res) => {
   app.listen(PORT, () => {
     console.log(`Server is running on port .`+PORT);
   });
-  

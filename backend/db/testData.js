@@ -29,6 +29,7 @@ var dataSchema = new mongoose.Schema({
     starting_page                     : { type: Number, default: 0},
     ending_page                       : { type: Number, default: 0},
     cite                              : { type: String, default: null},
+    fileName                          : { type: String, default: null},
 })
 dataSchema.plugin(mongoosePaginate);
 

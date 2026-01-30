@@ -1,22 +1,40 @@
 const { json } = require('express');
 const dataModal = require('../db/testData')
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
-module.exports.postData =async function(req,res) {
-    try{
+
+module.exports.postData = async function(req, res) {
+    try {
+    
         const myobj = req.body;
-        // console.log(myobj)
-        myobj.year = new Date(myobj.year)
+        const fileInfo = req.file;
+
+        if (myobj.year) {
+            myobj.year = new Date(myobj.year);
+        }
+
+        // console.log('Received metadata:', myobj);
+        // console.log('Received file:', fileInfo);
+        
         dataModal.create(myobj, function(err, result) {  
             if (err) throw err;
-            console.log("success")
-            return res.status(200).json(result);
-        }
-        )
+            console.log("success");
+            
+            return res.status(200).json({
+                message: 'Publication and file uploaded successfully',
+                publication: myobj,
+                file: fileInfo ? fileInfo.filename : null,
+                result: result
+            });
+        });
+    } catch (error) {
+        console.error('Upload error:', error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
     }
-    catch(error){
-        return res.status(500).json(error)
-    }
-}
+};
+
 module.exports.titles = async function(req,res){
     try{
         dataModal.find({}, 'title', function(err, result) {
