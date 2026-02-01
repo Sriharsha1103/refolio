@@ -22,28 +22,7 @@ import { Tab } from "../login/Actions";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import FileUploadSection from "../CustomComponents/FileUploadSection";
-
-
-// Move static configuration outside the component to avoid recreation on render
-const cjbOptions = [
-  { value: "C", label: "Conference" },
-  { value: "J", label: "Journal" },
-  { value: "B", label: "Book" },
-  { value: "BC", label: "Book Chapter" },
-];
-
-const branchOptions = ["CSE", "IT", "ECE", "EEE", "AI/ML", "BS&H"];
-const nationalityOptions = ["National", "International"];
-const binaryOptions = ["Yes", "No"];
-const authorPositionOptions = [
-  "Single",
-  "First",
-  "Second",
-  "Third",
-  "Fourth",
-  "Fifth",
-  "Others",
-];
+import { authorPositionOptions, binaryOptions, branchOptions, cjbOptions, nationalityOptions } from "../../utils/helper";
 
 // Unified Form Configuration
 const FORM_CONFIG = {

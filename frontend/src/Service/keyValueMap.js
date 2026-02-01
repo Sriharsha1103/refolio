@@ -21,6 +21,7 @@ export let Publication = {
     cite : "Cite Article",
     link : "Publication Link",
     proofingfile : "File ",
+    starting_page : "Page Number",
 }
 
 export let UsersKey = {

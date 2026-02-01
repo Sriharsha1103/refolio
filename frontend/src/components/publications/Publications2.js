@@ -1,22 +1,14 @@
-import React, { useEffect, useReducer } from "react";
-import { Button } from "@mui/material";
-import { MDBCol, MDBRow } from "mdb-react-ui-kit";
+import  { useEffect, useReducer, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import HomeNavbar from "../RNavbar";
 import Service from "../../Service/http";
-import { Publication } from "../../Service/keyValueMap";
 import AdvancedSearch from "../CustomComponents/AdvancedSearch";
 import { Tab } from "../login/Actions";
-import { ExportCSV } from "./ExportCSV";
-import PublicationsTable from "./PublicationsTable";
+import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 
 // --- Constants & Config ---
-const jobs = ["ALL", "C", "J", "B", "BC"];
-const authorsList = [
-  "ALL", "Single", "First", "Second", "Third", "Fourth", "Fifth", "Others",
-];
 
 const fieldConfigs = [
   { field: "title", width: 250, stickyLeft: 60 },
@@ -112,6 +104,7 @@ const reducer = (state, action) => {
   switch (action.type) {
     case "SET_ALL_DATA": {
       const allDocs = action.payload.docs;
+      
       return {
         ...state,
         allData: allDocs,
@@ -173,7 +166,7 @@ const reducer = (state, action) => {
 };
 
 function Publications2() {
-  const service = new Service();
+  const service = useMemo(() => new Service(), []);
   const navigate = useNavigate();
   const dispatchRedux = useDispatch();
 
@@ -186,7 +179,6 @@ function Publications2() {
 
   // --- Handlers ---
   const handleClose = () => localDispatch({ type: "SET_MODAL", value: false });
-  const handleShow = () => localDispatch({ type: "SET_MODAL", value: true });
 
   const handleSearch = () => {
     if (state.filters.startDate && state.filters.endDate) {
@@ -199,9 +191,6 @@ function Publications2() {
 
   const handleStartDateChange = (date) => localDispatch({ type: "SET_FILTER", field: "startDate", value: date });
   const handleEndDateChange = (date) => localDispatch({ type: "SET_FILTER", field: "endDate", value: date });
-  const handleFilterChange = (field, value) => localDispatch({ type: "SET_FILTER", field, value });
-  
-  const handleClear = () => window.location.reload();
 
   const handleDelete = (data) => {
     if (window.confirm("This action will permenently delete " + data.title + " publication.")) {
@@ -218,7 +207,6 @@ function Publications2() {
     }
   };
 
-  // --- Effects ---
   useEffect(() => {
     dispatchRedux(Tab("publication"));
     if (!loggedIn) {
@@ -235,7 +223,7 @@ function Publications2() {
         window.alert("Error while fetching the publications.\n Please try again later.");
         console.error(error);
       });
-  }, []);
+  }, [dispatchRedux, loggedIn, navigate, service, verify]);
 
   if (!loggedIn) return null;
 
@@ -261,39 +249,18 @@ function Publications2() {
           backgroundColor: "#c5d299",
         }}
       >
-        <br />
-        <MDBRow>
-          <MDBCol md="4">
-            <ExportCSV csvData={state.data} fileName={"Publications"} />
-          </MDBCol>
-          <MDBCol md="4">
-            <Button variant="contained" color="secondary" onClick={handleShow}>
-              Advance Search
-            </Button>
-          </MDBCol>
-          <MDBCol md="4">
-            <Button variant="contained" color="error" onClick={handleClear}>
-              Clear Filter
-            </Button>
-          </MDBCol>
-        </MDBRow>
-        <br />
 
-        <PublicationsTable
+
+        <EntityDataGrid
           data={state.data}
           pageNo={state.pageNo}
           perPage={state.perPage}
-          filters={state.filters}
-          handleFilterChange={handleFilterChange}
-          handleSelectFilterChange={handleFilterChange}
           handleDelete={handleDelete}
           isAdmin={isAdmin}
           isSuperAdmin={isSuperAdmin}
           color={state.color}
           background={state.background}
           textColor={state.textColor}
-          jobs={jobs}
-          authorsList={authorsList}
           fieldConfigs={fieldConfigs}
           type={"Publication"}
         />
