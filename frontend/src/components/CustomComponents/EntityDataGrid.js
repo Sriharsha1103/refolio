@@ -9,6 +9,7 @@ import {
   Publication,
   ResearchKey,
   UsersKey,
+  ConsultancyKey,
 } from "../../Service/keyValueMap";
 import { getCJBLabel, getMonthName } from "../../utils/helper";
 
@@ -54,6 +55,7 @@ const EntityDataGrid = ({
     if (type === "User") setTableType(UsersKey);
     if (type === "PatentsKey") setTableType(PatentsKey);
     if (type === "ResearchKey") setTableType(ResearchKey);
+    if (type === "ConsultancyKey") setTableType(ConsultancyKey);
   }, [type]);
 
   const columns = useMemo(() => {
