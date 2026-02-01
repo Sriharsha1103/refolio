@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import { Box } from "@mui/material";
+import PortalToolbar  from "./PortalToolBar";
 // Removed unused PortalToolbar imports
 
 const CustomDataGrid = ({
@@ -83,7 +84,7 @@ const CustomDataGrid = ({
           },
         }}
         pageSizeOptions={[10, 25, 50, 100]}
-        // slots={{ toolbar: PortalToolbar }}
+        slots={{ toolbar: PortalToolbar }}
         sx={{
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: "#f5f5f5",

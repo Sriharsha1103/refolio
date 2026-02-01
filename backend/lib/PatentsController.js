@@ -84,85 +84,48 @@ module.exports.editData = async function(req,res){
 }
 
 module.exports.getData = async function (req, res) {
-    try{
-        console.log("IN GETDATA1",req.query);
-        let title = req.query.title || ""
-        let branch = req.query.branch || ""
-        let user = req.query.authors || ""
-        let design = req.query.design || ""
-        let year = parseInt(req.query.pat_no) || 0
-        let nation = req.query.country || ""
-        let page = req.query.page || 1
-        let limit = req.query.limit || 10
-        let startDate = req.query.startDate?new Date(req.query.startDate):0
-        let endDate = req.query.endDate?new Date(req.query.endDate):0
-        let advance = req.query.advance || ""
-        // let startYear = parseInt(req.query.startYear) || 0
-        // let endYear = parseInt(req.query.endYear) || 0
-        let startMonth = startDate !== 0 ? startDate.getMonth() : 0
-        let endMonth = endDate !== 0 ? endDate.getMonth() : 0
+    try {
+        const {
+            title,
+            branch,
+            authors,
+            design,
+            pat_no,
+            country,
+            startDate,
+            endDate,
+            advance
+        } = req.query;
 
-        // console.log(cjb)
-        let query = {};
-        if (title!=""){
-            query["title"]= { $regex: '.*' + title + '.*', "$options" : "i" }
-        }
-        if (branch!=""){
-            console.log("IN BRANCH")
-            query["dept"] = { $regex: '.*' + branch + '.*', "$options" : "i" }
-        }
-        if (user!=""){
-            query["authors"] = { $regex: '.*' + user + '.*', "$options" : "i" }
-        }
-        if (design!=""){
-            // console.log(cjb)
-            query["design_utility"] = design
-            // console.log(query)
-        }
-        if(year!=0){
-            query["pat_no"] = { $regex: '.*' + year + '.*'}
-        }
-        if(nation!=""){
-            query["country"] ={ $regex: '.*' + nation + '.*', "$options" : "i"}
-        }
-        if(advance=="grant" && startDate!=0){
-            query["year"] = {$lte: endDate, $gte: startDate}
-            // query["month"] = {$lte: endMonth+1, $gte: startMonth}
-        }else if(advance=="filed" && startDate!=0){
-            query["filed"] = {$lte: endDate, $gte: startDate}
-        }else if(advance=="published" && startDate!=0){
-            query["published"] = {$lte: endDate, $gte: startDate}  
-        }
-        console.log("WHERE",query)
-        if(limit==='0'){
-            dataModal.paginate(query,{page:page,limit:0},function(err,result) {
-                if (err) res.status(500).send(err);
-                else{
-                    limit=result.total
-                    console.log("Result",result)
+        const query = {};
 
-                // ...
-                // res.json(result)
-                // console.log("RESULT", result)
-                }
-              });
+        const addRegex = (key, value) => {
+            if (value) query[key] = { $regex: value, $options: "i" };
+        };
 
-        }
-        dataModal.paginate(query,{page:page,limit:limit},function(err,result) {
-            if (err) {console.log(err);res.status(500).send(err)}
-            else{
-                console.log("Result        ",result)
-            // ...
-            return res.status(200).json(result)
-            // console.log("RESULT", result)
+        addRegex("title", title);
+        addRegex("dept", branch);
+        addRegex("authors", authors);
+        addRegex("country", country);
+
+        if (design) query.design_utility = design;
+        if (pat_no) query.pat_no = { $regex: pat_no, $options: "i" };
+
+        if (startDate && endDate && advance) {
+            const fieldMap = { grant: "year", filed: "filed", published: "published" };
+            const targetField = fieldMap[advance];
+            if (targetField) {
+                query[targetField] = {
+                    $gte: new Date(startDate),
+                    $lte: new Date(endDate)
+                };
             }
-          });
-        // console.log("DATA",data)
-        // return res.status(200).json(data);
-    }
-    catch(error){
-        console.log(error);
-        return res.status(500).json(error)
-    }
+        }
 
+        const result = await dataModal.find(query).sort({ _id: -1 });
+        return res.status(200).json({ docs: result });
+    } catch (error) {
+        console.error("getData Error:", error);
+        return res.status(500).json(error);
+    }
 }

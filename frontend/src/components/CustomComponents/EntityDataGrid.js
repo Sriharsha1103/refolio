@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Tooltip, Zoom } from "@mui/material";
 import { IconTrash } from "@tabler/icons-react";
 import HelpModal from "../publications/HelpModal";
+import EditPatent from "../patents/EditPatent";
 import CustomDataGrid from "./CustomDataGrid";
 import {
   PatentsKey,
@@ -44,6 +45,7 @@ const EntityDataGrid = ({
   fieldConfigs,
   type,
   freezeCount = 2,
+  renderEdit,
 }) => {
   const [tableType, setTableType] = useState({});
 
@@ -141,7 +143,7 @@ const EntityDataGrid = ({
                 justifyContent: "center",
               }}
             >
-              <HelpModal edit={params.row} />
+              {renderEdit ? renderEdit(params.row) : <HelpModal edit={params.row} />}
               <Tooltip title="Delete" arrow TransitionComponent={Zoom}>
                 <IconTrash
                   size={22}
@@ -165,6 +167,7 @@ const EntityDataGrid = ({
     color,
     background,
     textColor,
+    renderEdit,
   ]);
 
   /** 🔒 Compute frozen columns correctly */
