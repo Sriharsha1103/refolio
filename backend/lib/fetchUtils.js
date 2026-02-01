@@ -97,87 +97,45 @@ module.exports.editData = async function(req,res){
 }
 
 module.exports.getData = async function (req, res) {
-    try{
-        // console.log("IN GETDATA1",req.query);
-        let title = req.query.title || ""
-        let branch = req.query.branch || ""
-        let user = req.query.username || ""
-        let cjb = req.query.cjb || ""
-        let year = req.query.year || 0
-        let nation = req.query.nationality || ""
-        let scl = req.query.scl || ""
-        let author = req.query.author_no || ""
-        let page = req.query.page || 1
-        let limit = req.query.limit || 10
-        let startDate = req.query.startDate?new Date(req.query.startDate):0
-        let endDate = req.query.endDate?new Date(req.query.endDate):0
-        // let startYear = parseInt(req.query.startYear) || 0
-        // let endYear = parseInt(req.query.endYear) || 0
-        let startMonth = startDate !== 0 ? startDate.getMonth() : 0
-        let endMonth = endDate !== 0 ? endDate.getMonth() : 0
+    try {
+        const validParams = ['title', 'branch', 'username', 'cjb', 'year', 'nationality', 'scl', 'author_no', 'startDate', 'endDate'];
+        const hasFilters = validParams.some(param => req.query[param]);
 
-        // console.log(cjb)
-        let query = {};
-        if (title!=""){
-            query["title"]= { $regex: '.*' + title + '.*', "$options" : "i" }
-        }
-        if (branch!=""){
-            // console.log("IN BRANCH")
-            query["branch"] = { $regex: '.*' + branch + '.*', "$options" : "i" }
-        }
-        if (user!=""){
-            query["username"] = { $regex: '.*' + user + '.*', "$options" : "i" }
-        }
-        if (cjb!=""){
-            // console.log(cjb)
-            query["cjb"] = cjb
-            // console.log(query)
-        }
-        if(year!=0){
-            query["year"] = year
-        }
-        if(nation!=""){
-            query["nationality"] ={ $regex: '.*' + nation + '.*', "$options" : "i"}
-        }
-        if(scl!=""){
-            query["scl"] = { $regex: '.*' + scl + '.*', "$options" : "i"}
-        }
-        if(author!=""){
-            query["author_no"] = author
-        }
-        if(startDate !=0 && endDate!=0){
-            query["year"] = {$lte: endDate, $gte: startDate}
-            query["month"] = {$lte: endMonth+1, $gte: startMonth}
-        }
-        // console.log("WHERE",query)
-        if(limit==='0'){
-            dataModal.paginate(query,{page:page,limit:0},function(err,result) {
-                if (err) res.status(500).send(err);
-                else{
-                    limit=result.total
-                    // console.log("Result",result)
-                // ...
-                // res.json(result)
-                // console.log("RESULT", result)
-                }
-              });
+    
+        
+        const {
+            title, branch, username, cjb, year, nationality, scl, author_no,
+            startDate, endDate
+        } = req.query;
 
+        const query = {};
+
+        const addRegex = (key, value) => {
+            if (value) query[key] = { $regex: value, $options: "i" };
+        };
+
+        addRegex("title", title);
+        addRegex("branch", branch);
+        addRegex("username", username);
+        addRegex("nationality", nationality);
+        addRegex("scl", scl);
+
+        if (cjb) query.cjb = cjb;
+        if (year && year !== '0') query.year = year;
+        if (author_no) query.author_no = author_no;
+
+        if (startDate && endDate) {
+            query.year = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            };
         }
-        dataModal.paginate(query,{page:page,limit:limit},function(err,result) {
-            if (err) {console.log(err);res.status(500).send(err)}
-            else{
-                // console.log("Result",result)
-            // ...
-            return res.status(200).json(result)
-            // console.log("RESULT", result)
-            }
-          });
-        // console.log("DATA",data)
-        // return res.status(200).json(data);
+        const result = await dataModal.find(query).sort({ _id: -1 });
+        
+        return res.status(200).json({ docs: result });
+
+    } catch (error) {
+        console.error("getData Error:", error);
+        return res.status(500).json(error);
     }
-    catch(error){
-        console.log(error);
-        return res.status(500).json(error)
-    }
-
 }

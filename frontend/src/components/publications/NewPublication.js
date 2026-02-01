@@ -19,9 +19,10 @@ import { Publication } from "../../Service/keyValueMap";
 import { useDispatch, useSelector } from "react-redux";
 import { BulkUpload } from "./BulkUpload";
 import { Tab } from "../login/Actions";
-import FileUploadSection from "../fileUploader/FileUploadSection";
-import CustomSnackbar from "../CustomSnackbar";
-import CustomConfirmDialog from "../CustomConfirmDialog";
+import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import FileUploadSection from "../CustomComponents/FileUploadSection";
+
 
 // Move static configuration outside the component to avoid recreation on render
 const cjbOptions = [
