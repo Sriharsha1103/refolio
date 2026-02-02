@@ -10,6 +10,7 @@ import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import Link from '@mui/material/Link';
+import Button from '@mui/material/Button';
 import { useDispatch, useSelector } from 'react-redux';
 import { Signout } from '../../store/Actions';
 import { lightGreen } from '@mui/material/colors';
@@ -18,8 +19,8 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { NAV_LINKS_DEV } from '../../utils/constants';
 
 function HomeNavbar() {
-    const clientId = 'client-ID';
-    const isAdmin = useSelector((state)=>state.isAdmin);
+    // const clientId = 'client-ID';
+    // const isAdmin = useSelector((state)=>state.isAdmin);
     const isSuperAdmin = useSelector((state)=>state.isSuperAdmin);
     const username = useSelector((state)=>state.Name);
     const loggedIn = useSelector((state)=>state.logged);
@@ -28,6 +29,7 @@ function HomeNavbar() {
     const navigate = useNavigate();
 
     const [anchorElUser, setAnchorElUser] = useState(null);
+    const [anchorElNew, setAnchorElNew] = useState(null);
 
     const handleOpenUserMenu = (event) => {
         setAnchorElUser(event.currentTarget);
@@ -35,6 +37,14 @@ function HomeNavbar() {
 
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
+    };
+
+    const handleOpenNewMenu = (event) => {
+        setAnchorElNew(event.currentTarget);
+    };
+
+    const handleCloseNewMenu = () => {
+        setAnchorElNew(null);
     };
 
     const logOut = () => {
@@ -52,6 +62,17 @@ function HomeNavbar() {
         fontWeight: tab === activeTab ? 'bold' : 'normal',
         textDecoration: 'none',
         px: 1
+    });
+
+    // Compute visible NEW links once, honoring visibility rules
+    const visibleNewLinks = NAV_LINKS_DEV.filter(link => {
+        const isNewItem = link.tab && link.tab.startsWith('new-');
+        if (!isNewItem) return false;
+        if (link.alwaysVisible) return true;
+        if (!loggedIn) return false;
+        if (link.requiresSuperAdmin && !isSuperAdmin) return false;
+        if (link.hideForSuperAdmin && isSuperAdmin) return false;
+        return true;
     });
 
   return (
@@ -83,7 +104,11 @@ function HomeNavbar() {
                      // Hide for super admin
                     return null;
                 }
-
+                // Group "new-*" under NEW dropdown
+                const isNewItem = link.tab && link.tab.startsWith('new-');
+                if (isNewItem) {
+                    return null; // Skip here; handled by NEW menu below
+                }
                 return (
                     <Link 
                         key={link.tab}
@@ -97,7 +122,37 @@ function HomeNavbar() {
             })}
           </Box>
 
-          <Box sx={{ flexGrow: 0 }}>
+          <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 1 }}>
+            {visibleNewLinks.length > 0 && (
+                <>
+                    <Button
+                        id="new-menu-button"
+                        onClick={handleOpenNewMenu}
+                        sx={navLinkStyle('new-menu')}
+                    >
+                        NEW
+                    </Button>
+                    <Menu
+                        id="new-menu"
+                        anchorEl={anchorElNew}
+                        open={Boolean(anchorElNew)}
+                        onClose={handleCloseNewMenu}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    >
+                        {visibleNewLinks.map(link => (
+                            <MenuItem
+                                key={link.tab}
+                                component={RouterLink}
+                                to={link.to}
+                                onClick={handleCloseNewMenu}
+                            >
+                                {link.label}
+                            </MenuItem>
+                        ))}
+                    </Menu>
+                </>
+            )}
             {loggedIn ? (
                 <>
                     <Tooltip title="Open settings">
