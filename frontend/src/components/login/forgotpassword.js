@@ -1,225 +1,206 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useReducer } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import "../Comp.css";
-import { Container, PasswordInput, TextInput } from "@mantine/core";
 import { sha512 } from "js-sha512";
-import { useNavigate } from "react-router-dom";
-import {
-  MDBCard,
-  MDBCardBody,
-  MDBCardImage,
-  MDBCol,
-  MDBRow,
-} from "mdb-react-ui-kit";
-import { Button } from "@mui/material";
+import { 
+  Button, 
+  Grid, 
+  Paper, 
+  Typography, 
+  TextField, 
+  Box 
+} from "@mui/material";
 import Service from "../../Service/http";
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+
+const initialState = {
+  verified: true, // Initially true to hide form until verified false
+  email: "",
+  password: "",
+  confirmPassword: "",
+  errors: {
+    password: "",
+    confirmPassword: "",
+  },
+  snackbar: {
+    open: false,
+    message: "",
+    severity: "info",
+  },
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "SET_VERIFIED":
+      return { ...state, verified: action.payload.verified, email: action.payload.email };
+    case "SET_EXPIRED":
+      return { ...state, verified: true };
+    case "SET_FIELD":
+      return {
+        ...state,
+        [action.field]: action.value,
+        errors: { ...state.errors, [action.field]: "" }, // Clear error on change
+      };
+    case "SET_ERROR":
+      return {
+        ...state,
+        errors: { ...state.errors, [action.field]: action.message },
+      };
+    case "OPEN_SNACKBAR":
+      return {
+        ...state,
+        snackbar: { open: true, message: action.message, severity: action.severity },
+      };
+    case "CLOSE_SNACKBAR":
+      return {
+        ...state,
+        snackbar: { ...state.snackbar, open: false },
+      };
+    default:
+      return state;
+  }
+}
 
 function Forgotpassword() {
   const service = new Service();
   const navigate = useNavigate();
-  const [Comp, setComp] = useState(true);
-  const [email, setEmail] = useState("");
-  const [Password, setPassword] = useState("");
-  const [CPass, setCpass] = useState("");
-  var id = useParams();
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { id } = useParams();
+
   useEffect(() => {
     service
-      .post("forgotpassword", { id })
+      .post("forgotpassword", { id: { id } }) // Ensure correct payload structure depending on your backend
       .then((res) => {
-        setComp(res.verified);
-        setEmail(res.Email);
+        dispatch({ type: "SET_VERIFIED", payload: { verified: res.verified, email: res.Email } });
       })
       .catch((e) => {
-        setComp(true);
+        dispatch({ type: "SET_EXPIRED" });
       });
-  }, []);
+  }, [id]); // proper dependency
 
   const validPassword = new RegExp(
     "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})"
   );
-  function check() {
-    var s = "";
-    if (!validPassword.test(Password)) {
-      s +=
-        "Invalid Password , must have upper case , lower case ,number and special character of atleast 8 characters \n";
+
+  const validate = () => {
+    let isValid = true;
+    if (!validPassword.test(state.password)) {
+      dispatch({
+        type: "SET_ERROR",
+        field: "password",
+        message: "Must include uppercase, lowercase, number, special char & be 8+ chars.",
+      });
+      isValid = false;
     }
-    if (Password != CPass) {
-      s += "Password and Confirm passwords do not match";
+    if (state.password !== state.confirmPassword) {
+      dispatch({
+        type: "SET_ERROR",
+        field: "confirmPassword",
+        message: "Passwords do not match.",
+      });
+      isValid = false;
     }
-    return s;
-  }
-  if (!Comp) {
+    return isValid;
+  };
+
+  const handleSubmit = () => {
+    if (validate()) {
+      const pas = sha512(state.password);
+      service
+        .post("newpassword", {
+          Email: state.email,
+          Password: pas,
+        })
+        .then((res) => {
+          dispatch({ type: "OPEN_SNACKBAR", message: "Changed Successfully. Redirecting...", severity: 200 });
+          setTimeout(() => navigate("../"), 2000);
+        })
+        .catch((e) => {
+          dispatch({ type: "OPEN_SNACKBAR", message: "Link already used or invalid.", severity: 400 });
+        });
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    dispatch({ type: "CLOSE_SNACKBAR" });
+  };
+
+  if (!state.verified) {
     return (
-      <div
-        class="col d-flex justify-content-center"
-        style={{
-          height: "100vh",
-          width: "100vw",
-          backgroundColor: "#c5d299",
-          paddingTop: "90px",
-        }}
+      <Grid 
+        container 
+        justifyContent="center" 
+        alignItems="center" 
+        style={{ minHeight: "100vh", backgroundColor: "#c5d299" }}
       >
-        <MDBCard style={{ maxHeight: "379px", maxWidth: "900px" }}>
-          <MDBRow className="g-0">
-            <MDBCol md="8">
-              <MDBCardImage src={require("../static/hompage.jpg")} fluid />
-            </MDBCol>
+        <Paper elevation={4} sx={{ maxWidth: 900, width: "100%", overflow: 'hidden' }}>
+          <Grid container>
+            <Grid item xs={12} md={8}>
+              <img 
+                src={require("../static/hompage.jpg")} 
+                alt="Homepage" 
+                style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+              />
+            </Grid>
+            <Grid item xs={12} md={4} sx={{ p: 4, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Typography variant="h5" sx={{ color: "#6C9449", mb: 3 }}>
+                Change Password
+              </Typography>
+              
+              <TextField
+                fullWidth
+                label="New Password"
+                type="password"
+                variant="outlined"
+                margin="normal"
+                value={state.password}
+                onChange={(e) => dispatch({ type: "SET_FIELD", field: "password", value: e.target.value })}
+                error={!!state.errors.password}
+                helperText={state.errors.password}
+              />
 
-            <MDBCol md="4">
-              <MDBCardBody
-               
-              >
-                <table
-                  style={{ width: "100%", height: "100%", color: "#6C9449" }}
+              <TextField
+                fullWidth
+                label="Confirm New Password"
+                type="password"
+                variant="outlined"
+                margin="normal"
+                value={state.confirmPassword}
+                onChange={(e) => dispatch({ type: "SET_FIELD", field: "confirmPassword", value: e.target.value })}
+                error={!!state.errors.confirmPassword}
+                helperText={state.errors.confirmPassword}
+              />
+
+              <Box mt={3}>
+                <Button 
+                  variant="contained" 
+                  color="secondary" 
+                  fullWidth
+                  onClick={handleSubmit}
                 >
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div className="Heading">Change Password</div>
-                      </td>
-                    </tr><br/>
-                    <tr>
-                      <td colSpan={3}>
-                        <label id="label">New Password</label>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td colSpan={3}>
-                        <input
-                          type="password"
-                          className="Left_full"
-                          placeholder="Enter new Password"
-                          onChange={(e) => {
-                            setPassword(e.target.value);
-                          }}
-                        />
-                      </td>
-                    </tr>
-                    <br />
-                    <tr>
-                      <td>
-                        <label id="label">Confirm New Password</label>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <input
-                          type="password"
-                          className="Left_full"
-                          placeholder="Enter confirm password"
-                          onChange={(e) => {
-                            setCpass(e.target.value);
-                          }}
-                        />
-                      </td>
-                    </tr>
-                    <br/>
-                    <tr>
-                      <td>
-                      <Button variant="contained" color='secondary' onClick={() => {
-                            var st = check();
-                            if (st == "") {
-                              var pas = sha512(Password);
-                              service
-                                .post("newpassword", {
-                                  Email: email,
-                                  Password: pas,
-                                })
-                                .then((res) => {
-                                  window.alert("Changed Successfully");
-                                })
-                                .catch((e) => {
-                                  window.alert(
-                                    "Already changed the password using this link"
-                                  );
-                                });
-                              window.alert(
-                                "Password Changed Successfully.Redirecting to the login page"
-                              );
-                              navigate("../");
-                            } else {
-                              window.alert(st);
-                            }
-                          }}>Change</Button>
-                        {/* <button
-                          className="Button"
-                          onClick={() => {
-                            var st = check();
-                            if (st == "") {
-                              var pas = sha512(Password);
-                              axios
-                                .post("http://localhost:8000/newpassword", {
-                                  Email: email,
-                                  Password: pas,
-                                })
-                                .then((res) => {
-                                  window.alert("Changed Successfully");
-                                })
-                                .catch((e) => {
-                                  window.alert(
-                                    "Already changed the password using this link"
-                                  );
-                                });
-                              window.alert(
-                                "Password Changed Successfully.Redirecting to the login page"
-                              );
-                              navigate("../");
-                            } else {
-                              window.alert(st);
-                            }
-                          }}
-                        >
-                          Change
-                        </button> */}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div></div>
-                {/* <MDBCardBody style={{'display': 'flex', justifyContent: 'center',alignItems: 'center',height: '100%', width:'100%'}}>
-          {/* <MDBCardImage src={require('./static/bvrit-logo.jpg')} fluid /> 
-            <p style={{"fontSize":"35px",'color':'#6C9449'}}>Research Publications Search Engine</p> */}
-              </MDBCardBody>
-            </MDBCol>
-          </MDBRow>
-        </MDBCard>
-      </div>
-
-      //     <div id='forgot' style={{backgroundImage:{image}}}>
-      //         <Container style={{display:'flex',width:'60%',height:'80%',position:'absolute',top:'10%',left:'20%',right:'20%',bottom:'10%'}}>
-      //         <h3 style={{position:'absolute',left:'35%'}}>Change Password</h3>
-      //         <div style={{display:'flex',flexDirection:'column',position:'absolute',bottom:'10%',top:'10%',left:'30%',width:'40%'}}>
-      //         <div>New Password</div>
-      //         <input type='password' label='New Password' placeholder="Enter new Password" onChange={(e)=>{setPassword(e.target.value)}}/>
-      //         <br/>
-      //         <div>Confirm New Password</div>
-      //         <input type='password' label='Confirm New Password' placeholder="Enter confirm password" onChange={(e)=>{setCpass(e.target.value)}}/>
-      //         <br/>
-      //         <button className="Button"
-      //         onClick={()=>{
-      //             var st=check()
-      //             if(st=='')
-      //             {
-      //                 var pas=sha512(Password)
-      //                 axios.post('http://localhost:8000/newpassword',{Email:email,Password:pas})
-      //                 .then((res)=>{window.alert('Changed Successfully')
-      //             })
-      //                 .catch((e)=>{window.alert('Already changed the password using this link')})
-      //             window.alert('Password Changed Successfully.Redirecting to the login page')
-      //             navigate('../')
-      //             }
-      //             else
-      //             {window.alert(st)}
-      //         }}
-      //         >Change</button></div>
-      //    </Container>
-      //     </div>
+                  Change
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+        <CustomSnackbar
+          open={state.snackbar.open}
+          message={state.snackbar.message}
+          severity={state.snackbar.severity}
+          onClose={handleCloseSnackbar}
+        />
+      </Grid>
     );
   } else {
+    // Note: The original logic meant if Verified is TRUE, it was an error/expired link because 
+    // the API returns verified=false if the reset is allowed. 
+    // However, the catch block sets Comp=true which rendered the error.
+    // Preserving the render logic for "Invalid link".
     return (
-      <div>
-        <h1>Invalid link or Link Expired</h1>
-      </div>
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Typography variant="h4">Invalid link or Link Expired</Typography>
+      </Box>
     );
   }
 }
