@@ -268,6 +268,12 @@ function Patents() {
 
     if (!loggedIn) return null;
 
+    // Define handleEdit function
+    const handleEdit = (row) => {
+        navigate("/insertPatents", { state: { edit: row } });
+        console.log("Edited Row", row);
+    };
+
     return (
         <>
             <CustomSnackbar alert={state.alert} alertData={state.alertData} alertType={state.alertType} setAlert={setAlert} />
@@ -302,20 +308,7 @@ function Patents() {
                     textColor={state.textColor}
                     fieldConfigs={fieldConfigs}
                     type={"PatentsKey"}
-                    renderEdit={(row) => (
-                        <Tooltip title="Edit" placement="top">
-                            <IconButton
-                                aria-label="edit-patent"
-                                onClick={() => {
-                                    navigate("/insertPatents", { state: { edit: row } });
-                                    console.log("Edited Row", row)
-                                }}
-                                size="small"
-                            >
-                                <EditIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                    )}
+                    handleEdit={handleEdit}
                     loading={isLoading}
                 />
                 <CustomConfirmDialog

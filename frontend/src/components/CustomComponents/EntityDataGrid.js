@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Tooltip, Zoom } from "@mui/material";
-import { IconTrash } from "@tabler/icons-react";
-import HelpModal from "../publications/HelpModal";
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import CustomDataGrid from "./CustomDataGrid";
 import {
   PatentsKey,
@@ -49,6 +49,7 @@ const EntityDataGrid = ({
   pageNo,
   perPage,
   handleDelete,
+  handleEdit,
   isAdmin,
   isSuperAdmin,
   color,
@@ -163,12 +164,15 @@ const EntityDataGrid = ({
                 justifyContent: "center",
               }}
             >
-              {renderEdit ? renderEdit(params.row) : <HelpModal edit={params.row} />}
+              <Tooltip title="Edit" arrow TransitionComponent={Zoom}>
+                <EditIcon
+                  style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "black" }}
+                  onClick={() => handleEdit(params.row)}
+                />
+              </Tooltip>
               <Tooltip title="Delete" arrow TransitionComponent={Zoom}>
-                <IconTrash
-                  size={22}
-                  color="white"
-                  style={{ cursor: "pointer", marginLeft: 8 }}
+                <DeleteIcon
+                  style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "#ff1744" }}
                   onClick={() => handleDelete(params.row)}
                 />
               </Tooltip>
@@ -182,10 +186,10 @@ const EntityDataGrid = ({
     isAdmin,
     isSuperAdmin,
     handleDelete,
+    handleEdit,
     color,
     background,
     textColor,
-    renderEdit,
   ]);
 
   /** 🔒 Compute frozen columns correctly */

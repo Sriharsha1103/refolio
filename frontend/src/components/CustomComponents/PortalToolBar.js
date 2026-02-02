@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { IconButton, Tooltip } from "@mui/material";
-import { IconPlus } from "@tabler/icons-react";
+import AddIcon from "@mui/icons-material/Add";
 import {
   GridToolbarContainer,
   GridToolbarFilterButton,
@@ -20,7 +20,7 @@ const PortalToolbar = ({ addPath }) => {
       {addPath && (
         <Tooltip title="Add" arrow>
           <IconButton color="primary" onClick={() => navigate(addPath)}>
-            <IconPlus size={20} />
+            <AddIcon style={{ fontSize: 20 }} />
           </IconButton>
         </Tooltip>
       )}
