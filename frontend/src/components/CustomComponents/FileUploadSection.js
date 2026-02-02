@@ -1,10 +1,8 @@
 import React from 'react';
-import { MDBCol } from "mdb-react-ui-kit";
-import { Button } from '@mui/material';
-import Typography from "@mui/material/Typography";
+import { Button, Box, Typography, FormHelperText } from '@mui/material';
+import { primary, primaryColor, primaryHover, white  } from '../../utils/colors';
 
 const FileUploadSection = ({ file, handleFileChange, error, onError }) => {
-    const [errorMessage, setErrorMessage] = React.useState("");
     const onFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile && selectedFile.size > 1024 * 1024) { 
@@ -16,35 +14,34 @@ const FileUploadSection = ({ file, handleFileChange, error, onError }) => {
     };
 
     return (
-        <>
-            <MDBCol md="6">
-                <Button 
-                    variant="contained" 
-                    component="label" 
-                    color={error ? "error" : "primary"}
-                    style={{ marginTop: '8px' }}
-                >
-                    Upload File *
-                    <input
-                        type="file" accept=".pdf"
-                        hidden
-                        onChange={onFileChange}
-                    />
-                </Button>
-                {error && (
-                    <Typography variant="caption" display="block" color="error" sx={{ mt: 1 }}>
-                        File is required
-                    </Typography>
-                )}
-            </MDBCol>
-            <MDBCol md="6">
+        <Box display="flex" alignItems="center" flexWrap="wrap" gap={2} sx={{ }}>
+            <Button 
+                variant="contained" 
+                component="label" 
+                color={error ? "error" : "secondary"}
+                sx={{ mt: { xs: 2, md: 0 }, backgroundColor: primary, color:primaryColor, fontWeight:'bold', '&:hover': { backgroundColor: primaryHover, color: white }, width: 'auto' }}
+            >
+                Upload File *
+                <input
+                    type="file"
+                    accept=".pdf"
+                    hidden
+                    onChange={onFileChange}
+                />
+            </Button>
+            <Box display="flex" alignItems="center" gap={2} sx={{ mt: 1 }}>
                 {file && (
-                    <Typography variant="body2" sx={{ mt: 1 }}>
+                    <Typography variant="body2">
                         Selected file: <strong>{file.name}</strong>
                     </Typography>
                 )}
-            </MDBCol>
-        </>
+                {error && (
+                    <FormHelperText error sx={{ m: 0 }}>
+                        File is required
+                    </FormHelperText>
+                )}
+            </Box>
+        </Box>
     );
 };
 

@@ -1,18 +1,17 @@
 import React, { useEffect, useState, useReducer } from "react";
 import TextField from "@mui/material/TextField";
 import Select from "@mui/material/Select";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
-import {
-  MDBContainer,
-  MDBRow,
-  MDBCol,
-  MDBCard,
-  MDBCardBody,
-} from "mdb-react-ui-kit";
+import Container from "@mui/material/Container";
+import Grid from "@mui/material/Grid";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
 import { useNavigate } from "react-router-dom";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
-import { Button } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import Service from "../../Service/http";
 import { Publication } from "../../Service/keyValueMap";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,7 +20,14 @@ import { Tab } from "../../store/Actions";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import FileUploadSection from "../CustomComponents/FileUploadSection";
-import { authorPositionOptions, binaryOptions, branchOptions, cjbOptions, nationalityOptions } from "../../utils/helper";
+import {
+  authorPositionOptions,
+  branchOptions,
+  cjbOptions,
+  nationalityOptions,
+} from "../../utils/helper";
+import { primary, primaryColor, primaryHover, white } from "../../utils/colors";
+import { getMonthLabel, MONTH_OPTIONS } from "../../utils/constants";
 
 // Unified Form Configuration
 const FORM_CONFIG = {
@@ -45,10 +51,26 @@ const FORM_CONFIG = {
   // Fields updating both root state and body (SET_FIELD)
   cjb: { type: "SET_FIELD", field: "cjb", stateKey: "cjb" },
   branch: { type: "SET_FIELD", field: "branch", stateKey: "branch" },
-  nationality: { type: "SET_FIELD", field: "nationality", stateKey: "nationality" },
-  proceedings: { type: "SET_FIELD", field: "is_proceeding", stateKey: "is_proceedings" },
-  published: { type: "SET_FIELD", field: "is_published", stateKey: "is_published" },
-  affiliated: { type: "SET_FIELD", field: "is_affilated", stateKey: "is_affilated" },
+  nationality: {
+    type: "SET_FIELD",
+    field: "nationality",
+    stateKey: "nationality",
+  },
+  proceedings: {
+    type: "SET_FIELD",
+    field: "is_proceeding",
+    stateKey: "is_proceedings",
+  },
+  published: {
+    type: "SET_FIELD",
+    field: "is_published",
+    stateKey: "is_published",
+  },
+  affiliated: {
+    type: "SET_FIELD",
+    field: "is_affilated",
+    stateKey: "is_affilated",
+  },
   author_no: { type: "SET_FIELD", field: "author_no", stateKey: "author_no" },
 
   // Special handlers
@@ -62,9 +84,9 @@ const initialState = {
     cjb: "",
     branch: "",
     nationality: "",
-    is_proceeding: "",
-    is_affilated: "",
-    is_published: "",
+    is_proceeding: false,
+    is_affilated: false,
+    is_published: false,
     author_no: [],
     title: "",
     name_cjb: "",
@@ -87,9 +109,9 @@ const initialState = {
   cjb: "",
   branch: "",
   nationality: "",
-  is_proceedings: "",
-  is_published: "",
-  is_affilated: "",
+  is_proceedings: false,
+  is_published: false,
+  is_affilated: false,
   author_no: [],
   date: "",
   yearInput: "",
@@ -114,7 +136,7 @@ function reducer(state, action) {
         value +
           "-" +
           (state.body.month === "" ? "01" : state.body.month) +
-          "-01"
+          "-01",
       ).toLocaleDateString();
       return {
         ...state,
@@ -132,9 +154,9 @@ function reducer(state, action) {
                 (value.length === 1
                   ? "0" + value
                   : value.length === 0
-                  ? "01"
-                  : value) +
-                "-01"
+                    ? "01"
+                    : value) +
+                "-01",
             ).toLocaleDateString()
           : state.body.year;
       return {
@@ -151,7 +173,7 @@ function reducer(state, action) {
               value +
                 "-" +
                 (state.body.month === "" ? "01" : state.body.month) +
-                "-01"
+                "-01",
             ).toLocaleDateString()
           : "";
       return {
@@ -181,28 +203,11 @@ function FirstData() {
   const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
   const isAdmin = useSelector((state) => state.isAdmin);
   const username = useSelector((state) => state.Name);
-  const service = new Service();
+  const service = React.useMemo(() => new Service(), []);
   const yearpre = new Date();
   const dispatch = useDispatch();
-  const here = new Date(
-    "Sun Jan 01 2023 00:00:00 GMT+0530 (India Standard Time)"
-  ).toLocaleDateString();
   const formRef = React.useRef();
-  const [month, setMonth] = useState([
-    "None",
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-  ]);
+  const [month] = useState(MONTH_OPTIONS);
 
   const [state, dispatchReducer] = useReducer(reducer, initialState);
   const {
@@ -216,8 +221,6 @@ function FirstData() {
     is_published,
     is_affilated,
     author_no,
-    date,
-    yearInput,
   } = state;
 
   const years = ["None"];
@@ -298,9 +301,12 @@ function FirstData() {
       return;
     }
 
-    const { name, value, id } = e.target;
+    const { name, value, id, type, checked } = e.target;
     // Use name as primary key, fallback to id
     const key = name || id;
+
+    // Normalize value for checkboxes vs other inputs
+    const inputValue = type === "checkbox" ? !!checked : value;
 
     // Clear errors
     if (errors[key]) {
@@ -310,26 +316,29 @@ function FirstData() {
     const config = FORM_CONFIG[key];
 
     if (!config) {
-        // Fallback or unmapped fields (e.g. raw date input)
-        dispatchReducer({ type: "SET_DATE_INPUT", value: value, rawDate: e });
-        return;
+      // Fallback or unmapped fields (e.g. raw date input)
+      dispatchReducer({ type: "SET_DATE_INPUT", value: value, rawDate: e });
+      return;
     }
 
-    if (config.type === "SET_YEAR" || config.type === "SET_MONTH") {
-        dispatchReducer({ type: config.type, value });
+    if (config.type === "SET_YEAR") {
+      dispatchReducer({ type: config.type, value: inputValue });
+    } else if (config.type === "SET_MONTH") {
+      let monthValue = inputValue;
+      dispatchReducer({ type: config.type, value: monthValue });
     } else if (config.type === "SET_FIELD") {
-        dispatchReducer({ 
-            type: "SET_FIELD", 
-            field: config.field, 
-            value, 
-            stateKey: config.stateKey 
-        });
+      dispatchReducer({
+        type: "SET_FIELD",
+        field: config.field,
+        value: inputValue,
+        stateKey: config.stateKey,
+      });
     } else if (config.bodyField) {
-        dispatchReducer({ 
-            type: "SET_BODY_FIELD", 
-            field: config.bodyField, 
-            value 
-        });
+      dispatchReducer({
+        type: "SET_BODY_FIELD",
+        field: config.bodyField,
+        value: inputValue,
+      });
     }
   };
 
@@ -363,9 +372,12 @@ function FirstData() {
     setErrors(newErrors);
 
     if (missingFields.length > 0) {
-      showSnackbar(400, `Missing mandatory fields: ${missingFields.join(", ")}`);
+      showSnackbar(
+        400,
+        `Missing mandatory fields: ${missingFields.join(", ")}`,
+      );
     } else if (titles.includes(body.title)) {
-      showSnackbar(409, "Duplicate Title"); 
+      showSnackbar(409, "Duplicate Title");
     } else {
       setConfirmDialogOpen(true);
     }
@@ -386,7 +398,7 @@ function FirstData() {
     } else if (isSuperAdmin) {
       navigate("../publications");
     }
-    if (titles.length == 0) {
+    if (titles.length === 0) {
       service
         .get("api/publications/titles")
         .then((res) => {
@@ -396,7 +408,15 @@ function FirstData() {
           console.log("ERROR", error);
         });
     }
-  }, []);
+  }, [
+    dispatch,
+    isSuperAdmin,
+    loggedIn,
+    navigate,
+    service,
+    titles.length,
+    verify,
+  ]);
   return (
     <>
       <div
@@ -407,32 +427,34 @@ function FirstData() {
           paddingBottom: "150px",
         }}
       >
-        <MDBContainer fluid className="h-custom">
-          <MDBRow className="d-flex justify-content-center align-items-center h-100">
-            <MDBCol col="12" className="m-4">
+        <Container maxWidth={false}>
+          <Grid container justifyContent="center" alignItems="center">
+            <Grid item xs={12} sx={{ m: 4 }}>
               {isAdmin ? (
-                <MDBRow end className="mb-4">
-                  <MDBCol md="4">
+                <Grid container justifyContent="flex-end" sx={{ mb: 4 }}>
+                  <Grid item xs={12} md={4}>
                     <BulkUpload titles={titles} />
-                  </MDBCol>
-                </MDBRow>
+                  </Grid>
+                </Grid>
               ) : (
                 ""
               )}
-              <MDBCard
-                className="card-registration card-registration-2"
-                style={{ borderRadius: "15px" }}
-              >
-                <MDBCardBody className="p-0">
+              <Card sx={{ borderRadius: "15px" }}>
+                <CardContent sx={{ p: "0px !important" }}>
                   <form id="insert-data" ref={formRef} onSubmit={onSubmit}>
-                    <MDBRow>
-                      <MDBCol md="6" className="p-5 bg-white">
-                        <h3
-                          className="fw-normal mb-5"
-                          style={{ color: "#6C9449" }}
+                    <Grid container>
+                      <Grid
+                        item
+                        xs={12}
+                        md={6}
+                        sx={{ p: { xs: 2, md: 5 }, bgcolor: white }}
+                      >
+                        <Typography
+                          variant="h4"
+                          sx={{ mb: 4, color: primaryColor }}
                         >
                           Publication Information
-                        </h3>
+                        </Typography>
                         <TextField
                           required
                           id="publication"
@@ -458,11 +480,11 @@ function FirstData() {
                           onChange={handleFieldChange}
                           error={!!errors.authors}
                         />
-                        <MDBRow className="mb-4">
-                          <MDBCol md="4">
+                        <Grid container spacing={2} sx={{ mb: 4 }}>
+                          <Grid item xs={12} md={4}>
                             <FormControl
                               variant="standard"
-                              sx={{ minWidth: 120 }}
+                              sx={{ minWidth: 120, width: "100%" }}
                               error={!!errors.cjb}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
@@ -490,12 +512,12 @@ function FirstData() {
                                 ))}
                               </Select>
                             </FormControl>
-                          </MDBCol>
+                          </Grid>
 
-                          <MDBCol md="4">
+                          <Grid item xs={12} md={4}>
                             <FormControl
                               variant="standard"
-                              sx={{ minWidth: 120 }}
+                              sx={{ minWidth: 120, width: "100%" }}
                               error={!!errors.branch}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
@@ -520,11 +542,11 @@ function FirstData() {
                                 ))}
                               </Select>
                             </FormControl>
-                          </MDBCol>
-                          <MDBCol md="4">
+                          </Grid>
+                          <Grid item xs={12} md={4}>
                             <FormControl
                               variant="standard"
-                              sx={{ minWidth: 120 }}
+                              sx={{ minWidth: 120, width: "100%" }}
                               error={!!errors.nationality}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
@@ -549,8 +571,8 @@ function FirstData() {
                                 ))}
                               </Select>
                             </FormControl>
-                          </MDBCol>
-                        </MDBRow>
+                          </Grid>
+                        </Grid>
 
                         <TextField
                           required
@@ -584,9 +606,14 @@ function FirstData() {
                           onChange={handleFieldChange}
                           error={!!errors["article-cite"]}
                         />
-                      </MDBCol>
+                      </Grid>
 
-                      <MDBCol md="6" className="bg-indigo p-5">
+                      <Grid
+                        item
+                        xs={12}
+                        md={6}
+                        sx={{ p: { xs: 2, md: 5 }, bgcolor: primaryColor }}
+                      >
                         <TextField
                           id="organizer"
                           name="organizer"
@@ -609,8 +636,8 @@ function FirstData() {
                           onChange={handleFieldChange}
                           error={!!errors.link}
                         />
-                        <MDBRow className="mb-4">
-                          <MDBCol md="3">
+                        <Grid container spacing={2} sx={{ mb: 4 }}>
+                          <Grid item xs={12} md={3}>
                             <TextField
                               id="vol"
                               name="vol"
@@ -621,8 +648,8 @@ function FirstData() {
                               type="number"
                               onChange={handleFieldChange}
                             />
-                          </MDBCol>
-                          <MDBCol md="3">
+                          </Grid>
+                          <Grid item xs={12} md={3}>
                             <TextField
                               id="issue"
                               name="issue"
@@ -633,11 +660,11 @@ function FirstData() {
                               type="number"
                               onChange={handleFieldChange}
                             />
-                          </MDBCol>
-                          <MDBCol md="3">
+                          </Grid>
+                          <Grid item xs={12} md={3}>
                             <FormControl
                               variant="standard"
-                              sx={{ minWidth: 120 }}
+                              sx={{ minWidth: 120, width: "100%" }}
                               error={!!errors.year}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
@@ -653,17 +680,20 @@ function FirstData() {
                                 required
                               >
                                 {years.map((item) => (
-                                  <MenuItem value={item === "None" ? "" : item}>
+                                  <MenuItem
+                                    key={item}
+                                    value={item === "None" ? "" : item}
+                                  >
                                     {item}
                                   </MenuItem>
                                 ))}
                               </Select>
                             </FormControl>
-                          </MDBCol>
-                          <MDBCol md="3">
+                          </Grid>
+                          <Grid item xs={12} md={3}>
                             <FormControl
                               variant="standard"
-                              sx={{ minWidth: 120 }}
+                              sx={{ minWidth: 120, width: "100%" }}
                               error={!!errors.month}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
@@ -675,118 +705,78 @@ function FirstData() {
                                 name="month"
                                 value={monthvalue}
                                 onChange={handleFieldChange}
-                                label="month"
+                                label={ getMonthLabel(monthvalue)}
                                 required
+                                
                               >
-                                {month.map((item) => (
-                                  <MenuItem value={item === "None" ? "" : item}>
-                                    {item}
+                                {MONTH_OPTIONS.map((item) => (
+                                  <MenuItem
+                                    key={item.value}
+                                    value={item === "None" ? "" : item.value}
+                                  >
+                                    {item.label}
                                   </MenuItem>
                                 ))}
                               </Select>
                             </FormControl>
-                          </MDBCol>
-                        </MDBRow>
+                          </Grid>
+                        </Grid>
+                        <Grid container spacing={2} sx={{ mb: 4 }}>
+                          <Grid item xs={12} md={4}>
+                            <FormControl sx={{ minWidth: 120, width: "100%" }}>
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    id="proceedings"
+                                    name="proceedings"
+                                    color="secondary"
+                                    checked={!!is_proceedings}
+                                    onChange={handleFieldChange}
+                                  />
+                                }
+                                label={Publication.is_proceeding}
+                              />
+                            </FormControl>
+                          </Grid>
 
-                        <MDBRow className="mb-4">
-                          <MDBCol md="4">
-                            <FormControl
-                              variant="standard"
-                              sx={{ minWidth: 120 }}
-                            >
-                              <InputLabel
-                                id="demo-simple-select-standard-label"
-                                color="secondary"
-                              >
-                                {Publication.is_proceeding}
-                              </InputLabel>
-                              <Select
-                                labelId="proceedings"
-                                id="proceedings"
-                                name="proceedings"
-                                value={is_proceedings}
-                                onChange={handleFieldChange}
-                                label="In Proceedings?"
-                                color="secondary"
-                              >
-                                <MenuItem value="">
-                                  <em>None</em>
-                                </MenuItem>
-                                {binaryOptions.map((option) => (
-                                  <MenuItem key={option} value={option}>
-                                    {option}
-                                  </MenuItem>
-                                ))}
-                              </Select>
+                          <Grid item xs={12} md={4}>
+                            <FormControl sx={{ minWidth: 120, width: "100%" }}>
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    id="published"
+                                    name="published"
+                                    color="secondary"
+                                    checked={!!is_published}
+                                    onChange={handleFieldChange}
+                                  />
+                                }
+                                label={Publication.is_published}
+                              />
                             </FormControl>
-                          </MDBCol>
-
-                          <MDBCol md="4">
-                            <FormControl
-                              variant="standard"
-                              sx={{ minWidth: 120 }}
-                            >
-                              <InputLabel
-                                id="demo-simple-select-standard-label"
-                                color="secondary"
-                              >
-                                {Publication.is_published}
-                              </InputLabel>
-                              <Select
-                                labelId="published"
-                                id="published"
-                                name="published"
-                                value={is_published}
-                                onChange={handleFieldChange}
-                                label="Abstract Published?"
-                                color="secondary"
-                              >
-                                <MenuItem value="">
-                                  <em>None</em>
-                                </MenuItem>
-                                {binaryOptions.map((option) => (
-                                  <MenuItem key={option} value={option}>
-                                    {option}
-                                  </MenuItem>
-                                ))}
-                              </Select>
+                          </Grid>
+                          <Grid item xs={12} md={4}>
+                            <FormControl sx={{ minWidth: 120, width: "100%" }}>
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    id="affiliated"
+                                    name="affiliated"
+                                    color="secondary"
+                                    checked={!!is_affilated}
+                                    onChange={handleFieldChange}
+                                  />
+                                }
+                                label={Publication.is_affilated}
+                              />
                             </FormControl>
-                          </MDBCol>
-                          <MDBCol md="4">
+                          </Grid>
+                        </Grid>
+                        <Grid container spacing={2} sx={{ mb: 4 }}>
+                          <Grid item xs={12} md={4}>
                             <FormControl
                               variant="standard"
-                              sx={{ minWidth: 120 }}
-                            >
-                              <InputLabel color="secondary">
-                                {Publication.is_affilated}
-                              </InputLabel>
-                              <Select
-                                labelId="affiliated"
-                                id="affiliated"
-                                name="affiliated"
-                                value={is_affilated}
-                                onChange={handleFieldChange}
-                                label="Affiliated?"
-                                color="secondary"
-                              >
-                                <MenuItem value="">
-                                  <em>None</em>
-                                </MenuItem>
-                                {binaryOptions.map((option) => (
-                                  <MenuItem key={option} value={option}>
-                                    {option}
-                                  </MenuItem>
-                                ))}
-                              </Select>
-                            </FormControl>
-                          </MDBCol>
-                        </MDBRow>
-
-                        <MDBRow className="mb-4">
-                          <MDBCol md="4">
-                            <FormControl
-                              variant="standard"
-                              sx={{ minWidth: 120 }}
+                              sx={{ minWidth: 120, width: "100%" }}
                             >
                               <InputLabel
                                 id="demo-simple-select-standard-label"
@@ -814,9 +804,9 @@ function FirstData() {
                                 ))}
                               </Select>
                             </FormControl>
-                          </MDBCol>
+                          </Grid>
 
-                          <MDBCol md="4">
+                          <Grid item xs={12} md={4}>
                             <TextField
                               id="startingPage"
                               name="startingPage"
@@ -827,8 +817,8 @@ function FirstData() {
                               type="number"
                               onChange={handleFieldChange}
                             />
-                          </MDBCol>
-                          <MDBCol md="4">
+                          </Grid>
+                          <Grid item xs={12} md={4}>
                             <TextField
                               id="endingPage"
                               name="endingPage"
@@ -839,10 +829,10 @@ function FirstData() {
                               type="number"
                               onChange={handleFieldChange}
                             />
-                          </MDBCol>
-                        </MDBRow>
-                        <MDBRow className="mb-4">
-                          <MDBCol md="4">
+                          </Grid>
+                        </Grid>
+                        <Grid container spacing={2} sx={{ mb: 4 }}>
+                          <Grid item xs={12} md={4}>
                             <TextField
                               required
                               id="scopus"
@@ -854,9 +844,9 @@ function FirstData() {
                               onChange={handleFieldChange}
                               error={!!errors.scopus}
                             />
-                          </MDBCol>
+                          </Grid>
 
-                          <MDBCol md="4">
+                          <Grid item xs={12} md={4}>
                             <TextField
                               id="citationscopus"
                               name="citationscopus"
@@ -866,8 +856,8 @@ function FirstData() {
                               color="secondary"
                               onChange={handleFieldChange}
                             />
-                          </MDBCol>
-                          <MDBCol md="4">
+                          </Grid>
+                          <Grid item xs={12} md={4}>
                             <TextField
                               id="citationgoogle"
                               name="citationgoogle"
@@ -877,35 +867,56 @@ function FirstData() {
                               color="secondary"
                               onChange={handleFieldChange}
                             />
-                          </MDBCol>
-
-                        </MDBRow>
-                          <FileUploadSection
-                            file={file}
-                            handleFileChange={handleFileChange}
-                            error={!!errors.file}
-                            onError={handleUploadError}
-                          />
-                        <Button
-                          variant="contained"
-                          color="secondary"
-                          type="submit"
-                          form="insert-data"
-                          onClick={() => {
-                            formRef.current.reportValidity();
-                            setSend(send + 1);
-                          }}
+                          </Grid>
+                        </Grid>
+                        <Grid
+                          container
+                          spacing={2}
+                          alignItems="center"
+                          sx={{ mt: { xs: 2, md: 0 } }}
                         >
-                          Submit
-                        </Button>
-                      </MDBCol>
-                    </MDBRow>
+                          <Grid item xs={12} md={8}>
+                            <FileUploadSection
+                              file={file}
+                              handleFileChange={handleFileChange}
+                              error={!!errors.file}
+                              onError={handleUploadError}
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: { md: 'flex-end', xs: 'center' } }}>
+                            <Button
+                              variant="contained"
+                              type="submit"
+                              form="insert-data"
+                              sx={{
+                                mt: { xs: 2, md: 0 },
+                                backgroundColor: primary,
+                                color: primaryColor,
+                                fontWeight: "bold",
+                                "&:hover": {
+                                  backgroundColor: primaryHover,
+                                  color: white,
+                                },
+                                width: 'auto',
+                                
+                              }}
+                              onClick={() => {
+                                formRef.current.reportValidity();
+                                setSend(send + 1);
+                              }}
+                            >
+                              Submit
+                            </Button>
+                          </Grid>
+                        </Grid>
+                      </Grid>
+                    </Grid>
                   </form>
-                </MDBCardBody>
-              </MDBCard>
-            </MDBCol>
-          </MDBRow>
-        </MDBContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Container>
         <CustomSnackbar
           open={snackbar.open}
           handleClose={handleCloseSnackbar}

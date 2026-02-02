@@ -163,7 +163,7 @@ const reducer = (state, action) => {
   }
 };
 
-function Publications2() {
+function Publications() {
   const service = useMemo(() => new Service(), []);
   const navigate = useNavigate();
   const dispatchRedux = useDispatch();
@@ -266,4 +266,4 @@ function Publications2() {
   );
 }
 
-export default Publications2;
+export default Publications;

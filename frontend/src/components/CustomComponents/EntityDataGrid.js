@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Tooltip, Zoom } from "@mui/material";
 import { IconTrash } from "@tabler/icons-react";
 import HelpModal from "../publications/HelpModal";
-import EditPatent from "../patents/EditPatent";
 import CustomDataGrid from "./CustomDataGrid";
 import {
   PatentsKey,
@@ -12,6 +11,7 @@ import {
   ConsultancyKey,
 } from "../../Service/keyValueMap";
 import { getCJBLabel, getMonthName } from "../../utils/helper";
+import { tableBgColors } from "../../utils/colors";
 
 const yearOnly = (value) => (value ? new Date(value).getFullYear() : "");
 
@@ -31,7 +31,7 @@ const CustomCell = ({ row, children, bg, color, background, textColor }) => (
   </div>
 );
 
-const bgColors = ["#A6BE87", "#C3D496", "#F0F7E6"];
+
 
 const EntityDataGrid = ({
   data,
@@ -60,7 +60,7 @@ const EntityDataGrid = ({
 
   const columns = useMemo(() => {
     const generated = fieldConfigs.map((cfg, i) => {
-      const bg = bgColors[i % bgColors.length];
+      const bg = tableBgColors[i % tableBgColors.length];
       const cellProps = { bg, color, background, textColor };
 
       let renderCell = (params) => (

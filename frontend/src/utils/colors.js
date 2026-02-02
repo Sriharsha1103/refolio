@@ -1,0 +1,27 @@
+export const tableBgColors = ["#A6BE87", "#C3D496", "#F0F7E6"];
+
+export const primaryColor = "#548C42";
+export const primaryHover = "#3E6B2E";
+export const secondaryColor = "#c5d299";
+export const textColor = "#000000";
+export const backgroundColor = "#f0f7e6";
+export const buttonColor = "#6fa130";
+export const buttonTextColor = "#ffffff";
+export const hoverButtonColor = "#55861a";
+export const hoverButtonTextColor = "#ffffff";
+export const borderColor = "#b2d17c";
+export const disabledButtonColor = "#a9c89a";
+export const disabledButtonTextColor = "#e1e6dd";
+export const errorColor = "#ff4d4d";
+export const successColor = "#4BB543";
+export const warningColor = "#ffcc00";
+export const infoColor = "#3399ff";
+export const lightTextColor = "#666666";
+export const darkTextColor = "#333333";
+export const headerBgColor = "#d6e8b3";
+export const headerTextColor = "#000000";
+export const rowHoverColor = "#e6f0d4";
+export const footerBgColor = "#c3d496";
+export const black = "#000000";
+export const white = "#ffffff";
+export const primary = "#d8f3dc";
