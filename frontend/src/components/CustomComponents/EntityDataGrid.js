@@ -15,6 +15,17 @@ import { tableBgColors } from "../../utils/colors";
 
 const yearOnly = (value) => (value ? new Date(value).getFullYear() : "");
 
+/** Format date for CSV export as MM-DD-YYYY */
+const formatDateMDY = (value) => {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${mm}-${dd}-${yyyy}`;
+};
+
 const CustomCell = ({ row, children, bg, color, background, textColor }) => (
   <div
     style={{
@@ -69,6 +80,7 @@ const EntityDataGrid = ({
           {params.value}
         </CustomCell>
       );
+      let valueFormatter;
 
       if (cfg.isDate) {
         renderCell = (p) => (
@@ -76,6 +88,8 @@ const EntityDataGrid = ({
             {yearOnly(p.value)}
           </CustomCell>
         );
+        // Use full date in CSV export
+        valueFormatter = (p) => formatDateMDY(p.value);
       }
 
       if (cfg.field === "month") {
@@ -84,6 +98,7 @@ const EntityDataGrid = ({
             {getMonthName(p.value)}
           </CustomCell>
         );
+        valueFormatter = (p) => getMonthName(p.value);
       }
 
       if (cfg.field === "cjb") {
@@ -92,6 +107,7 @@ const EntityDataGrid = ({
             {getCJBLabel(p.value)}
           </CustomCell>
         );
+        valueFormatter = (p) => getCJBLabel(p.value);
       }
 
       return {
@@ -100,6 +116,7 @@ const EntityDataGrid = ({
         width: cfg.width || 150,
         renderCell,
         filterable: true,
+        ...(valueFormatter ? { valueFormatter } : {}),
       };
     });
 
