@@ -9,7 +9,7 @@ import { useEffect } from 'react'
 import { Tab } from '../store/Actions';
 
 
-function Main(){
+function Dashboard(){
     const a=useSelector(state=>state.Page)
     const dispatch=useDispatch();
     useEffect(()=>{
@@ -63,4 +63,4 @@ function Main(){
     )
 }
 
-export default Main;
+export default Dashboard;
