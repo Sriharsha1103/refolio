@@ -61,6 +61,7 @@ function Research() {
   const [titles, setTitles] = useState([]);
   const [state, localDispatch] = useReducer(reducer, initialState);
   const [snack, setSnack] = useState({ open: false, status: 0, message: "" });
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleDelete = (data) => {
     if (window.confirm("This action will permenently delete " + data.title + " research project.")) {
@@ -95,6 +96,7 @@ function Research() {
         });
     }
 
+    setIsLoading(true);
     service
       .get("api/research/data")
       .then((json) => {
@@ -103,10 +105,12 @@ function Research() {
           dept: Array.isArray(d.dept) ? d.dept.join(", ") : d.dept,
         }));
         localDispatch({ type: "SET_ALL_DATA", payload: { docs: normalized } });
+        setIsLoading(false);
       })
       .catch((error) => {
         console.error(error);
         setSnack({ open: true, status: 500, message: "Error while fetching research projects" });
+        setIsLoading(false);
       });
   }, [dispatch, loggedIn, navigate, service, titles.length, verify]);
 
@@ -141,6 +145,7 @@ function Research() {
           fieldConfigs={fieldConfigs}
           type={"ResearchKey"}
           renderEdit={(row) => <EditResearch edit={row} titles={titles} />}
+          loading={isLoading}
         />
       </div>
       <CustomSnackbar

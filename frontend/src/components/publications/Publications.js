@@ -1,4 +1,4 @@
-import  { useEffect, useReducer, useMemo } from "react";
+import  { useEffect, useReducer, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Service from "../../Service/http";
@@ -174,6 +174,7 @@ function Publications() {
   const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
 
   const [state, localDispatch] = useReducer(reducer, initialState);
+  const [isLoading, setIsLoading] = useState(true);
 
   // --- Handlers ---
   const handleClose = () => localDispatch({ type: "SET_MODAL", value: false });
@@ -213,13 +214,16 @@ function Publications() {
       return;
     }
 
+    setIsLoading(true);
     service.get(`api/publications/data`)
       .then((json) => {
         localDispatch({ type: "SET_ALL_DATA", payload: json });
+        setIsLoading(false);
       })
       .catch((error) => {
         window.alert("Error while fetching the publications.\n Please try again later.");
         console.error(error);
+        setIsLoading(false);
       });
   }, [dispatchRedux, loggedIn, navigate, service, verify]);
 
@@ -260,6 +264,7 @@ function Publications() {
           textColor={state.textColor}
           fieldConfigs={fieldConfigs}
           type={"Publication"}
+          loading={isLoading}
         />
       </div>
     </>

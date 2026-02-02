@@ -60,6 +60,7 @@ function Consultancy() {
   const [titles, setTitles] = useState([]);
   const [state, localDispatch] = useReducer(reducer, initialState);
   const [snack, setSnack] = useState({ open: false, status: 0, message: "" });
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleDelete = (data) => {
     if (window.confirm("This action will permenently delete " + data.title + " consultancy project.")) {
@@ -94,6 +95,7 @@ function Consultancy() {
         });
     }
 
+    setIsLoading(true);
     service
       .get("api/consultancy/data")
       .then((json) => {
@@ -102,10 +104,12 @@ function Consultancy() {
           dept: Array.isArray(d.dept) ? d.dept.join(", ") : d.dept,
         }));
         localDispatch({ type: "SET_ALL_DATA", payload: { docs: normalized } });
+        setIsLoading(false);
       })
       .catch((error) => {
         console.error(error);
         setSnack({ open: true, status: 500, message: "Error while fetching consultancy projects" });
+        setIsLoading(false);
       });
   }, [dispatch, loggedIn, navigate, service, titles.length, verify]);
 
@@ -140,6 +144,7 @@ function Consultancy() {
           fieldConfigs={fieldConfigs}
           type={"ConsultancyKey"}
           renderEdit={(row) => <EditConsultancy edit={row} titles={titles} />}
+          loading={isLoading}
         />
       </div>
 

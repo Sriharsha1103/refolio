@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useMemo } from "react";
+import { useEffect, useReducer, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Service from "../../Service/http";
@@ -161,6 +161,7 @@ function Patents() {
     const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
 
     const [state, localDispatch] = useReducer(reducer, initialState);
+    const [isLoading, setIsLoading] = useState(true);
     const setAlert = (val) => localDispatch({ type: "SET_ALERT", payload: { alert: val } });
 
     const handleClose = () => localDispatch({ type: "SET_MODAL", value: false });
@@ -205,6 +206,7 @@ function Patents() {
         }
 
         // Fetch patents list
+        setIsLoading(true);
         service
             .get("api/patents/data")
             .then((json) => {
@@ -215,6 +217,7 @@ function Patents() {
                     dept: Array.isArray(d.dept) ? d.dept.join(", ") : d.dept,
                 }));
                 localDispatch({ type: "SET_ALL_DATA", payload: { docs: normalized } });
+                setIsLoading(false);
             })
             .catch((error) => {
                 localDispatch({
@@ -222,6 +225,7 @@ function Patents() {
                     payload: { alert: true, alertData: "Error while fetching patents.\n Please try again later.", alertType: "error" },
                 });
                 console.error(error);
+                setIsLoading(false);
             });
 
         // Fetch patent numbers for EditPatent validation
@@ -268,6 +272,7 @@ function Patents() {
                     fieldConfigs={fieldConfigs}
                     type={"PatentsKey"}
                     renderEdit={(row) => <EditPatent edit={row} patentNo={state.patentNumbers} />}
+                    loading={isLoading}
                 />
             </div>
         </>

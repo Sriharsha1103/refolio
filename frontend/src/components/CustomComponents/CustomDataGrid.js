@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import { Box } from "@mui/material";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import PortalToolbar  from "./PortalToolBar";
 // Removed unused PortalToolbar imports
 
@@ -12,7 +12,14 @@ const CustomDataGrid = ({
   getRowId,
   pinnedLeft = [],
   addPath,
+  loadingMessage = "Loading data...",
 }) => {
+    const LoadingOverlay = () => (
+      <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 2 }}>
+        <CircularProgress size={32} />
+        <Typography variant="body2" color="text.secondary">{loadingMessage}</Typography>
+      </Box>
+    );
   // const FREEZE_COUNT = 2;
   const pinnedSx = pinnedLeft.reduce((acc, col, index) => {
     const zCell = 100 + index;
@@ -85,7 +92,7 @@ const CustomDataGrid = ({
           },
         }}
         pageSizeOptions={[10, 25, 50, 100]}
-        slots={{ toolbar: PortalToolbar }}
+        slots={{ toolbar: PortalToolbar, loadingOverlay: LoadingOverlay }}
         slotProps={{ toolbar: { addPath } }}
         sx={{
           "& .MuiDataGrid-columnHeaders": {

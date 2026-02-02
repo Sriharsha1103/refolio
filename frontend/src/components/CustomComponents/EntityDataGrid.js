@@ -47,6 +47,7 @@ const EntityDataGrid = ({
   type,
   freezeCount = 2,
   renderEdit,
+  loading,
 }) => {
   const [tableType, setTableType] = useState({});
 
@@ -199,6 +200,8 @@ const EntityDataGrid = ({
           ? "/insertConsultancy"
           : undefined
       }
+      loading={loading}
+      loadingMessage={`Loading ${type || 'data'}...`}
     />
   );
 };
