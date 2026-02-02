@@ -1,5 +1,4 @@
 import "./App.css";
-import FirstData from "./components/publications/NewPublication";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -19,6 +18,7 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import ErrorPage from "./pages/ErrorPage";
 import Publications from "./components/publications/Publications";
+import AddPublications from "./components/publications/NewPublication";
 
 const theme = createTheme();
 
@@ -45,7 +45,7 @@ function App() {
                 <Route path="/research" element={<Research />} />
                 <Route path="/consultancy" element={<Consultancy />} />
 
-                <Route path="/insertPublications" element={<FirstData />} />
+                <Route path="/insertPublications" element={<AddPublications />} />
                 <Route path="/insertPatents" element={<NewPatent />} />
                 <Route path="/insertResearch" element={<NewResearch />} />
                 <Route path="/insertConsultancy" element={<NewConsultancy />} />

@@ -197,7 +197,7 @@ function reducer(state, action) {
   }
 }
 
-function FirstData() {
+function AddPublications() {
   const loggedIn = useSelector((state) => state.logged);
   const verify = useSelector((state) => state.verify);
   const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
@@ -935,4 +935,4 @@ function FirstData() {
   );
 }
 
-export default FirstData;
+export default AddPublications;

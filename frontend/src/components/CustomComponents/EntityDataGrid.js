@@ -188,6 +188,17 @@ const EntityDataGrid = ({
       columns={columns}
       pageSize={perPage}
       pinnedLeft={pinnedLeft}
+      addPath={
+        type === "Publication"
+          ? "/insertPublications"
+          : type === "PatentsKey"
+          ? "/insertPatents"
+          : type === "ResearchKey"
+          ? "/insertResearch"
+          : type === "ConsultancyKey"
+          ? "/insertConsultancy"
+          : undefined
+      }
     />
   );
 };

@@ -11,6 +11,7 @@ const CustomDataGrid = ({
   loading,
   getRowId,
   pinnedLeft = [],
+  addPath,
 }) => {
   // const FREEZE_COUNT = 2;
   const pinnedSx = pinnedLeft.reduce((acc, col, index) => {
@@ -85,6 +86,7 @@ const CustomDataGrid = ({
         }}
         pageSizeOptions={[10, 25, 50, 100]}
         slots={{ toolbar: PortalToolbar }}
+        slotProps={{ toolbar: { addPath } }}
         sx={{
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: "#f5f5f5",
@@ -104,6 +106,41 @@ const CustomDataGrid = ({
           },
           "& .MuiDataGrid-columnHeadersInner": {
             overflow: "visible",
+          },
+          "& .MuiDataGrid-footerContainer": {
+            justifyContent: "flex-end",
+            alignItems: "center",
+            alignContent: "center",
+            px: 2,
+            borderTop: "1px solid rgba(0,0,0,0.12)",
+          },
+          // Fine-tune table pagination alignment
+          "& .MuiTablePagination-root": {
+            marginLeft: "auto",
+            padding: 0,
+          },
+          "& .MuiTablePagination-toolbar": {
+            padding: 0,
+            minHeight: 40,
+            height: 40,
+          },
+          "& .MuiTablePagination-spacer": {
+            display: "none",
+          },
+          "& .MuiTablePagination-selectLabel": {
+            margin: 0,
+          },
+          "& .MuiTablePagination-input": {
+            margin: 0,
+          },
+          "& .MuiTablePagination-displayedRows": {
+            margin: 0,
+          },
+          "& .MuiTablePagination-actions": {
+            margin: 0,
+          },
+          "& .MuiDataGrid-selectedRowCount": {
+            display: "none",
           },
 
           ...pinnedSx,
