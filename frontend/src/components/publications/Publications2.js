@@ -1,8 +1,6 @@
 import  { useEffect, useReducer, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-
-import HomeNavbar from "../RNavbar";
 import Service from "../../Service/http";
 import AdvancedSearch from "../CustomComponents/AdvancedSearch";
 import { Tab } from "../../store/Actions";
@@ -240,7 +238,6 @@ function Publications2() {
         required={state.required}
       />
 
-      {/* <HomeNavbar /> */}
       <div
         className="p-3"
         style={{

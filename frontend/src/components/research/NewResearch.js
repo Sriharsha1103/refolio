@@ -11,7 +11,6 @@ import {
   MDBCardBody,
 } from "mdb-react-ui-kit";
 import { useNavigate } from "react-router-dom";
-import HomeNavbar from "../RNavbar";
 
 import { Button } from '@mui/material';
 import Service from '../../Service/http';
@@ -265,7 +264,6 @@ function NewResearch() {
           </Button>
         </Modal.Footer>
       </Modal> */}
-      {/* <HomeNavbar /> */}
       <div
         style={{
           height: "81.5vh",

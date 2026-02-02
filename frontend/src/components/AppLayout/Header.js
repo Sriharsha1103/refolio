@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
-import HomeNavbar from "../RNavbar";
+import HomeNavbar from "./Navbar";
 
 const Header = () => {
   const [role, setRole] = useState(null);

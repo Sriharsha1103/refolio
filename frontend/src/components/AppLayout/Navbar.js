@@ -7,16 +7,15 @@ import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import Container from '@mui/material/Container';
 import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import Link from '@mui/material/Link';
 import { useDispatch, useSelector } from 'react-redux';
-import { Signout } from '../store/Actions';
+import { Signout } from '../../store/Actions';
 import { lightGreen } from '@mui/material/colors';
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { NAV_LINKS_DEV } from '../utils/constants';
+import { NAV_LINKS_DEV } from '../../utils/constants';
 
 function HomeNavbar() {
     const clientId = 'client-ID';
@@ -59,7 +58,7 @@ function HomeNavbar() {
         <Toolbar disableGutters >
           <Box component={RouterLink} to="/refolio/home" sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}>
             <img
-              src={require("./static/bvrit-logo.png")}
+              src={require("../../static/bvrit-logo.png")}
               width="150"
               height="50"
               className="d-inline-block align-top"

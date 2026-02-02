@@ -10,7 +10,6 @@ import {
   MDBCardBody,
 } from "mdb-react-ui-kit";
 import { useNavigate } from "react-router-dom";
-import HomeNavbar from "../RNavbar";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import { Button } from "@mui/material";
@@ -400,7 +399,6 @@ function FirstData() {
   }, []);
   return (
     <>
-      {/* <HomeNavbar /> */}
       <div
         style={{
           height: "fill",

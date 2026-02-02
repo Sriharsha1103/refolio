@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import Service from "../../Service/http";
-import HomeNavbar from "../RNavbar";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ResearchExportCSV } from "./ResearchExportCSV";
@@ -115,7 +114,6 @@ function Research() {
 
   return (
     <>
-      {/* <HomeNavbar /> */}
       <div
         className="p-3"
         style={{

@@ -20,7 +20,6 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import { ActionIcon, Center } from "@mantine/core";
 import { Button, Tooltip, Zoom  } from "@mui/material";
-import HomeNavbar from "../RNavbar";
 import Service from "../../Service/http";
 import {Departments, PatentsKey} from "../../Service/keyValueMap";
 import { useNavigate } from "react-router-dom";
