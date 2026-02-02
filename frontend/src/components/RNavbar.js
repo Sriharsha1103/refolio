@@ -15,6 +15,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Signout } from './login/Actions';
 import { lightGreen } from '@mui/material/colors';
 import { useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import { NAV_LINKS_DEV } from '../utils/constants';
 
 function HomeNavbar() {
     const clientId = 'client-ID';
@@ -55,7 +57,7 @@ function HomeNavbar() {
     <AppBar position="static" color="inherit" className='NavBar' sx={{ width: '100vw', margin:0, paddingLeft: 0 }}>
       <Container maxWidth={false} >
         <Toolbar disableGutters >
-          <Box component="a" href="/refolio/home" sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}>
+          <Box component={RouterLink} to="/refolio/home" sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}>
             <img
               src={require("./static/bvrit-logo.png")}
               width="150"
@@ -66,26 +68,32 @@ function HomeNavbar() {
           </Box>
 
           <Box sx={{ flexGrow: 1, display: 'flex' }}>
-            <Link href="/refolio/home" sx={navLinkStyle('home')}>Home</Link>
-            {loggedIn && (
-                <>
-                    <Link href="/refolio/publications" sx={navLinkStyle('publication')}>Publications</Link>
-                    <Link href="/refolio/patents" sx={navLinkStyle('patent')}>Patents</Link>
-                    <Link href="/refolio/research" sx={navLinkStyle('research')}>Research Projects</Link>
-                    <Link href="/refolio/consultancy" sx={navLinkStyle('consultancy')}>Consultancy Projects</Link>
-                    
-                    {!isSuperAdmin ? (
-                        <>
-                            <Link href="/refolio/insertPublications" sx={navLinkStyle('new-publication')}>New Publication</Link>
-                            <Link href="/refolio/insertPatents" sx={navLinkStyle('new-patent')}>New Patent</Link>
-                            <Link href="/refolio/insertResearch" sx={navLinkStyle('new-research')}>New Research Project</Link>
-                            <Link href="/refolio/insertConsultancy" sx={navLinkStyle('new-consultancy')}>New Consultancy Project</Link>
-                        </>
-                    ) : (
-                        <Link href="/refolio/users" sx={navLinkStyle('users')}>Users List</Link>
-                    )}
-                </>
-            )}
+            {NAV_LINKS_DEV.map(link => {
+                // Determine visibility
+                if (link.alwaysVisible) {
+                    // Always show
+                } else if (!loggedIn) {
+                    // Not logged in, hide auth links
+                    return null;
+                } else if (link.requiresSuperAdmin && !isSuperAdmin) {
+                    // Requires super admin but user is not
+                    return null;
+                } else if (link.hideForSuperAdmin && isSuperAdmin) {
+                     // Hide for super admin
+                    return null;
+                }
+
+                return (
+                    <Link 
+                        key={link.tab}
+                        component={RouterLink} 
+                        to={link.to} 
+                        sx={navLinkStyle(link.tab)}
+                    >
+                        {link.label}
+                    </Link>
+                );
+            })}
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>
@@ -113,16 +121,16 @@ function HomeNavbar() {
                         open={Boolean(anchorElUser)}
                         onClose={handleCloseUserMenu}
                     >
-                        <MenuItem component="a" href="/refolio/changepassword" onClick={handleCloseUserMenu}>
+                        <MenuItem component={RouterLink} to="/refolio/changepassword" onClick={handleCloseUserMenu}>
                             <Typography textAlign="center">Change Password</Typography>
                         </MenuItem>
-                        <MenuItem component="a" href="/refolio/login" onClick={() => { handleCloseUserMenu(); logOut(); }}>
+                        <MenuItem component={RouterLink} to="/refolio/login" onClick={() => { handleCloseUserMenu(); logOut(); }}>
                             <Typography textAlign="center">Logout</Typography>
                         </MenuItem>
                     </Menu>
                 </>
             ) : (
-                <Link href="/refolio/login" sx={navLinkStyle('login')}>Login</Link>
+                <Link component={RouterLink} to="/refolio/login" sx={navLinkStyle('login')}>Login</Link>
             )}
           </Box>
         </Toolbar>

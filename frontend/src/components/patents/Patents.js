@@ -7,6 +7,7 @@ import AdvancedSearch from "../CustomComponents/AdvancedSearch";
 import { Tab } from "../login/Actions";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import EditPatent from "./EditPatent";
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 
 // --- Columns Config ---
 const fieldConfigs = [
@@ -45,6 +46,9 @@ const initialState = {
         endDate: null,
     },
     patentNumbers: [],
+    alert: false,
+    alertData: "",
+    alertType: "",
 };
 
 // --- Helpers ---
@@ -135,6 +139,13 @@ const reducer = (state, action) => {
             return { ...state, showModal: action.value };
         case "SET_REQUIRED":
             return { ...state, required: action.value };
+        case "SET_ALERT":
+            return {
+                ...state,
+                alert: action.payload.alert,
+                alertData: action.payload.alertData || state.alertData,
+                alertType: action.payload.alertType || state.alertType,
+            };
         default:
             return state;
     }
@@ -151,6 +162,7 @@ function Patents() {
     const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
 
     const [state, localDispatch] = useReducer(reducer, initialState);
+    const setAlert = (val) => localDispatch({ type: "SET_ALERT", payload: { alert: val } });
 
     const handleClose = () => localDispatch({ type: "SET_MODAL", value: false });
     const handleSearch = () => {
@@ -169,12 +181,18 @@ function Patents() {
             service
                 .delete("api/patents/data/" + row._id)
                 .then(() => {
-                    window.alert("Successfully Deleted " + row.title + " Patent.");
-                    window.location.reload();
+                    localDispatch({
+                        type: "SET_ALERT",
+                        payload: { alert: true, alertData: "Successfully Deleted " + row.title + " Patent.", alertType: "success" },
+                    });
+                    setTimeout(() => window.location.reload(), 2000);
                 })
                 .catch((err) => {
                     console.error("ERROR", err);
-                    window.alert("Error while deleting the patent");
+                    localDispatch({
+                        type: "SET_ALERT",
+                        payload: { alert: true, alertData: "Error while deleting the patent", alertType: "error" },
+                    });
                 });
         }
     };
@@ -200,7 +218,10 @@ function Patents() {
                 localDispatch({ type: "SET_ALL_DATA", payload: { docs: normalized } });
             })
             .catch((error) => {
-                window.alert("Error while fetching patents.\n Please try again later.");
+                localDispatch({
+                    type: "SET_ALERT",
+                    payload: { alert: true, alertData: "Error while fetching patents.\n Please try again later.", alertType: "error" },
+                });
                 console.error(error);
             });
 
@@ -215,7 +236,8 @@ function Patents() {
 
     return (
         <>
-            <AdvancedSearch
+            <CustomSnackbar alert={state.alert} alertData={state.alertData} alertType={state.alertType} setAlert={setAlert} />
+            {/* <AdvancedSearch
                 show={state.showModal}
                 onHide={handleClose}
                 startDate={state.filters.startDate}
@@ -224,7 +246,7 @@ function Patents() {
                 onEndDateChange={onEndDate}
                 onSearch={handleSearch}
                 required={state.required}
-            />
+            /> */}
 
             {/* <HomeNavbar /> */}
             <div
