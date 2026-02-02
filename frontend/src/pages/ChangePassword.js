@@ -13,7 +13,8 @@ const initialState = {
   newPass: '',
   confirmPass: '',
   errors: { newPass: '', confirmPass: '' },
-  snack: { open: false, message: '', severity: 'success' }
+  snack: { open: false, message: '', severity: 'success' },
+  loading: false
 };
 
 function reducer(state, action) {
@@ -38,6 +39,11 @@ function reducer(state, action) {
       return { 
         ...state, 
         snack: { ...state.snack, open: false } 
+      };
+    case 'setLoading':
+      return {
+        ...state,
+        loading: action.value
       };
     default:
       return state;
@@ -82,6 +88,7 @@ function ChangePasswordPage() {
     if (hasError) return;
 
     try {
+      dispatch({ type: 'setLoading', value: true });
       // Verify Old Password
       const passHash = sha512(state.oldPass);
       await service.post('userlogin', { Email: email, Password: passHash });
@@ -98,8 +105,12 @@ function ChangePasswordPage() {
 
     } catch (e) {
       dispatch({ type: 'openSnack', message: 'Wrong current password or server error', severity: 500 });
+    } finally {
+      dispatch({ type: 'setLoading', value: false });
     }
   };
+
+  const inputsDisabled = state.loading || state.snack.open;
 
   return (
     <Box
@@ -138,7 +149,7 @@ function ChangePasswordPage() {
               Change Password
             </Typography>
             
-            <Stack spacing={2}>
+            <Stack component="form" onSubmit={(e)=>{ e.preventDefault(); if (!inputsDisabled) handleChange(); }} spacing={2}>
               <TextField
                 label="Old Password"
                 type="password"
@@ -147,6 +158,7 @@ function ChangePasswordPage() {
                 fullWidth
                 value={state.oldPass}
                 onChange={(e) => dispatch({ type: 'input', field: 'oldPass', value: e.target.value })}
+                disabled={inputsDisabled}
               />
               
               <TextField
@@ -159,6 +171,7 @@ function ChangePasswordPage() {
                 helperText={state.errors.newPass}
                 value={state.newPass}
                 onChange={(e) => dispatch({ type: 'input', field: 'newPass', value: e.target.value })}
+                disabled={inputsDisabled}
               />
 
               <TextField
@@ -171,15 +184,17 @@ function ChangePasswordPage() {
                 helperText={state.errors.confirmPass}
                 value={state.confirmPass}
                 onChange={(e) => dispatch({ type: 'input', field: 'confirmPass', value: e.target.value })}
+                disabled={inputsDisabled}
               />
 
               <Button 
                 variant="contained" 
                 color="secondary" 
-                onClick={handleChange}
+                type="submit"
+                disabled={inputsDisabled}
                 sx={{ mt: 1 }}
               >
-                Change
+                {state.loading ? 'Changing...' : 'Change'}
               </Button>
             </Stack>
           </Grid>

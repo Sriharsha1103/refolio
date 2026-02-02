@@ -14,7 +14,8 @@ const initialState = {
     Email: '',
     Password: '',
     CPass: '',
-    errors: {}
+    errors: {},
+    loading: false
 };
 
 function reducer(state, action) {
@@ -31,6 +32,11 @@ function reducer(state, action) {
         return {
             ...state,
             errors: action.errors
+        };
+    } else if (action.type === 'setLoading') {
+        return {
+            ...state,
+            loading: action.value
         };
     }
     return state;
@@ -107,6 +113,7 @@ function Register() {
     }, [Name, Email, Password, CPass]);
 
     function send(Name, Email, Password) {
+        localDispatch({ type: 'setLoading', value: true });
         var e = Email + '@bvrithyderabad.edu.in';
         var Pas = sha512(Password);
         service.post('registerme', { Name, Email: e, Password: Pas, branch: Branch })
@@ -119,11 +126,14 @@ function Register() {
             .catch((e) => {
                 showSnackbar('ERROR while Registering the user.', 'error');
                 console.log(e);
+            })
+            .finally(() => {
+                localDispatch({ type: 'setLoading', value: false });
             });
     }
 
     return (
-        <Box sx={{ width: '100%', height: '100%', p: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box component="form" onSubmit={(e)=>{ e.preventDefault(); const inputsDisabled = state.loading || snackbarOpen; if (!inputsDisabled && check()) { send(Name, Email, Password, Branch); } }} sx={{ width: '100%', height: '100%', p: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
             <CustomSnackbar 
                 open={snackbarOpen} 
                 handleClose={handleSnackbarClose} 
@@ -143,6 +153,7 @@ function Register() {
                     error={!!errors.Name}
                     helperText={errors.Name}
                     onChange={(e) => handleChange('Name', e.target.value)}
+                    disabled={state.loading || snackbarOpen}
                 />
                 <FormControl fullWidth error={!!errors.Branch}>
                     <InputLabel id="branch-select-label">Branch</InputLabel>
@@ -152,6 +163,7 @@ function Register() {
                         value={Branch}
                         label="Branch"
                         onChange={(e) => handleChange('Branch', e.target.value)}
+                        disabled={state.loading || snackbarOpen}
                     >
                         <MenuItem value=""><em>None</em></MenuItem>
                         {BRANCH_OPTIONS.map((option) => (
@@ -172,6 +184,7 @@ function Register() {
                 error={!!errors.Email}
                 helperText={errors.Email}
                 onChange={(e) => handleChange('Email', e.target.value)}
+                disabled={state.loading || snackbarOpen}
                 InputProps={{
                     endAdornment: <InputAdornment position="end">@bvrithyderabad.edu.in</InputAdornment>,
                 }}
@@ -186,6 +199,7 @@ function Register() {
                 error={!!errors.Password}
                 helperText={errors.Password}
                 onChange={(e) => handleChange('Password', e.target.value)}
+                disabled={state.loading || snackbarOpen}
             />
 
             <TextField
@@ -197,6 +211,7 @@ function Register() {
                 error={!!errors.CPass}
                 helperText={errors.CPass}
                 onChange={(e) => handleChange('CPass', e.target.value)}
+                disabled={state.loading || snackbarOpen}
             />
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
@@ -210,13 +225,10 @@ function Register() {
                 <Button
                     variant="contained"
                     color='secondary'
-                    onClick={() => {
-                        if (check()) {
-                            send(Name, Email, Password, Branch);
-                        }
-                    }}
+                    type="submit"
+                    disabled={state.loading || snackbarOpen}
                 >
-                    Register
+                    {state.loading ? 'Registering...' : 'Register'}
                 </Button>
             </Box>
         </Box>

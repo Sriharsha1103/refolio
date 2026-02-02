@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Signout } from '../../store/Actions';
 import { lightGreen } from '@mui/material/colors';
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { NAV_LINKS_DEV } from '../../utils/constants';
 
 function HomeNavbar() {
@@ -25,6 +25,7 @@ function HomeNavbar() {
     const loggedIn = useSelector((state)=>state.logged);
     const tab = useSelector((state)=>state.tab);
     const dispatch=useDispatch()
+    const navigate = useNavigate();
 
     const [anchorElUser, setAnchorElUser] = useState(null);
 
@@ -40,6 +41,7 @@ function HomeNavbar() {
         if(loggedIn){
             localStorage.clear()
             dispatch(Signout())
+            navigate("/login");
           }
     };
 

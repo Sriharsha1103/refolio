@@ -91,6 +91,8 @@ function Forgot() {
     }
   };
 
+  const inputsDisabled = state.loading || state.snack.open;
+
   return (
     <Box
       sx={{
@@ -101,7 +103,7 @@ function Forgot() {
         width: "100%",
       }}
     >
-      <Stack spacing={2} sx={{ width: "85%" }}>
+      <Stack component="form" onSubmit={(e)=>{ e.preventDefault(); if (!inputsDisabled) handleSubmit(); }} spacing={2} sx={{ width: "85%" }}>
         <Typography variant="h5" sx={{ color: "#6C9449", textAlign: "center" }}>
           Forgot Password
         </Typography>
@@ -116,6 +118,7 @@ function Forgot() {
           onChange={(e) =>
             dispatch({ type: "input", field: "email", value: e.target.value })
           }
+          disabled={inputsDisabled}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -144,8 +147,8 @@ function Forgot() {
           <Button
             variant="contained"
             color="secondary"
-            disabled={state.loading}
-            onClick={handleSubmit}
+            disabled={inputsDisabled}
+            type="submit"
           >
             {state.loading ? "Sending..." : "Send Code"}
           </Button>

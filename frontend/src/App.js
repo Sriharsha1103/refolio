@@ -16,8 +16,9 @@ import NewResearch from "./components/research/NewResearch";
 import Consultancy from "./components/consultancy/Consultancy";
 import NewConsultancy from "./components/consultancy/NewConsultancy";
 import AppLayout from "./components/AppLayout/AppLayout";
-import Main from "./pages/Main";
 import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import ErrorPage from "./pages/ErrorPage";
 
 const theme = createTheme();
 
@@ -29,10 +30,10 @@ function App() {
         <BrowserRouter basename="/refolio">
             <Routes>
               <Route element={<AppLayout />}>
-                <Route path="/" element={<Main />} />
+                <Route path="/" element={<Dashboard />} />
                 <Route path="/home" element={<Home />} />
 
-                <Route path="/login" element={<Main />} />
+                <Route path="/login" element={<Dashboard />} />
                 <Route path="/changepassword" element={<ChangePassword />} />
                
                 <Route path="/verifyemail/:id" element={<VerifiedEmail />} />
@@ -48,6 +49,7 @@ function App() {
                 <Route path="/insertPatents" element={<NewPatent />} />
                 <Route path="/insertResearch" element={<NewResearch />} />
                 <Route path="/insertConsultancy" element={<NewConsultancy />} />
+                <Route path="*" element={<ErrorPage />} />
               </Route>
             </Routes>
         </BrowserRouter>

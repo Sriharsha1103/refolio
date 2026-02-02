@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Signin, Register, Forgot } from "../store/Actions";
 import { useNavigate } from 'react-router-dom'
 import { sha512 } from "js-sha512";
-import { Button, TextField, InputAdornment, Typography, Box, Container } from "@mui/material"; 
+import { Button, TextField, InputAdornment, Typography, Box, Container, Backdrop, CircularProgress } from "@mui/material"; 
 import Service from "../Service/http";
 import CustomSnackbar from "../components/CustomComponents/CustomSnackbar";
 
@@ -59,7 +59,6 @@ function Login() {
                 tempLoginData.role === "super-admin", 
                 tempLoginData.verified
             ));
-            // Navigation happens via existing useEffect watching 'loggedIn'
             setTempLoginData(null); 
         }
     };
@@ -102,6 +101,8 @@ function Login() {
             });
     };
 
+    const inputsDisabled = state.loading || snackbarOpen;
+
     return (
         <Container maxWidth="sm">
             <CustomSnackbar 
@@ -111,8 +112,15 @@ function Login() {
                 message={snackbarMessage} 
                 customautoHideDuration={1000}
             />
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={state.loading}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
             <Box
                 component="form"
+                onSubmit={(e) => { e.preventDefault(); if (!inputsDisabled) handleLogin(); }}
                 sx={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -134,6 +142,7 @@ function Login() {
                     fullWidth
                     value={state.email}
                     onChange={(e) => localDispatch({ type: 'SET_FIELD', field: 'email', value: e.target.value })}
+                    disabled={inputsDisabled}
                     InputProps={{
                         endAdornment: <InputAdornment position="end">@bvrithyderabad.edu.in</InputAdornment>,
                     }}
@@ -146,13 +155,14 @@ function Login() {
                     fullWidth
                     value={state.password}
                     onChange={(e) => localDispatch({ type: 'SET_FIELD', field: 'password', value: e.target.value })}
+                    disabled={inputsDisabled}
                 />
 
                 <Button 
                     variant="contained" 
                     color='secondary' 
-                    onClick={handleLogin}
-                    disabled={state.loading}
+                    type="submit"
+                    disabled={inputsDisabled}
                     size="large"
                 >
                     {state.loading ? 'Logging in...' : 'Login'}
