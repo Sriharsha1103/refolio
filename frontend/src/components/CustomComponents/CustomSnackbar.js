@@ -2,7 +2,7 @@ import React from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
-const CustomSnackbar = ({ open, handleClose, status, message }) => {
+const CustomSnackbar = ({ open, handleClose, status, message, customautoHideDuration = 3000 }) => {
 
   const getSeverity = (code) => {
     if (!code) return 'info';
@@ -17,7 +17,7 @@ const CustomSnackbar = ({ open, handleClose, status, message }) => {
   return (
     <Snackbar
       open={open}
-      autoHideDuration={3000}
+      autoHideDuration={customautoHideDuration}
       onClose={handleClose}
       anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
     >

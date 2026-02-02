@@ -1,11 +1,11 @@
-import {Card} from '@mantine/core'
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Grid from '@mui/material/Grid';
 import '../Comp.css'
 import { useDispatch, useSelector} from 'react-redux'
 import Login from './Log'
 import Register from './Register'
 import Forgot from './Forgot'
-import { MDBCard, MDBCardBody, MDBCardImage, MDBCardTitle, MDBCol, MDBRow } from 'mdb-react-ui-kit'
-import HomeNavbar from '../RNavbar'
 import { useEffect } from 'react'
 import { Tab } from './Actions.js'
 
@@ -19,51 +19,48 @@ function Main(){
     console.log(a);
     return(
       <>
-      {/* <HomeNavbar/> */}
-      
-        <div class="col d-flex justify-content-center" style={{height: "79.5vh",
-        width: "100vw",
-      "backgroundColor":"#c5d299", paddingTop:"65px"}}>
-      <MDBCard style={{ maxHeight: '380px', maxWidth: '900px'}}>
-        <MDBRow className='g-0'>
+        <Box sx={{
+            height: "88vh",
+            width: "100vw",
+            backgroundColor: "#c5d299",
+            pt: "65px",
+            display: "flex",
+            justifyContent: "center",
+            // alignItems: "center"
+        }}>
+          <Card sx={{ maxHeight:580, maxWidth: 900, width: '100%', boxShadow: 3, borderRadius: 2 }}>
+            <Grid container sx={{ height: '100%' }}>
 
-          <MDBCol md='6'>
-          <MDBCardImage style={{height:'380px'}}src={require('../static/hompage.jpg')} fluid />
-          </MDBCol>
+              <Grid item xs={12} md={6}>
+                <Box
+                    component="img"
+                    sx={{
+                      height: '100%',
+                      width: '100%',
+                      objectFit: 'cover'
+                    }}
+                    src={require('../static/hompage.jpg')}
+                    alt="Homepage"
+                />
+              </Grid>
 
-          <MDBCol md='6' >
-            <MDBCardBody style={{'display': 'flex', justifyContent: 'center',alignItems: 'center',height: '100%', width:'100%'}}>
-              {/* {a} */}
-              {a=="Forgot"?<Forgot/>:(a=='Register'?<Register/>:<Login/>)}
-          {/* <MDBCardBody style={{'display': 'flex', justifyContent: 'center',alignItems: 'center',height: '100%', width:'100%'}}>
-          {/* <MDBCardImage src={require('./static/bvrit-logo.jpg')} fluid /> 
-            <p style={{"fontSize":"35px",'color':'#6C9449'}}>Research Publications Search Engine</p> */}
-          </MDBCardBody>
-          </MDBCol>
+              <Grid item xs={12} md={6} >
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100%',
+                    width: '100%'
+                }}>
+                  
+                  {a==="Forgot"?<Forgot/>:(a==='Register'?<Register/>:<Login/>)}
+                </Box>
+              </Grid>
 
-        </MDBRow>
-      </MDBCard>
-
-    </div>
+            </Grid>
+          </Card>
+        </Box>
     </>
-        // <div id='login_back'>
-        //     <div id='login_fore_row'>
-        //         <div id='login_fore_col1'> 
-        //             <img id='homepage_image' src={image}/>
-        //         </div>
-        //         <div id='login_fore_col2' > 
-        //             <div className='login_fore_top'>
-        //                 <img id='logo_image' src={logo}/>
-        //             </div>
-        //             <div className='login_fore_top'>
-        //                 <div id='text'>Research Publications Search Engine</div>
-        //             </div>
-        //             <div id='login_fore_bottom'>
-        //                 {a}
-        //             </div>
-        //         </div>
-        //     </div>
-        // </div>
     )
 }
 

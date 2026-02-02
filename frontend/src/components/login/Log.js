@@ -1,143 +1,184 @@
-import React from "react";
+import React, { useReducer, useEffect, useState } from "react";
 import '../Comp.css'
-import { TextInput,PasswordInput } from "@mantine/core";
-import { useDispatch,useSelector } from "react-redux";
-import { Register,Forgot, Signin, Signout } from "./Actions";
-import { useState,useEffect} from "react";
-import {useNavigate} from 'react-router-dom'
+import { useDispatch, useSelector } from "react-redux";
+import { Register, Forgot, Signin } from "./Actions";
+import { useNavigate } from 'react-router-dom'
 import { sha512 } from "js-sha512";
-import { Button } from "@mui/material";
+import { Button, TextField, InputAdornment, Typography, Box, Container } from "@mui/material"; 
 import Service from "../../Service/http";
-function Login(){
-    const [Email,setEmail]=useState('')
-    const service = new Service()
-    const [Password,setPassword]=useState('')
-    const dispatch=useDispatch()
-    const navigate=useNavigate()
-    // const sign=useSelector(state=>state.Login)
-    const loggedIn = useSelector((state)=>state.logged);
-    useEffect(()=>{
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+
+const initialState = {
+    email: '',
+    password: '',
+    loading: false,
+    error: null
+};
+
+function loginReducer(state, action) {
+    switch (action.type) {
+        case 'SET_FIELD':
+            return { ...state, [action.field]: action.value };
+        case 'LOGIN_START':
+            return { ...state, loading: true, error: null };
+        case 'LOGIN_SUCCESS':
+            return { ...state, loading: false };
+        case 'LOGIN_FAILURE':
+            return { ...state, loading: false, error: action.error };
+        default:
+            return state;
+    }
+}
+
+function Login() {
+    const [state, localDispatch] = useReducer(loginReducer, initialState);
+    const service = new Service();
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const loggedIn = useSelector((state) => state.logged);
+
+    // Snackbar state
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+    // Temporary state to hold login data until snackbar closes
+    const [tempLoginData, setTempLoginData] = useState(null);
+
+    const handleSnackbarClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackbarOpen(false);
         
-        if(loggedIn){
+        // If we have pending login data, dispatch signin now
+        if (tempLoginData) {
+            console.log('Users are', tempLoginData.Email, tempLoginData.Name, tempLoginData);
+            dispatch(Signin(
+                tempLoginData.Email, 
+                tempLoginData.Name, 
+                tempLoginData.role === "admin", 
+                tempLoginData.role === "super-admin", 
+                tempLoginData.verified
+            ));
+            // Navigation happens via existing useEffect watching 'loggedIn'
+            setTempLoginData(null); 
+        }
+    };
+
+    const showSnackbar = (message, severity) => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
+
+    useEffect(() => {
+        if (loggedIn) {
             navigate('../home')
         }
-        // localStorage.setItem('status',false)
-        // localStorage.setItem('Name','')
-        // localStorage.setItem('Email','')
-        // localStorage.setItem('Verify',)
-        // console.log(localStorage.getItem('status'))
-    },[])
-    return(
-        <div>
-        <table style={{width:'90%',height:'100%',color:'#6C9449'}}>
-            <tbody>
-            <tr>
-                <td colSpan={3}><div className="Heading">
-                Sign in to your account
-            </div></td>
-            </tr>
-            <br/>
-            <tr>
-                <td >
-                    <label id='label'>Email</label>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <input onChange={(e)=>{setEmail(e.target.value)}}/>
-                </td>
-                <td>
-                    <input placeholder="@bvrithyderabad.edu.in" disabled/>
-                </td>
-            </tr>
-            <br/>   
-            <tr>
-                <td>
-                    <label id='label'>Password</label>
-                </td>
-            </tr>
-            <tr>
-                <td colSpan={3}> 
-                    <input  className='Left_full' type='password' placeholder='Password' onChange={(e)=>{
-                        setPassword(e.target.value)}}/>
-                </td>
-            </tr>
-            <tr>
-                <td colSpan={3}>
-                    <br/>
-                    <Button variant="contained" color='secondary' onClick={()=>{
-                        var email=Email+'@bvrithyderabad.edu.in'
-                        var pas=sha512(Password)
-                        service.post('userlogin',{Email:email,Password:pas})
-                        .then((res)=>{
-                            console.log('Users are',res.Email,res.Name,res)
-                            dispatch(Signin(res.Email,res.Name,res.role=="admin"?true:false,res.role=="super-admin"?true:false,res.verified))
-                            // localStorage.setItem('status',true)
-                            // // localStorage.setItem('Email',res.Email)
-                            // localStorage.setItem('Name',res.Name)
-                            // localStorage.setItem('Role',res.role)
-                            // localStorage.setItem('Verify',res.verified)
-                            navigate('../home')
-                        })
-                        .catch((e)=>{
-                            console.log("error",e)
-                            window.alert('Invalid  Credentials')})
-                    }}>Login</Button>
-                    {/* <button
-                    className='Button'
-                    onClick={()=>{
-                        var email=Email+'@bvrithyderabad.edu.in'
-                        var pas=sha512(Password)
-                        axios.post('http://localhost:8000/userlogin',{Email:email,Password:pas})
-                        .then((res)=>{
-                            console.log('Users are',res.data.Email,res.data.Name)
-                            dispatch(Signin(res.data.Email,res.data.Name))
-                            localStorage.setItem('status',true)
-                            localStorage.setItem('Email',res.data.Email)
-                            localStorage.setItem('Name',res.data.Name)
-                            navigate('../home')
-                        })
-                        .catch((e)=>{window.alert('Invalid  Credentials')})
-                    }}
-                    >Login</button> */}
-                </td>
-            </tr>
-            <br/>
-            <tr>
-                <td >
-                <a id="link1" className="link_pages" onClick={()=>dispatch(Register())}>Register</a>
-                </td>
-                {' '}
-                <td>
-                <a id='link2' className="link_pages" onClick={()=>{dispatch(Forgot())}}>Forgot Password?</a>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        </div>
+    }, [loggedIn, navigate]);
 
-            /* 
-            <div id="input_email">
-                <label>Username</label>
-                <br/>
-                <TextInput className="input" id='email'/>
-                <input className="input" id='input_domain' placeholder="@bvrith.edu.in"  disabled/>
-            </div>
-            <br/>
-            <div>
-                <PasswordInput id='password' label='Password' placeholder="Password"/>
-            </div>
-            <br/>
-            <div>
-                <Button>Login</Button>
-            </div>
-            <br/>
-            <div id='link'>
-                <a id="link1" className="link_pages" onClick={()=>dispatch(Register())}>Register</a>
-                {' '}
-                <a id='link2' className="link_pages" onClick={()=>{dispatch(Forgot())}}>Forgot Password?</a>
-            </div>
-        </div> */
-    )
+    const handleLogin = () => {
+        if (!state.email.trim() || !state.password.trim()) {
+            const errorMsg = 'Email and password are required';
+            localDispatch({ type: 'LOGIN_FAILURE', error: errorMsg });
+            showSnackbar(errorMsg, 'error');
+            return;
+        }
+
+        localDispatch({ type: 'LOGIN_START' });
+        var email = state.email + '@bvrithyderabad.edu.in';
+        var pas = sha512(state.password);
+        
+        service.post('userlogin', { Email: email, Password: pas })
+            .then((res) => {
+                localDispatch({ type: 'LOGIN_SUCCESS' });
+                showSnackbar('Login successful!', 'success');
+                setTempLoginData(res);
+            })
+            .catch((e) => {
+                console.log("error", e);
+                const errorMsg = 'Invalid Credentials';
+                localDispatch({ type: 'LOGIN_FAILURE', error: errorMsg });
+                showSnackbar(errorMsg, 'error');
+            });
+    };
+
+    return (
+        <Container maxWidth="sm">
+            <CustomSnackbar 
+                open={snackbarOpen} 
+                handleClose={handleSnackbarClose} 
+                severity={snackbarSeverity} 
+                message={snackbarMessage} 
+                customautoHideDuration={1000}
+            />
+            <Box
+                component="form"
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                    mt: 5,
+                    p: 3,
+                    boxShadow: 3,
+                    borderRadius: 2,
+                    backgroundColor: 'white'
+                }}
+            >
+                <Typography variant="h5" component="div" className="Heading" color="primary">
+                    Sign in to your account
+                </Typography>
+
+                <TextField
+                    label="Email"
+                    variant="outlined"
+                    fullWidth
+                    value={state.email}
+                    onChange={(e) => localDispatch({ type: 'SET_FIELD', field: 'email', value: e.target.value })}
+                    InputProps={{
+                        endAdornment: <InputAdornment position="end">@bvrithyderabad.edu.in</InputAdornment>,
+                    }}
+                />
+
+                <TextField
+                    label="Password"
+                    type="password"
+                    variant="outlined"
+                    fullWidth
+                    value={state.password}
+                    onChange={(e) => localDispatch({ type: 'SET_FIELD', field: 'password', value: e.target.value })}
+                />
+
+                <Button 
+                    variant="contained" 
+                    color='secondary' 
+                    onClick={handleLogin}
+                    disabled={state.loading}
+                    size="large"
+                >
+                    {state.loading ? 'Logging in...' : 'Login'}
+                </Button>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                    <Typography 
+                        variant="body2" 
+                        color="primary" 
+                        sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+                        onClick={() => dispatch(Register())}
+                    >
+                        Register
+                    </Typography>
+                    <Typography 
+                        variant="body2" 
+                        color="primary" 
+                        sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+                        onClick={() => dispatch(Forgot())}
+                    >
+                        Forgot Password?
+                    </Typography>
+                </Box>
+            </Box>
+        </Container>
+    );
 }
 export default Login;
