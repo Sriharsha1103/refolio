@@ -400,7 +400,7 @@ function FirstData() {
   }, []);
   return (
     <>
-      <HomeNavbar />
+      {/* <HomeNavbar /> */}
       <div
         style={{
           height: "fill",

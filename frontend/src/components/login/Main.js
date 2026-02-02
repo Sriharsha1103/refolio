@@ -19,7 +19,7 @@ function Main(){
     console.log(a);
     return(
       <>
-      <HomeNavbar/>
+      {/* <HomeNavbar/> */}
       
         <div class="col d-flex justify-content-center" style={{height: "79.5vh",
         width: "100vw",

@@ -310,7 +310,7 @@ function NewPatent() {
           </Button>
         </Modal.Footer>
       </Modal> */}
-      <HomeNavbar />
+      {/* <HomeNavbar /> */}
       <div
         style={{
           height: "fill",

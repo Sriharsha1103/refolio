@@ -75,7 +75,7 @@ function Trial1(){
     return(
       
         <>
-          <HomeNavbar/>
+          {/* <HomeNavbar/> */}
           <div className="" style={{height: "90vh",
         width: "100vw",
       "backgroundColor":"#c5d299"}}>

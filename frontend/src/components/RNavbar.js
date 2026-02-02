@@ -1,14 +1,20 @@
-import Container from 'react-bootstrap/Container';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
+import * as React from 'react';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Menu from '@mui/material/Menu';
+import Container from '@mui/material/Container';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
+import MenuItem from '@mui/material/MenuItem';
+import Link from '@mui/material/Link';
 import { useDispatch, useSelector } from 'react-redux';
 import { Signout } from './login/Actions';
-import Avatar from '@mui/material/Avatar';
-import Stack from '@mui/material/Stack';
-import { green, lightGreen } from '@mui/material/colors';
-import { useEffect, useState } from 'react';
-import NavDropdown from 'react-bootstrap/NavDropdown';
-//import { GoogleLogin, GoogleLogout } from 'react-google-login';
+import { lightGreen } from '@mui/material/colors';
+import { useState } from 'react';
 
 function HomeNavbar() {
     const clientId = 'client-ID';
@@ -18,75 +24,110 @@ function HomeNavbar() {
     const loggedIn = useSelector((state)=>state.logged);
     const tab = useSelector((state)=>state.tab);
     const dispatch=useDispatch()
+
+    const [anchorElUser, setAnchorElUser] = useState(null);
+
+    const handleOpenUserMenu = (event) => {
+        setAnchorElUser(event.currentTarget);
+    };
+
+    const handleCloseUserMenu = () => {
+        setAnchorElUser(null);
+    };
+
     const logOut = () => {
         if(loggedIn){
             localStorage.clear()
             dispatch(Signout())
           }
-    
-};
+    };
+
+    const navLinkStyle = (activeTab) => ({
+        my: 2, 
+        color: tab === activeTab ? "#809d38" : 'gray', 
+        display: 'block',
+        fontWeight: tab === activeTab ? 'bold' : 'normal',
+        textDecoration: 'none',
+        px: 1
+    });
 
   return (
-    <>
-      <Navbar className='NavBar'>
-        <Container>
-          <Navbar.Brand href="/refolio/home"><img
+    <AppBar position="static" color="inherit" className='NavBar' sx={{ width: '100vw', margin:0, paddingLeft: 0 }}>
+      <Container maxWidth={false} >
+        <Toolbar disableGutters >
+          <Box component="a" href="/refolio/home" sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}>
+            <img
               src={require("./static/bvrit-logo.png")}
               width="150"
               height="50"
               className="d-inline-block align-top"
-            /></Navbar.Brand>
-          <Nav className="me-auto">
-            <Nav.Link href="/refolio/home" style={{"fontWeight":tab=='home'?'bold':'normal',color:tab=='home'?"#809d38":"gray"}}>Home</Nav.Link>
-          { loggedIn?<><Nav.Link href="/refolio/publications" style={{"fontWeight":tab=='publication'?'bold':'normal',color:tab=='publication'?"#809d38":"gray"}}>Publications</Nav.Link>
-          <Nav.Link href="/refolio/patents"style={{"fontWeight":tab=='patent'?'bold':'normal',color:tab=='patent'?"#809d38":"gray"}}>Patents</Nav.Link>
-          <Nav.Link href="/refolio/research"style={{"fontWeight":tab=='research'?'bold':'normal',color:tab=='research'?"#809d38":"gray"}}>Research Projects</Nav.Link>
-          <Nav.Link href="/refolio/consultancy"style={{"fontWeight":tab=='consultancy'?'bold':'normal',color:tab=='consultancy'?"#809d38":"gray"}}>Consultancy Projects</Nav.Link>
-          {!isSuperAdmin?(<><Nav.Link href="/refolio/insertPublications" style={{"fontWeight":tab=='new-publication'?'bold':'normal',color:tab=='new-publication'?"#809d38":"gray"}}>New Publication</Nav.Link><Nav.Link href="/refolio/insertPatents"style={{"fontWeight":tab=='new-patent'?'bold':'normal',color:tab=='new-patent'?"#809d38":"gray"}}>New Patent</Nav.Link><Nav.Link href="/refolio/insertResearch" style={{"fontWeight":tab=='new-research'?'bold':'normal',color:tab=='new-research'?"#809d38":"gray"}}>New Research Project</Nav.Link><Nav.Link href="/refolio/insertConsultancy" style={{"fontWeight":tab=='new-consultancy'?'bold':'normal',color:tab=='new-consultancy'?"#809d38":"gray"}}>New Consultancy Project</Nav.Link></>):<Nav.Link href="/refolio/users" style={{"fontWeight":tab=='users'?'bold':'normal',color:tab=='users'?"#809d38":"gray"}}>Users List</Nav.Link>}</>:<></>}
-          </Nav>
-          <Nav>
-            {/* <Nav.Link>
+              alt="Logo"
+            />
+          </Box>
 
-          <Dropdown>
-      <Dropdown.Toggle  id="dropdown-basic">
-        
-         
-      </Dropdown.Toggle>
+          <Box sx={{ flexGrow: 1, display: 'flex' }}>
+            <Link href="/refolio/home" sx={navLinkStyle('home')}>Home</Link>
+            {loggedIn && (
+                <>
+                    <Link href="/refolio/publications" sx={navLinkStyle('publication')}>Publications</Link>
+                    <Link href="/refolio/patents" sx={navLinkStyle('patent')}>Patents</Link>
+                    <Link href="/refolio/research" sx={navLinkStyle('research')}>Research Projects</Link>
+                    <Link href="/refolio/consultancy" sx={navLinkStyle('consultancy')}>Consultancy Projects</Link>
+                    
+                    {!isSuperAdmin ? (
+                        <>
+                            <Link href="/refolio/insertPublications" sx={navLinkStyle('new-publication')}>New Publication</Link>
+                            <Link href="/refolio/insertPatents" sx={navLinkStyle('new-patent')}>New Patent</Link>
+                            <Link href="/refolio/insertResearch" sx={navLinkStyle('new-research')}>New Research Project</Link>
+                            <Link href="/refolio/insertConsultancy" sx={navLinkStyle('new-consultancy')}>New Consultancy Project</Link>
+                        </>
+                    ) : (
+                        <Link href="/refolio/users" sx={navLinkStyle('users')}>Users List</Link>
+                    )}
+                </>
+            )}
+          </Box>
 
-      <Dropdown.Menu>
-        <Dropdown.Item>
-          <Nav.Link </Nav.Link>
-          </Dropdown.Item>
-        <Dropdown.Item >
-          <Nav.Link</Nav.Link>
-          </Dropdown.Item>
-      </Dropdown.Menu>
-    </Dropdown>
-            </Nav.Link> */}
-             {loggedIn?<Stack direction="row" spacing={1}>
-                <Avatar
-                sx={{ bgcolor: lightGreen[700] }}
-                alt={username}
-                src="/broken-image.jpg"
-              />
-            <NavDropdown
-              id="nav-dropdown-dark-example"
-              title={username}
-              menuVariant="light"
-
-            >
-              <NavDropdown.Item href="/refolio/changepassword">Change Password
-              </NavDropdown.Item>
-              <NavDropdown.Item  href="/refolio/login"onClick={logOut}>Logout</NavDropdown.Item>
-            </NavDropdown>
-            </Stack>:
-            <Nav.Link href="/refolio/login"style={{"fontWeight":tab=='login'?'bold':'normal',color:tab=='login'?"#809d38":"gray"}}>Login</Nav.Link>
-          }
-          </Nav>
-          
-        </Container>
-      </Navbar>
-    </>
+          <Box sx={{ flexGrow: 0 }}>
+            {loggedIn ? (
+                <>
+                    <Tooltip title="Open settings">
+                        <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                            <Avatar sx={{ bgcolor: lightGreen[700] }} alt={username} src="/broken-image.jpg" />
+                            <Typography sx={{ ml: 1, display: { xs: 'none', md: 'block' }, color: 'text.primary' }}>{username}</Typography>
+                        </IconButton>
+                    </Tooltip>
+                    <Menu
+                        sx={{ mt: '45px' }}
+                        id="menu-appbar"
+                        anchorEl={anchorElUser}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        keepMounted
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        open={Boolean(anchorElUser)}
+                        onClose={handleCloseUserMenu}
+                    >
+                        <MenuItem component="a" href="/refolio/changepassword" onClick={handleCloseUserMenu}>
+                            <Typography textAlign="center">Change Password</Typography>
+                        </MenuItem>
+                        <MenuItem component="a" href="/refolio/login" onClick={() => { handleCloseUserMenu(); logOut(); }}>
+                            <Typography textAlign="center">Logout</Typography>
+                        </MenuItem>
+                    </Menu>
+                </>
+            ) : (
+                <Link href="/refolio/login" sx={navLinkStyle('login')}>Login</Link>
+            )}
+          </Box>
+        </Toolbar>
+      </Container>
+    </AppBar>
   );
 }
 

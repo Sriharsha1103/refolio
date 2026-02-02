@@ -18,7 +18,7 @@ function WorkFlow() {
     })
   return (
     <>
-    <HomeNavbar/>
+    {/* <HomeNavbar/> */}
       <div style={{height: "90vh",
         width: "100vw",
       "backgroundColor":"#c5d299"}}>

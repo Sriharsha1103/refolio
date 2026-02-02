@@ -235,7 +235,7 @@ function NewConsultancy() {
           </Button>
         </Modal.Footer>
       </Modal> */}
-      <HomeNavbar />
+      {/* <HomeNavbar /> */}
       <div
         style={{
           height: "81.5vh",

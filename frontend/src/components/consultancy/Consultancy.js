@@ -102,7 +102,7 @@ function Consultancy() {
 
   return (
     <>
-      <HomeNavbar />
+      {/* <HomeNavbar /> */}
       <div
         className="p-3"
         style={{

@@ -103,7 +103,7 @@ function Research() {
 
   return (
     <>
-      <HomeNavbar />
+      {/* <HomeNavbar /> */}
       <div
         className="p-3"
         style={{

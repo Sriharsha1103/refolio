@@ -226,7 +226,7 @@ function Patents() {
                 required={state.required}
             />
 
-            <HomeNavbar />
+            {/* <HomeNavbar /> */}
             <div
                 className="p-3"
                 style={{

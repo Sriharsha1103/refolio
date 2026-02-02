@@ -748,7 +748,7 @@ function FirstData1() {
                     </Button>
                 </Modal.Footer>
             </Modal>
-            <HomeNavbar />
+            {/* <HomeNavbar /> */}
             <div style={{ "height": "fill", "width": "100wh", backgroundColor: "#c5d299", "paddingBottom": "100px" }}>
                 <MDBContainer fluid className='h-custom'>
 

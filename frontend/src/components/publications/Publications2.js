@@ -240,7 +240,7 @@ function Publications2() {
         required={state.required}
       />
 
-      <HomeNavbar />
+      {/* <HomeNavbar /> */}
       <div
         className="p-3"
         style={{
@@ -252,8 +252,8 @@ function Publications2() {
 
 
         <EntityDataGrid
-          data={state.data}
-          pageNo={state.pageNo}
+          data={state.filteredData}
+          // pageNo={state.pageNo}
           perPage={state.perPage}
           handleDelete={handleDelete}
           isAdmin={isAdmin}

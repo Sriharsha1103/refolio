@@ -22,7 +22,7 @@ function ChangePassword() {
   return (
     
     <>
-    <HomeNavbar/>
+    {/* <HomeNavbar/> */}
     <div class="col d-flex justify-content-center" style={{height: "90vh",
         width: "100vw",
       "backgroundColor":"#c5d299", paddingTop:"90px"}}>

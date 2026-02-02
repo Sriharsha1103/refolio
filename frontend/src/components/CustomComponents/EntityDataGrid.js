@@ -122,7 +122,7 @@ const EntityDataGrid = ({
                 fontWeight: 600,
               }}
             >
-              {index + 1 + ((pageNo || 1) - 1) * (perPage || 100)}
+              {index + 1}
             </div>
           );
         },
@@ -161,8 +161,6 @@ const EntityDataGrid = ({
   }, [
     fieldConfigs,
     tableType,
-    pageNo,
-    perPage,
     isAdmin,
     isSuperAdmin,
     handleDelete,
@@ -188,7 +186,7 @@ const EntityDataGrid = ({
     <CustomDataGrid
       data={data}
       columns={columns}
-      pageSize={data.length}
+      pageSize={perPage}
       pinnedLeft={pinnedLeft}
     />
   );
