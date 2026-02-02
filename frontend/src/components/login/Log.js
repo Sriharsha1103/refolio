@@ -40,7 +40,7 @@ function Login() {
     // Snackbar state
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
-    const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+    const [snackbarSeverity, setSnackbarSeverity] = useState(300);
     // Temporary state to hold login data until snackbar closes
     const [tempLoginData, setTempLoginData] = useState(null);
 
@@ -81,7 +81,7 @@ function Login() {
         if (!state.email.trim() || !state.password.trim()) {
             const errorMsg = 'Email and password are required';
             localDispatch({ type: 'LOGIN_FAILURE', error: errorMsg });
-            showSnackbar(errorMsg, 'error');
+            showSnackbar(errorMsg, 400);
             return;
         }
 
@@ -92,7 +92,7 @@ function Login() {
         service.post('userlogin', { Email: email, Password: pas })
             .then((res) => {
                 localDispatch({ type: 'LOGIN_SUCCESS' });
-                showSnackbar('Login successful!', 'success');
+                showSnackbar('Login successful!', 200);
                 setTempLoginData(res);
             })
             .catch((e) => {
@@ -108,7 +108,7 @@ function Login() {
             <CustomSnackbar 
                 open={snackbarOpen} 
                 handleClose={handleSnackbarClose} 
-                severity={snackbarSeverity} 
+                status={snackbarSeverity} 
                 message={snackbarMessage} 
                 customautoHideDuration={1000}
             />
