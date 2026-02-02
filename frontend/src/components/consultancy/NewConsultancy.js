@@ -18,7 +18,7 @@ import Service from '../../Service/http';
 import { Departments, ConsultancyKey } from '../../Service/keyValueMap';
 import { useDispatch, useSelector } from 'react-redux';
 import { MultiSelect,TextInput, Textarea,Select, NumberInput } from "@mantine/core";
-import { Tab } from "../login/Actions";
+import { Tab } from "../../store/Actions";
 // import { PatentsBulkUpload } from "./PatentsBulkUpload";
 // import { events } from "../../../backend/db/LoginSchema";
 

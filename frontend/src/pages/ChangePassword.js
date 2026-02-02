@@ -3,8 +3,8 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Box, Card, Grid, CardMedia, TextField, Button, Typography, Stack } from '@mui/material';
 import { sha512 } from "js-sha512";
-import Service from "../../Service/http";
-import CustomSnackbar from '../CustomComponents/CustomSnackbar';
+import Service from "../Service/http";
+import CustomSnackbar from '../components/CustomComponents/CustomSnackbar';
 
 const validPassword = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})');
 

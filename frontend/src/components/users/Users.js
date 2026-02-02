@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import Service from "../../Service/http";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
-import { Tab } from "../login/Actions";
+import { Tab } from "../../store/Actions";
 
 // --- Constants & Config ---
 

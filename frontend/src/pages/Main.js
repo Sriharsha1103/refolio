@@ -1,13 +1,12 @@
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
-import '../Comp.css'
 import { useDispatch, useSelector} from 'react-redux'
-import Login from './Log'
+import Login from './Login'
 import Register from './Register'
 import Forgot from './Forgot'
 import { useEffect } from 'react'
-import { Tab } from './Actions.js'
+import { Tab } from '../store/Actions';
 
 
 function Main(){

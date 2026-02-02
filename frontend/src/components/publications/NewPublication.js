@@ -18,7 +18,7 @@ import Service from "../../Service/http";
 import { Publication } from "../../Service/keyValueMap";
 import { useDispatch, useSelector } from "react-redux";
 import { BulkUpload } from "./BulkUpload";
-import { Tab } from "../login/Actions";
+import { Tab } from "../../store/Actions";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import FileUploadSection from "../CustomComponents/FileUploadSection";

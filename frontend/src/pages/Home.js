@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Box, Card, CardMedia, Grid, Typography } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Tab } from './login/Actions';
+import { Tab } from '../store/Actions';
 
 
 function Home() {
@@ -40,7 +40,7 @@ function Home() {
               <CardMedia
                 component="img"
                 sx={{ height: 650, width: '100%', objectFit: 'cover' }}
-                image={require('./static/hompage.jpg')}
+                image={require('../static/hompage.jpg')}
                 alt="Homepage"
               />
             </Grid>

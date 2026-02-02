@@ -1,13 +1,12 @@
 import React, { useReducer } from "react";
-import '../Comp.css'
 import { useDispatch } from "react-redux";
-import { Login } from "./Actions";
+import { Login } from "../store/Actions";
 import { useState, useEffect } from "react";
 import { sha512 } from 'js-sha512'
 import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Box, Typography, InputAdornment } from "@mui/material";
-import Service from "../../Service/http";
-import { BRANCH_OPTIONS } from "../../utils/constants";
-import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import Service from "../Service/http";
+import { BRANCH_OPTIONS } from "../utils/constants";
+import CustomSnackbar from "../components/CustomComponents/CustomSnackbar";
 
 const initialState = {
     Name: '',
@@ -44,7 +43,7 @@ function Register() {
     const [state, localDispatch] = useReducer(reducer, initialState);
     const { Name, Branch, Email, Password, CPass, errors } = state;
 
-    const validPassword = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})');
+    const validPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
 
     // Snackbar state
     const [snackbarOpen, setSnackbarOpen] = useState(false);

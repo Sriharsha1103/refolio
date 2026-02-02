@@ -1,18 +1,13 @@
-// import "bootswatch/dist/lumen/bootstrap.min.css";
-// import 'react-toastify/dist/ReactToastify.css';
 import "./App.css";
-import Main from "./components/login/Main";
-import Home from "./components/Home";
 import FirstData from "./components/publications/NewPublication";
 import Publications2 from "./components/publications/Publications2";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import ChangePassword from "./components/login/ChangePasswordPage";
-import Forgotpassword from "./components/login/forgotpassword";
-import VerifiedEmail from "./components/login/VerifiedEmail";
-import Unverified from "./components/login/Unverified";
+import ChangePassword from "./pages/ChangePassword";
+import VerifiedEmail from "./pages/VerifiedEmail";
+import Unverified from "./pages/Unverified";
 import Users from "./components/users/Users";
 import Patents from "./components/patents/Patents";
 import Research from "./components/research/Research";
@@ -20,8 +15,9 @@ import NewPatent from "./components/patents/NewPatent";
 import NewResearch from "./components/research/NewResearch";
 import Consultancy from "./components/consultancy/Consultancy";
 import NewConsultancy from "./components/consultancy/NewConsultancy";
-import Footer from "./components/Footer";
 import AppLayout from "./components/AppLayout/AppLayout";
+import Main from "./pages/Main";
+import Home from "./pages/Home";
 
 const theme = createTheme();
 
@@ -38,7 +34,7 @@ function App() {
 
                 <Route path="/login" element={<Main />} />
                 <Route path="/changepassword" element={<ChangePassword />} />
-                <Route path="/forgotpassword/:id" element={<Forgotpassword />} />
+               
                 <Route path="/verifyemail/:id" element={<VerifiedEmail />} />
                 <Route path="/verify" element={<Unverified />} />
 
@@ -55,7 +51,6 @@ function App() {
               </Route>
             </Routes>
         </BrowserRouter>
-        {/* <Footer /> */}
       </div>
     </ThemeProvider>
   );

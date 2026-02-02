@@ -11,8 +11,7 @@ import '@mantine/dates/styles.css';
 import { Provider } from 'react-redux';
 // import Store from './components/Store';
 import { PersistGate } from 'redux-persist/integration/react';
-import { store, persistor } from './Service/ReduxStore';
-import Footer from './components/Footer';
+import { store, persistor } from './store/ReduxStore';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

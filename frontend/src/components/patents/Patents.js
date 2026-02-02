@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import HomeNavbar from "../RNavbar";
 import Service from "../../Service/http";
 import AdvancedSearch from "../CustomComponents/AdvancedSearch";
-import { Tab } from "../login/Actions";
+import { Tab } from "../../store/Actions";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import EditPatent from "./EditPatent";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";

@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { ResearchExportCSV } from "./ResearchExportCSV";
 import EditResearch from "./EditResearch";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
-import { Tab } from "../login/Actions";
+import { Tab } from "../../store/Actions";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";

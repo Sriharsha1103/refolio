@@ -1,12 +1,11 @@
 import React, { useReducer, useEffect, useState } from "react";
-import '../Comp.css'
 import { useDispatch, useSelector } from "react-redux";
-import { Register, Forgot, Signin } from "./Actions";
+import { Signin, Register, Forgot } from "../store/Actions";
 import { useNavigate } from 'react-router-dom'
 import { sha512 } from "js-sha512";
 import { Button, TextField, InputAdornment, Typography, Box, Container } from "@mui/material"; 
-import Service from "../../Service/http";
-import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import Service from "../Service/http";
+import CustomSnackbar from "../components/CustomComponents/CustomSnackbar";
 
 const initialState = {
     email: '',

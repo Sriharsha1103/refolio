@@ -25,7 +25,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { MultiSelect,TextInput, Textarea,Select, NumberInput } from "@mantine/core";
 import { PatentsBulkUpload } from "./PatentsBulkUpload";
-import { Tab } from "../login/Actions";
+import { Tab } from "../../store/Actions";
 // import { events } from "../../../backend/db/LoginSchema";
 
 

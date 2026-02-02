@@ -1,14 +1,14 @@
 import { useEffect, useReducer } from "react";
 import { useNavigate } from "react-router-dom";
-import Service from "../../Service/http";
+import Service from "../Service/http";
 import { useDispatch, useSelector } from "react-redux";
-import { Signout } from "./Actions";
+import { Signout } from "../store/Actions";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import CustomSnackbar from "../components/CustomComponents/CustomSnackbar";
 
 const initialState = {
     loading: false,
