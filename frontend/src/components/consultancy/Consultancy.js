@@ -3,11 +3,13 @@ import Service from "../../Service/http";
 import HomeNavbar from "../RNavbar";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { MDBCol, MDBRow } from "mdb-react-ui-kit";
 import { ConsultancyExportCSV } from "./ConsultancyExportCSV";
 import EditConsultancy from "./EditConsultancy";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import { Tab } from "../login/Actions";
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 
 const fieldConfigs = [
   { field: "title", width: 250 },
@@ -35,6 +37,12 @@ const reducer = (state, action) => {
       const docs = action.payload.docs || [];
       return { ...state, allData: docs, data: docs };
     }
+    case "REMOVE_ITEM": {
+      const id = action.id;
+      const allData = state.allData.filter((d) => d._id !== id);
+      const data = state.data.filter((d) => d._id !== id);
+      return { ...state, allData, data };
+    }
     default:
       return state;
   }
@@ -52,18 +60,19 @@ function Consultancy() {
 
   const [titles, setTitles] = useState([]);
   const [state, localDispatch] = useReducer(reducer, initialState);
+  const [snack, setSnack] = useState({ open: false, status: 0, message: "" });
 
   const handleDelete = (data) => {
     if (window.confirm("This action will permenently delete " + data.title + " consultancy project.")) {
       service
         .delete("api/consultancy/data/" + data._id)
         .then(() => {
-          window.alert("Successfully Deleted " + data.title + " consultancy project.");
-          window.location.reload();
+          localDispatch({ type: "REMOVE_ITEM", id: data._id });
+          setSnack({ open: true, status: 200, message: `Deleted ${data.title} consultancy project.` });
         })
         .catch((err) => {
           console.error("ERROR", err);
-          window.alert("Error while deleting the consultancy project");
+          setSnack({ open: true, status: 500, message: "Error while deleting the consultancy project" });
         });
     }
   };
@@ -80,7 +89,10 @@ function Consultancy() {
       service
         .get("api/consultancy/titles")
         .then((res) => setTitles(res))
-        .catch((error) => console.error("ERROR", error));
+        .catch((error) => {
+          console.error("ERROR", error);
+          setSnack({ open: true, status: 500, message: "Failed to load consultancy titles" });
+        });
     }
 
     service
@@ -93,8 +105,8 @@ function Consultancy() {
         localDispatch({ type: "SET_ALL_DATA", payload: { docs: normalized } });
       })
       .catch((error) => {
-        window.alert("Error while fetching consultancy projects.\n Please try again later.");
         console.error(error);
+        setSnack({ open: true, status: 500, message: "Error while fetching consultancy projects" });
       });
   }, [dispatch, loggedIn, navigate, service, titles.length, verify]);
 
@@ -102,7 +114,7 @@ function Consultancy() {
 
   return (
     <>
-      {/* <HomeNavbar /> */}
+      <HomeNavbar />
       <div
         className="p-3"
         style={{
@@ -111,12 +123,11 @@ function Consultancy() {
           backgroundColor: "#c5d299",
         }}
       >
-        <MDBRow>
-          <MDBCol md="4">
+        <Box sx={{ mb: 2 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
             <ConsultancyExportCSV csvData={state.data} fileName={"Consultancy"} />
-          </MDBCol>
-          <MDBCol md="8" />
-        </MDBRow>
+          </Stack>
+        </Box>
 
         <EntityDataGrid
           data={state.data}
@@ -133,6 +144,13 @@ function Consultancy() {
           renderEdit={(row) => <EditConsultancy edit={row} titles={titles} />}
         />
       </div>
+
+      <CustomSnackbar
+        open={snack.open}
+        status={snack.status}
+        message={snack.message}
+        handleClose={() => setSnack((s) => ({ ...s, open: false }))}
+      />
     </>
   );
 }

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import Service from "../../Service/http";
 import HomeNavbar from "../RNavbar";
-import { MDBCol, MDBRow } from "mdb-react-ui-kit";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ResearchExportCSV } from "./ResearchExportCSV";
 import EditResearch from "./EditResearch";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import { Tab } from "../login/Actions";
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 
 const fieldConfigs = [
   { field: "title", width: 250 },
@@ -36,6 +38,12 @@ const reducer = (state, action) => {
       const docs = action.payload.docs || [];
       return { ...state, allData: docs, data: docs };
     }
+    case "REMOVE_ITEM": {
+      const id = action.id;
+      const allData = state.allData.filter((d) => d._id !== id);
+      const data = state.data.filter((d) => d._id !== id);
+      return { ...state, allData, data };
+    }
     default:
       return state;
   }
@@ -53,18 +61,19 @@ function Research() {
 
   const [titles, setTitles] = useState([]);
   const [state, localDispatch] = useReducer(reducer, initialState);
+  const [snack, setSnack] = useState({ open: false, status: 0, message: "" });
 
   const handleDelete = (data) => {
     if (window.confirm("This action will permenently delete " + data.title + " research project.")) {
       service
         .delete("api/research/data/" + data._id)
         .then(() => {
-          window.alert("Successfully Deleted " + data.title + " research project.");
-          window.location.reload();
+          localDispatch({ type: "REMOVE_ITEM", id: data._id });
+          setSnack({ open: true, status: 200, message: `Deleted ${data.title} research project.` });
         })
         .catch((err) => {
           console.error("ERROR", err);
-          window.alert("Error while deleting the research project");
+          setSnack({ open: true, status: 500, message: "Error while deleting the research project" });
         });
     }
   };
@@ -81,7 +90,10 @@ function Research() {
       service
         .get("api/research/titles")
         .then((res) => setTitles(res))
-        .catch((error) => console.error("ERROR", error));
+        .catch((error) => {
+          console.error("ERROR", error);
+          setSnack({ open: true, status: 500, message: "Failed to load research titles" });
+        });
     }
 
     service
@@ -94,8 +106,8 @@ function Research() {
         localDispatch({ type: "SET_ALL_DATA", payload: { docs: normalized } });
       })
       .catch((error) => {
-        window.alert("Error while fetching research projects.\n Please try again later.");
         console.error(error);
+        setSnack({ open: true, status: 500, message: "Error while fetching research projects" });
       });
   }, [dispatch, loggedIn, navigate, service, titles.length, verify]);
 
@@ -112,12 +124,11 @@ function Research() {
           backgroundColor: "#c5d299",
         }}
       >
-        <MDBRow>
-          <MDBCol md="4">
+        <Box sx={{ mb: 2 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
             <ResearchExportCSV csvData={state.data} fileName={"Research"} />
-          </MDBCol>
-          <MDBCol md="8" />
-        </MDBRow>
+          </Stack>
+        </Box>
 
         <EntityDataGrid
           data={state.data}
@@ -134,6 +145,12 @@ function Research() {
           renderEdit={(row) => <EditResearch edit={row} titles={titles} />}
         />
       </div>
+      <CustomSnackbar
+        open={snack.open}
+        status={snack.status}
+        message={snack.message}
+        handleClose={() => setSnack((s) => ({ ...s, open: false }))}
+      />
     </>
   );
 }
