@@ -5,7 +5,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import CustomDataGrid from "./CustomDataGrid";
 import {
   PatentsKey,
-  Publication,
+  PublicationsKey,
   ResearchKey,
   UsersKey,
   ConsultancyKey,
@@ -64,7 +64,7 @@ const EntityDataGrid = ({
   const [tableType, setTableType] = useState({});
 
   useEffect(() => {
-    if (type === "Publication") setTableType(Publication);
+    if (type === "Publication") setTableType(PublicationsKey);
     if (type === "User") setTableType(UsersKey);
     if (type === "PatentsKey") setTableType(PatentsKey);
     if (type === "ResearchKey") setTableType(ResearchKey);

@@ -11,15 +11,16 @@ import CardContent from "@mui/material/CardContent";
 import { useNavigate } from "react-router-dom";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
-import { Button, Typography } from "@mui/material";
+import { Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Zoom } from "@mui/material";
 import Service from "../../Service/http";
-import { Publication } from "../../Service/keyValueMap";
 import { useDispatch, useSelector } from "react-redux";
 import { BulkUpload } from "./BulkUpload";
 import { Tab } from "../../store/Actions";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import FileUploadSection from "../CustomComponents/FileUploadSection";
+import { IconEdit } from "@tabler/icons-react";
+import _ from 'lodash';
 import {
   authorPositionOptions,
   branchOptions,
@@ -28,6 +29,7 @@ import {
 } from "../../utils/helper";
 import { primary, primaryColor, primaryHover, white } from "../../utils/colors";
 import { getMonthLabel, MONTH_OPTIONS } from "../../utils/constants";
+import { PublicationsKey } from "../../Service/keyValueMap";
 
 // Unified Form Configuration
 const FORM_CONFIG = {
@@ -119,31 +121,29 @@ const initialState = {
 
 function reducer(state, action) {
   switch (action.type) {
+    case "INIT": {
+      const edit = action.value;
+      const presentYear = new Date(edit.year).getFullYear();
+      return {
+          ...state,
+          body: edit,
+          yearvalue: presentYear,
+          monthvalue: edit.month,
+          cjb: edit.cjb,
+          branch: edit.branch,
+          nationality: edit.nationality,
+          is_proceedings: edit.is_proceeding || edit.is_proceedings,
+          is_published: edit.is_published,
+          is_affilated: edit.is_affilated, // Note: inconsistent spelling in DB vs Model often exists
+          author_no: edit.author_no
+      };
+    }
     case "SET_FIELD":
       return {
         ...state,
         body: { ...state.body, [action.field]: action.value },
         [action.stateKey]: action.value,
       };
-    case "SET_BODY_FIELD":
-      return {
-        ...state,
-        body: { ...state.body, [action.field]: action.value },
-      };
-    case "SET_YEAR": {
-      const { value } = action;
-      const computedYear = new Date(
-        value +
-          "-" +
-          (state.body.month === "" ? "01" : state.body.month) +
-          "-01",
-      ).toLocaleDateString();
-      return {
-        ...state,
-        yearvalue: value,
-        body: { ...state.body, year: computedYear },
-      };
-    }
     case "SET_MONTH": {
       const { value } = action;
       const computedYear =
@@ -154,9 +154,9 @@ function reducer(state, action) {
                 (value.length === 1
                   ? "0" + value
                   : value.length === 0
-                    ? "01"
-                    : value) +
-                "-01",
+                  ? "01"
+                  : value) +
+                "-01"
             ).toLocaleDateString()
           : state.body.year;
       return {
@@ -173,7 +173,7 @@ function reducer(state, action) {
               value +
                 "-" +
                 (state.body.month === "" ? "01" : state.body.month) +
-                "-01",
+                "-01"
             ).toLocaleDateString()
           : "";
       return {
@@ -197,7 +197,7 @@ function reducer(state, action) {
   }
 }
 
-function AddPublications() {
+function Publication() {
   const loggedIn = useSelector((state) => state.logged);
   const verify = useSelector((state) => state.verify);
   const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
@@ -345,18 +345,26 @@ function AddPublications() {
   const onSubmit = (event) => {
     event.preventDefault();
     const mandatoryFields = [
-      { value: body.title, id: "publication", name: Publication.title },
-      { value: body.username, id: "authors", name: Publication.username },
-      { value: cjb, id: "cjb", name: Publication.cjb },
-      { value: branch, id: "branch", name: Publication.branch },
-      { value: nationality, id: "nationality", name: Publication.nationality },
-      { value: body.name_cjb, id: "name_c-j-b", name: Publication.name_cjb },
-      { value: body.doi, id: "issn", name: Publication.doi },
-      { value: body.cite, id: "article-cite", name: Publication.cite },
-      { value: body.link, id: "link", name: Publication.link },
-      { value: yearvalue, id: "year", name: Publication.year },
-      { value: monthvalue, id: "month", name: Publication.month },
-      { value: body.scl, id: "scopus", name: Publication.scl },
+      { value: body.title, id: "publication", name: PublicationsKey.title },
+      { value: body.username, id: "authors", name: PublicationsKey.username },
+      { value: cjb, id: "cjb", name: PublicationsKey.cjb },
+      { value: branch, id: "branch", name: PublicationsKey.branch },
+      {
+        value: nationality,
+        id: "nationality",
+        name: PublicationsKey.nationality,
+      },
+      {
+        value: body.name_cjb,
+        id: "name_c-j-b",
+        name: PublicationsKey.name_cjb,
+      },
+      { value: body.doi, id: "issn", name: PublicationsKey.doi },
+      { value: body.cite, id: "article-cite", name: PublicationsKey.cite },
+      { value: body.link, id: "link", name: PublicationsKey.link },
+      { value: yearvalue, id: "year", name: PublicationsKey.year },
+      { value: monthvalue, id: "month", name: PublicationsKey.month },
+      { value: body.scl, id: "scopus", name: PublicationsKey.scl },
       { value: file, id: "file", name: "File Upload" },
     ];
 
@@ -374,7 +382,7 @@ function AddPublications() {
     if (missingFields.length > 0) {
       showSnackbar(
         400,
-        `Missing mandatory fields: ${missingFields.join(", ")}`,
+        `Missing mandatory fields: ${missingFields.join(", ")}`
       );
     } else if (titles.includes(body.title)) {
       showSnackbar(409, "Duplicate Title");
@@ -459,7 +467,7 @@ function AddPublications() {
                           required
                           id="publication"
                           name="publication"
-                          label={Publication.title}
+                          label={PublicationsKey.title}
                           fullWidth
                           variant="standard"
                           sx={{ mb: 4 }}
@@ -471,7 +479,7 @@ function AddPublications() {
                           id="authors"
                           name="authors"
                           label={
-                            Publication.username +
+                            PublicationsKey.username +
                             ' (Add multiple authors seperated by ",")'
                           }
                           fullWidth
@@ -488,7 +496,7 @@ function AddPublications() {
                               error={!!errors.cjb}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
-                                {Publication.cjb + "*"}
+                                {PublicationsKey.cjb + "*"}
                               </InputLabel>
                               <Select
                                 labelId="cjb"
@@ -496,7 +504,7 @@ function AddPublications() {
                                 name="cjb"
                                 value={cjb}
                                 onChange={handleFieldChange}
-                                label={Publication.cjb}
+                                label={PublicationsKey.cjb}
                                 required
                               >
                                 <MenuItem value="">
@@ -521,7 +529,7 @@ function AddPublications() {
                               error={!!errors.branch}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
-                                {Publication.branch + "*"}
+                                {PublicationsKey.branch + "*"}
                               </InputLabel>
                               <Select
                                 labelId="branch"
@@ -529,7 +537,7 @@ function AddPublications() {
                                 name="branch"
                                 value={branch}
                                 onChange={handleFieldChange}
-                                label={Publication.branch}
+                                label={PublicationsKey.branch}
                                 required
                               >
                                 <MenuItem value="">
@@ -550,7 +558,7 @@ function AddPublications() {
                               error={!!errors.nationality}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
-                                {Publication.nationality + "*"}
+                                {PublicationsKey.nationality + "*"}
                               </InputLabel>
                               <Select
                                 labelId="nationality"
@@ -558,7 +566,7 @@ function AddPublications() {
                                 name="nationality"
                                 value={nationality}
                                 onChange={handleFieldChange}
-                                label={Publication.nationality}
+                                label={PublicationsKey.nationality}
                                 required
                               >
                                 <MenuItem value="">
@@ -578,7 +586,7 @@ function AddPublications() {
                           required
                           id="name_c-j-b"
                           name="name_c-j-b"
-                          label={Publication.name_cjb}
+                          label={PublicationsKey.name_cjb}
                           fullWidth
                           variant="standard"
                           sx={{ mb: 4 }}
@@ -589,7 +597,7 @@ function AddPublications() {
                           required
                           id="issn"
                           name="issn"
-                          label={Publication.doi}
+                          label={PublicationsKey.doi}
                           fullWidth
                           variant="standard"
                           sx={{ mb: 4 }}
@@ -600,7 +608,7 @@ function AddPublications() {
                           required
                           id="article-cite"
                           name="article-cite"
-                          label={Publication.cite}
+                          label={PublicationsKey.cite}
                           fullWidth
                           variant="standard"
                           onChange={handleFieldChange}
@@ -617,7 +625,7 @@ function AddPublications() {
                         <TextField
                           id="organizer"
                           name="organizer"
-                          label={Publication.organised_by}
+                          label={PublicationsKey.organised_by}
                           fullWidth
                           variant="standard"
                           color="secondary"
@@ -628,7 +636,7 @@ function AddPublications() {
                           required
                           id="link"
                           name="link"
-                          label={Publication.link}
+                          label={PublicationsKey.link}
                           fullWidth
                           variant="standard"
                           color="secondary"
@@ -641,7 +649,7 @@ function AddPublications() {
                             <TextField
                               id="vol"
                               name="vol"
-                              label={Publication.vol}
+                              label={PublicationsKey.vol}
                               fullWidth
                               variant="standard"
                               color="secondary"
@@ -653,7 +661,7 @@ function AddPublications() {
                             <TextField
                               id="issue"
                               name="issue"
-                              label={Publication.issue}
+                              label={PublicationsKey.issue}
                               fullWidth
                               variant="standard"
                               color="secondary"
@@ -668,7 +676,7 @@ function AddPublications() {
                               error={!!errors.year}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
-                                {Publication.year + "*"}
+                                {PublicationsKey.year + "*"}
                               </InputLabel>
                               <Select
                                 labelId="year"
@@ -676,7 +684,7 @@ function AddPublications() {
                                 name="year"
                                 value={yearvalue}
                                 onChange={handleFieldChange}
-                                label={Publication.year}
+                                label={PublicationsKey.year}
                                 required
                               >
                                 {years.map((item) => (
@@ -697,7 +705,7 @@ function AddPublications() {
                               error={!!errors.month}
                             >
                               <InputLabel id="demo-simple-select-standard-label">
-                                {Publication.month + "*"}
+                                {PublicationsKey.month + "*"}
                               </InputLabel>
                               <Select
                                 labelId="month"
@@ -705,9 +713,8 @@ function AddPublications() {
                                 name="month"
                                 value={monthvalue}
                                 onChange={handleFieldChange}
-                                label={ getMonthLabel(monthvalue)}
+                                label={getMonthLabel(monthvalue)}
                                 required
-                                
                               >
                                 {MONTH_OPTIONS.map((item) => (
                                   <MenuItem
@@ -734,7 +741,7 @@ function AddPublications() {
                                     onChange={handleFieldChange}
                                   />
                                 }
-                                label={Publication.is_proceeding}
+                                label={PublicationsKey.is_proceeding}
                               />
                             </FormControl>
                           </Grid>
@@ -751,7 +758,7 @@ function AddPublications() {
                                     onChange={handleFieldChange}
                                   />
                                 }
-                                label={Publication.is_published}
+                                label={PublicationsKey.is_published}
                               />
                             </FormControl>
                           </Grid>
@@ -767,7 +774,7 @@ function AddPublications() {
                                     onChange={handleFieldChange}
                                   />
                                 }
-                                label={Publication.is_affilated}
+                                label={PublicationsKey.is_affilated}
                               />
                             </FormControl>
                           </Grid>
@@ -782,7 +789,7 @@ function AddPublications() {
                                 id="demo-simple-select-standard-label"
                                 color="secondary"
                               >
-                                {Publication.author_no}
+                                {PublicationsKey.author_no}
                               </InputLabel>
                               <Select
                                 labelId="author_no"
@@ -837,7 +844,7 @@ function AddPublications() {
                               required
                               id="scopus"
                               name="scopus"
-                              label={Publication.scl}
+                              label={PublicationsKey.scl}
                               fullWidth
                               variant="standard"
                               color="secondary"
@@ -850,7 +857,7 @@ function AddPublications() {
                             <TextField
                               id="citationscopus"
                               name="citationscopus"
-                              label={Publication.citation_scopus}
+                              label={PublicationsKey.citation_scopus}
                               fullWidth
                               variant="standard"
                               color="secondary"
@@ -861,7 +868,7 @@ function AddPublications() {
                             <TextField
                               id="citationgoogle"
                               name="citationgoogle"
-                              label={Publication.citation_google}
+                              label={PublicationsKey.citation_google}
                               fullWidth
                               variant="standard"
                               color="secondary"
@@ -869,21 +876,30 @@ function AddPublications() {
                             />
                           </Grid>
                         </Grid>
+                        <Grid item xs={12} md={8}>
+                          <FileUploadSection
+                            file={file}
+                            handleFileChange={handleFileChange}
+                            error={!!errors.file}
+                            onError={handleUploadError}
+                          />
+                        </Grid>
                         <Grid
                           container
                           spacing={2}
                           alignItems="center"
+                          justifyContent={"center"}
                           sx={{ mt: { xs: 2, md: 0 } }}
                         >
-                          <Grid item xs={12} md={8}>
-                            <FileUploadSection
-                              file={file}
-                              handleFileChange={handleFileChange}
-                              error={!!errors.file}
-                              onError={handleUploadError}
-                            />
-                          </Grid>
-                          <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: { md: 'flex-end', xs: 'center' } }}>
+                          <Grid
+                            item
+                            xs={12}
+                            md={4}
+                            sx={{
+                              display: "flex",
+                              justifyContent: { md: "flex-end", xs: "center" },
+                            }}
+                          >
                             <Button
                               variant="contained"
                               type="submit"
@@ -897,8 +913,7 @@ function AddPublications() {
                                   backgroundColor: primaryHover,
                                   color: white,
                                 },
-                                width: 'auto',
-                                
+                                width: "auto",
                               }}
                               onClick={() => {
                                 formRef.current.reportValidity();
@@ -906,6 +921,35 @@ function AddPublications() {
                               }}
                             >
                               Submit
+                            </Button>
+                          </Grid>
+                          <Grid
+                            item
+                            xs={12}
+                            md={4}
+                            sx={{
+                              display: "flex",
+                              justifyContent: {
+                                md: "flex-end",
+                                xs: "center",
+                              },
+                            }}
+                          >
+                            <Button
+                              variant="outlined"
+                              sx={{
+                                color: white,
+                                borderColor: white,
+                                fontWeight: "bold",
+                                "&:hover": {
+                                  backgroundColor: white,
+                                  color: primaryColor,
+                                  borderColor: white,
+                                },
+                              }}
+                              onClick={() => navigate("/publications")}
+                            >
+                              Cancel
                             </Button>
                           </Grid>
                         </Grid>
@@ -935,4 +979,4 @@ function AddPublications() {
   );
 }
 
-export default AddPublications;
+export default Publication;

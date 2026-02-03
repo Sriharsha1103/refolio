@@ -8,7 +8,7 @@ import Modal from "react-bootstrap/Modal";
 import { read, utils, writeFile } from "xlsx";
 import Service from "../../Service/http";
 import { MDBRow } from "mdb-react-ui-kit";
-import { Publication } from "../../Service/keyValueMap";
+import { PublicationsKey } from "../../Service/keyValueMap";
 import { CSVLink } from "react-csv";
 
 export const BulkUpload = ({ titles }) => {
@@ -18,29 +18,29 @@ export const BulkUpload = ({ titles }) => {
   const handleClose = () => setShow(false);
   const yearpre = new Date();
   const service = new Service();
-  const publication = {title: Publication.title+"*",
-  branch: Publication.branch+"*",
-  username: Publication.username+"*",
-  cjb: Publication.cjb+"*",
-  name_cjb: Publication.name_cjb+"*",
-  vol: Publication.vol,
-  issue: Publication.issue,
-  year: Publication.year+"*",
-  month: Publication.month+"*",
-  doi: Publication.doi+"*",
-  nationality: Publication.nationality+"*",
-  organised_by: Publication.organised_by,
-  is_proceeding: Publication.is_proceeding,
-  is_published: Publication.is_published,
-  scl: Publication.scl+"*",
-  citation_scopus: Publication.citation_scopus,
-  citation_google: Publication.citation_google,
-  link: Publication.link+"*",
-  is_affilated: Publication.is_affilated,
-  author_no: Publication.author_no,
+  const publication = {title: PublicationsKey.title+"*",
+  branch: PublicationsKey.branch+"*",
+  username: PublicationsKey.username+"*",
+  cjb: PublicationsKey.cjb+"*",
+  name_cjb: PublicationsKey.name_cjb+"*",
+  vol: PublicationsKey.vol,
+  issue: PublicationsKey.issue,
+  year: PublicationsKey.year+"*",
+  month: PublicationsKey.month+"*",
+  doi: PublicationsKey.doi+"*",
+  nationality: PublicationsKey.nationality+"*",
+  organised_by: PublicationsKey.organised_by,
+  is_proceeding: PublicationsKey.is_proceeding,
+  is_published: PublicationsKey.is_published,
+  scl: PublicationsKey.scl+"*",
+  citation_scopus: PublicationsKey.citation_scopus,
+  citation_google: PublicationsKey.citation_google,
+  link: PublicationsKey.link+"*",
+  is_affilated: PublicationsKey.is_affilated,
+  author_no: PublicationsKey.author_no,
   starting_page: "Starting Page",
   ending_page: "Ending Page",
-  cite: Publication.cite+"*"}
+  cite: PublicationsKey.cite+"*"}
   const handleImport = ($event) => {
     const files = $event.target.files;
     if (files.length) {
@@ -81,29 +81,29 @@ export const BulkUpload = ({ titles }) => {
           if (
             JSON.stringify(rows[0]) ==
             JSON.stringify({
-              title: Publication.title+"*",
-              branch: Publication.branch+"*",
-              username: Publication.username+"*",
-              cjb: Publication.cjb+"*",
-              name_cjb: Publication.name_cjb+"*",
-              vol: Publication.vol,
-              issue: Publication.issue,
-              year: Publication.year+"*",
-              month: Publication.month+"*",
-              doi: Publication.doi+"*",
-              nationality: Publication.nationality+"*",
-              organised_by: Publication.organised_by,
-              is_proceeding: Publication.is_proceeding,
-              is_published: Publication.is_published,
-              scl: Publication.scl+"*",
-              citation_scopus: Publication.citation_scopus,
-              citation_google: Publication.citation_google,
-              link: Publication.link+"*",
-              is_affilated: Publication.is_affilated,
-              author_no: Publication.author_no,
+              title: PublicationsKey.title+"*",
+              branch: PublicationsKey.branch+"*",
+              username: PublicationsKey.username+"*",
+              cjb: PublicationsKey.cjb+"*",
+              name_cjb: PublicationsKey.name_cjb+"*",
+              vol: PublicationsKey.vol,
+              issue: PublicationsKey.issue,
+              year: PublicationsKey.year+"*",
+              month: PublicationsKey.month+"*",
+              doi: PublicationsKey.doi+"*",
+              nationality: PublicationsKey.nationality+"*",
+              organised_by: PublicationsKey.organised_by,
+              is_proceeding: PublicationsKey.is_proceeding,
+              is_published: PublicationsKey.is_published,
+              scl: PublicationsKey.scl+"*",
+              citation_scopus: PublicationsKey.citation_scopus,
+              citation_google: PublicationsKey.citation_google,
+              link: PublicationsKey.link+"*",
+              is_affilated: PublicationsKey.is_affilated,
+              author_no: PublicationsKey.author_no,
               starting_page: "Starting Page",
               ending_page: "Ending Page",
-              cite: Publication.cite+"*",
+              cite: PublicationsKey.cite+"*",
             })
           ) {
             // console.log('iffff')
@@ -245,7 +245,7 @@ export const BulkUpload = ({ titles }) => {
   }
  
 
-  // DownloadData.push(["Publication","Branch","Authors","C/J/B/BC","Name of C/J/B/BC","Volume","Issue","Year","Month","ISSN/ISBN/DOI","Inter/National","Organisor","In Proceedings","Abstract Published","Scopus/Wos/SCI/Others","Citation in Scopus/WoS","Citation in GoogleScholar","Link","Affiliated?", "Are you author?","Starting Page","Ending Page", "Cite Article"])
+  // DownloadData.push(["PublicationsKey","Branch","Authors","C/J/B/BC","Name of C/J/B/BC","Volume","Issue","Year","Month","ISSN/ISBN/DOI","Inter/National","Organisor","In Proceedings","Abstract Published","Scopus/Wos/SCI/Others","Citation in Scopus/WoS","Citation in GoogleScholar","Link","Affiliated?", "Are you author?","Starting Page","Ending Page", "Cite Article"])
   //   for (let ele of csvData) {
   //     DownloadData.push([
   //       ele.title,
@@ -343,7 +343,7 @@ export const BulkUpload = ({ titles }) => {
           </label>
           {/* <a
             href={SampleUploadfile}
-            download="Example-Publication-document"
+            download="Example-PublicationsKey-document"
             target="_blank"
             rel="noopener noreferrer"
           > */}

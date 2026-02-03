@@ -5,6 +5,7 @@ import Service from "../../Service/http";
 import AdvancedSearch from "../CustomComponents/AdvancedSearch";
 import { Tab } from "../../store/Actions";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
+import Publication from "./Publication";
 
 // --- Constants & Config ---
 
@@ -264,6 +265,8 @@ function Publications() {
           textColor={state.textColor}
           fieldConfigs={fieldConfigs}
           type={"Publication"}
+          handleEdit={ (data) => navigate("/insertPublications", { state: { editData: data } }) }
+          renderEdit={row => <Publication editData={row} />}
           loading={isLoading}
         />
       </div>

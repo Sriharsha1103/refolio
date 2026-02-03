@@ -1,4 +1,4 @@
-export let Publication = {
+export let PublicationsKey = {
     username : "Authors",
     title : "Title of the Publication",
     branch : "Branch",

@@ -17,8 +17,8 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import ErrorPage from "./pages/ErrorPage";
 import Publications from "./components/publications/Publications";
-import AddPublications from "./components/publications/NewPublication";
 import Patent from "./components/patents/Patent";
+import Publication from "./components/publications/Publication";
 
 const theme = createTheme();
 
@@ -45,7 +45,7 @@ function App() {
                 <Route path="/research" element={<Research />} />
                 <Route path="/consultancy" element={<Consultancy />} />
 
-                <Route path="/insertPublications" element={<AddPublications />} />
+                <Route path="/insertPublications" element={<Publication />} />
                 <Route path="/insertPatents" element={<Patent />} />
                 <Route path="/insertResearch" element={<NewResearch />} />
                 <Route path="/insertConsultancy" element={<NewConsultancy />} />
