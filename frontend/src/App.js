@@ -9,7 +9,6 @@ import Unverified from "./pages/Unverified";
 import Users from "./components/users/Users";
 import Patents from "./components/patents/Patents";
 import Research from "./components/research/Research";
-import NewPatent from "./components/patents/NewPatent";
 import NewResearch from "./components/research/NewResearch";
 import Consultancy from "./components/consultancy/Consultancy";
 import NewConsultancy from "./components/consultancy/NewConsultancy";
@@ -19,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import ErrorPage from "./pages/ErrorPage";
 import Publications from "./components/publications/Publications";
 import AddPublications from "./components/publications/NewPublication";
+import Patent from "./components/patents/Patent";
 
 const theme = createTheme();
 
@@ -46,7 +46,7 @@ function App() {
                 <Route path="/consultancy" element={<Consultancy />} />
 
                 <Route path="/insertPublications" element={<AddPublications />} />
-                <Route path="/insertPatents" element={<NewPatent />} />
+                <Route path="/insertPatents" element={<Patent />} />
                 <Route path="/insertResearch" element={<NewResearch />} />
                 <Route path="/insertConsultancy" element={<NewConsultancy />} />
                 <Route path="*" element={<ErrorPage />} />

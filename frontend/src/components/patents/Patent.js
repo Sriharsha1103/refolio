@@ -19,17 +19,16 @@ import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import { primary, primaryColor, primaryHover, white } from "../../utils/colors";
 
-
-function NewPatent() {
-    const formatDateForInput = (d) => {
-      if (!d) return "";
-      const date = new Date(d);
-      if (isNaN(date.getTime())) return "";
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${day}`;
-    };
+function Patent() {
+  const formatDateForInput = (d) => {
+    if (!d) return "";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "";
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
   const dispatch = useDispatch();
   const loggedIn = useSelector((state) => state.logged);
   const verify = useSelector((state) => state.verify);
@@ -47,8 +46,11 @@ function NewPatent() {
       const normalizedDept = Array.isArray(editData.dept)
         ? editData.dept
         : typeof editData.dept === "string"
-          ? editData.dept.split(",").map((s) => s.trim()).filter(Boolean)
-          : [];
+        ? editData.dept
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
       return {
         ...editData,
         dept: normalizedDept,
@@ -70,13 +72,19 @@ function NewPatent() {
       country: "",
     };
   });
-  const [originalPatNo, setOriginalPatNo] = useState(() => (editData ? parseInt(editData.pat_no, 10) : null));
+  const [originalPatNo, setOriginalPatNo] = useState(() =>
+    editData ? parseInt(editData.pat_no, 10) : null
+  );
 
   const [titles, setTitles] = useState([]);
   const [send, setSend] = useState(0);
   const [errors, setErrors] = useState({});
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, status: 0, message: "" });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    status: 0,
+    message: "",
+  });
 
   const navigate = useNavigate();
 
@@ -105,7 +113,10 @@ function NewPatent() {
         })
         .catch((error) => {
           console.log(error);
-          showSnackbar(500, "Error while updating " + body.title + ". Please try again later.");
+          showSnackbar(
+            500,
+            "Error while updating " + body.title + ". Please try again later."
+          );
         });
     } else {
       service
@@ -116,7 +127,10 @@ function NewPatent() {
         })
         .catch((error) => {
           console.log(error);
-          showSnackbar(500, "Error while adding " + body.title + ". Please try again later.");
+          showSnackbar(
+            500,
+            "Error while adding " + body.title + ". Please try again later."
+          );
         });
     }
   };
@@ -140,8 +154,16 @@ function NewPatent() {
       { id: "title", name: PatentsKey.title, value: body.title },
       { id: "authors", name: PatentsKey.authors, value: body.authors },
       { id: "pat_no", name: PatentsKey.pat_no, value: body.pat_no },
-      { id: "dept", name: PatentsKey.dept, value: body.dept && body.dept.length > 0 },
-      { id: "design_utility", name: PatentsKey.design_utility, value: body.design_utility },
+      {
+        id: "dept",
+        name: PatentsKey.dept,
+        value: body.dept && body.dept.length > 0,
+      },
+      {
+        id: "design_utility",
+        name: PatentsKey.design_utility,
+        value: body.design_utility,
+      },
       { id: "filed", name: PatentsKey.filed, value: body.filed },
       { id: "country", name: PatentsKey.country, value: body.country },
     ];
@@ -157,7 +179,10 @@ function NewPatent() {
 
     // Duplicate patent number check
     const patNoNum = body.pat_no !== "" ? parseInt(body.pat_no, 10) : NaN;
-    const isDuplicate = patNoNum && titles.includes(patNoNum) && (!isEdit || patNoNum !== originalPatNo);
+    const isDuplicate =
+      patNoNum &&
+      titles.includes(patNoNum) &&
+      (!isEdit || patNoNum !== originalPatNo);
     if (isDuplicate) {
       newErrors["pat_no"] = true;
       showSnackbar(409, "Patent Number already exists");
@@ -180,8 +205,11 @@ function NewPatent() {
       const normalizedDept = Array.isArray(editData.dept)
         ? editData.dept
         : typeof editData.dept === "string"
-          ? editData.dept.split(",").map((s) => s.trim()).filter(Boolean)
-          : [];
+        ? editData.dept
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
       setBody({
         ...editData,
         dept: normalizedDept,
@@ -205,16 +233,28 @@ function NewPatent() {
         .then((res) => setTitles(res))
         .catch((error) => console.log("ERROR", error));
     }
-  }, [dispatch, isSuperAdmin, loggedIn, navigate, service, titles.length, verify, isEdit, editData]);
+  }, [
+    dispatch,
+    isSuperAdmin,
+    loggedIn,
+    navigate,
+    service,
+    titles.length,
+    verify,
+    isEdit,
+    editData,
+  ]);
 
   return (
     <>
       <div
         style={{
-          height: "fill",
+          height: "88vh",
           width: "100wh",
           backgroundColor: "#c5d299",
           paddingBottom: "150px",
+          display: "flex",
+          alignItems: "center",
         }}
       >
         <Container maxWidth={false}>
@@ -233,8 +273,16 @@ function NewPatent() {
                 <CardContent sx={{ p: "0px !important" }}>
                   <form id="insert-data" ref={formRef} onSubmit={onSubmit}>
                     <Grid container>
-                      <Grid item xs={12} md={6} sx={{ p: { xs: 2, md: 5 }, bgcolor: white }}>
-                        <Typography variant="h4" sx={{ mb: 4, color: primaryColor }}>
+                      <Grid
+                        item
+                        xs={12}
+                        md={6}
+                        sx={{ p: { xs: 2, md: 5 }, bgcolor: white }}
+                      >
+                        <Typography
+                          variant="h4"
+                          sx={{ mb: 4, color: primaryColor }}
+                        >
                           Patent Information
                         </Typography>
                         <TextField
@@ -253,7 +301,10 @@ function NewPatent() {
                           required
                           id="authors"
                           name="authors"
-                          label={PatentsKey.authors + ' (Add multiple authors seperated by ",")'}
+                          label={
+                            PatentsKey.authors +
+                            ' (Add multiple authors seperated by ",")'
+                          }
                           fullWidth
                           variant="standard"
                           sx={{ mb: 4 }}
@@ -278,8 +329,14 @@ function NewPatent() {
                         />
                         <Grid container spacing={2} sx={{ mb: 4 }}>
                           <Grid item xs={12} md={6}>
-                            <FormControl variant="standard" sx={{ minWidth: 120, width: "100%" }} error={!!errors.dept}>
-                              <InputLabel id="dept-label">{PatentsKey.dept + "*"}</InputLabel>
+                            <FormControl
+                              variant="standard"
+                              sx={{ minWidth: 120, width: "100%" }}
+                              error={!!errors.dept}
+                            >
+                              <InputLabel id="dept-label">
+                                {PatentsKey.dept + "*"}
+                              </InputLabel>
                               <Select
                                 labelId="dept-label"
                                 id="dept"
@@ -288,11 +345,25 @@ function NewPatent() {
                                 value={body.dept}
                                 onChange={(e) => {
                                   const { value } = e.target;
-                                  setBody((prev) => ({ ...prev, dept: typeof value === 'string' ? value.split(',') : value }));
-                                  if (errors.dept) setErrors((prev) => ({ ...prev, dept: false }));
+                                  setBody((prev) => ({
+                                    ...prev,
+                                    dept:
+                                      typeof value === "string"
+                                        ? value.split(",")
+                                        : value,
+                                  }));
+                                  if (errors.dept)
+                                    setErrors((prev) => ({
+                                      ...prev,
+                                      dept: false,
+                                    }));
                                 }}
                                 label={PatentsKey.dept}
-                                renderValue={(selected) => (Array.isArray(selected) ? selected.join(', ') : '')}
+                                renderValue={(selected) =>
+                                  Array.isArray(selected)
+                                    ? selected.join(", ")
+                                    : ""
+                                }
                                 required
                               >
                                 {Departments.map((option) => (
@@ -304,8 +375,14 @@ function NewPatent() {
                             </FormControl>
                           </Grid>
                           <Grid item xs={12} md={6}>
-                            <FormControl variant="standard" sx={{ minWidth: 120, width: "100%" }} error={!!errors.design_utility}>
-                              <InputLabel id="design-util-label">{PatentsKey.design_utility + "*"}</InputLabel>
+                            <FormControl
+                              variant="standard"
+                              sx={{ minWidth: 120, width: "100%" }}
+                              error={!!errors.design_utility}
+                            >
+                              <InputLabel id="design-util-label">
+                                {PatentsKey.design_utility + "*"}
+                              </InputLabel>
                               <Select
                                 labelId="design-util-label"
                                 id="design_utility"
@@ -315,7 +392,9 @@ function NewPatent() {
                                 label={PatentsKey.design_utility}
                                 required
                               >
-                                <MenuItem value=""><em>None</em></MenuItem>
+                                <MenuItem value="">
+                                  <em>None</em>
+                                </MenuItem>
                                 <MenuItem value="Design">Design</MenuItem>
                                 <MenuItem value="Utility">Utility</MenuItem>
                               </Select>
@@ -324,7 +403,12 @@ function NewPatent() {
                         </Grid>
                       </Grid>
 
-                      <Grid item xs={12} md={6} sx={{ p: { xs: 2, md: 5 }, bgcolor: primaryColor }}>
+                      <Grid
+                        item
+                        xs={12}
+                        md={6}
+                        sx={{ p: { xs: 2, md: 5 }, bgcolor: primaryColor }}
+                      >
                         <Grid container spacing={2} sx={{ mb: 4 }}>
                           <Grid item xs={12} md={4}>
                             <TextField
@@ -397,8 +481,19 @@ function NewPatent() {
                           value={body.country || ""}
                           error={!!errors.country}
                         />
-                        <Grid container spacing={2} alignItems="center">
-                          <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: { md: 'flex-start', xs: 'center' } }}>
+                        <Grid container spacing={2} alignItems="center" justifyContent={"center"} mt={2}>
+                          <Grid
+                            item
+                            xs={12}
+                            md={4}
+                            sx={{
+                              display: "flex",
+                              justifyContent: {
+                                md: "flex-start",
+                                xs: "center",
+                              },
+                            }}
+                          >
                             <Button
                               variant="contained"
                               type="submit"
@@ -407,7 +502,10 @@ function NewPatent() {
                                 backgroundColor: primary,
                                 color: primaryColor,
                                 fontWeight: "bold",
-                                "&:hover": { backgroundColor: primaryHover, color: white },
+                                "&:hover": {
+                                  backgroundColor: primaryHover,
+                                  color: white,
+                                },
                               }}
                               onClick={() => {
                                 formRef.current?.reportValidity();
@@ -415,6 +513,35 @@ function NewPatent() {
                               }}
                             >
                               {isEdit ? "Update" : "Submit"}
+                            </Button>
+                          </Grid>
+                          <Grid
+                            item
+                            xs={12}
+                            md={4}
+                            sx={{
+                              display: "flex",
+                              justifyContent: {
+                                md: "flex-end",
+                                xs: "center",
+                              },
+                            }}
+                          >
+                            <Button
+                              variant="outlined"
+                              sx={{
+                                color: white,
+                                borderColor: white,
+                                fontWeight: "bold",
+                                "&:hover": {
+                                  backgroundColor: white,
+                                  color: primaryColor,
+                                  borderColor: white,
+                                },
+                              }}
+                              onClick={() => navigate("/patents")}
+                            >
+                              Cancel
                             </Button>
                           </Grid>
                         </Grid>
@@ -444,4 +571,4 @@ function NewPatent() {
   );
 }
 
-export default NewPatent;
+export default Patent;

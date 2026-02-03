@@ -1,15 +1,11 @@
-import { useEffect, useReducer, useMemo, useState } from "react";
+import { useEffect, useReducer, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Service from "../../Service/http";
-// import AdvancedSearch from "../CustomComponents/AdvancedSearch";
 import { Tab } from "../../store/Actions";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
-import Tooltip from "@mui/material/Tooltip";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
-import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
+import Patent from "./Patent";
 
 // --- Columns Config ---
 const fieldConfigs = [
@@ -93,20 +89,6 @@ const reducer = (state, action) => {
                 pageData: Math.ceil(allDocs.length / state.perPage),
             };
         }
-        case "REMOVE_ROW": {
-            const newAll = state.allData.filter((d) => d._id !== action.id);
-            const newFiltered = filterData(newAll, state.filters);
-            const totalPages = state.perPage === 0 ? 1 : Math.ceil(newFiltered.length / state.perPage);
-            const nextPage = Math.min(state.pageNo, totalPages || 1);
-            return {
-                ...state,
-                allData: newAll,
-                filteredData: newFiltered,
-                pageData: totalPages,
-                pageNo: nextPage,
-                data: paginateData(newFiltered, nextPage, state.perPage),
-            };
-        }
         case "SET_PATENT_NUMBERS":
             return { ...state, patentNumbers: action.numbers || [] };
         case "APPLY_FILTERS": {
@@ -178,54 +160,39 @@ function Patents() {
     const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
 
     const [state, localDispatch] = useReducer(reducer, initialState);
-    const [isLoading, setIsLoading] = useState(true);
-    const [confirmOpen, setConfirmOpen] = useState(false);
-    const [rowToDelete, setRowToDelete] = useState(null);
     const setAlert = (val) => localDispatch({ type: "SET_ALERT", payload: { alert: val } });
 
-    // const handleClose = () => localDispatch({ type: "SET_MODAL", value: false });
-    // const handleSearch = () => {
-    //     if (state.filters.startDate && state.filters.endDate) {
-    //         localDispatch({ type: "APPLY_FILTERS" });
-    //         localDispatch({ type: "SET_MODAL", value: false });
-    //     } else {
-    //         localDispatch({ type: "SET_REQUIRED", value: true });
-    //     }
-    // };
-    // const onStartDate = (date) => localDispatch({ type: "SET_FILTER", field: "startDate", value: date });
-    // const onEndDate = (date) => localDispatch({ type: "SET_FILTER", field: "endDate", value: date });
+    const handleClose = () => localDispatch({ type: "SET_MODAL", value: false });
+    const handleSearch = () => {
+        if (state.filters.startDate && state.filters.endDate) {
+            localDispatch({ type: "APPLY_FILTERS" });
+            localDispatch({ type: "SET_MODAL", value: false });
+        } else {
+            localDispatch({ type: "SET_REQUIRED", value: true });
+        }
+    };
+    const onStartDate = (date) => localDispatch({ type: "SET_FILTER", field: "startDate", value: date });
+    const onEndDate = (date) => localDispatch({ type: "SET_FILTER", field: "endDate", value: date });
 
     const handleDelete = (row) => {
-        setRowToDelete(row);
-        setConfirmOpen(true);
-    };
-
-    const handleConfirmDelete = () => {
-        if (!rowToDelete) return;
-        service
-            .delete("api/patents/data/" + rowToDelete._id)
-            .then(() => {
-                localDispatch({ type: "REMOVE_ROW", id: rowToDelete._id });
-                localDispatch({
-                    type: "SET_ALERT",
-                    payload: { alert: true, alertData: "Successfully Deleted " + rowToDelete.title + " Patent.", alertType: "success" },
+        if (window.confirm("This action will permenently delete " + row.title + " patent.")) {
+            service
+                .delete("api/patents/data/" + row._id)
+                .then(() => {
+                    localDispatch({
+                        type: "SET_ALERT",
+                        payload: { alert: true, alertData: "Successfully Deleted " + row.title + " Patent.", alertType: "success" },
+                    });
+                    setTimeout(() => window.location.reload(), 2000);
+                })
+                .catch((err) => {
+                    console.error("ERROR", err);
+                    localDispatch({
+                        type: "SET_ALERT",
+                        payload: { alert: true, alertData: "Error while deleting the patent", alertType: "error" },
+                    });
                 });
-                setConfirmOpen(false);
-                setRowToDelete(null);
-            })
-            .catch((err) => {
-                console.error("ERROR", err);
-                localDispatch({
-                    type: "SET_ALERT",
-                    payload: { alert: true, alertData: "Error while deleting the patent", alertType: "error" },
-                });
-                setConfirmOpen(false);
-            });
-    };
-
-    const handleCloseConfirm = () => {
-        setConfirmOpen(false);
-        setRowToDelete(null);
+        }
     };
 
     useEffect(() => {
@@ -237,7 +204,6 @@ function Patents() {
         }
 
         // Fetch patents list
-        setIsLoading(true);
         service
             .get("api/patents/data")
             .then((json) => {
@@ -248,7 +214,6 @@ function Patents() {
                     dept: Array.isArray(d.dept) ? d.dept.join(", ") : d.dept,
                 }));
                 localDispatch({ type: "SET_ALL_DATA", payload: { docs: normalized } });
-                setIsLoading(false);
             })
             .catch((error) => {
                 localDispatch({
@@ -256,10 +221,9 @@ function Patents() {
                     payload: { alert: true, alertData: "Error while fetching patents.\n Please try again later.", alertType: "error" },
                 });
                 console.error(error);
-                setIsLoading(false);
             });
 
-        // Fetch patent numbers for duplicate validation
+        // Fetch patent numbers for EditPatent validation
         service
             .get("api/patents/number")
             .then((res) => localDispatch({ type: "SET_PATENT_NUMBERS", numbers: res }))
@@ -267,12 +231,6 @@ function Patents() {
     }, [dispatchRedux, loggedIn, navigate, service, verify]);
 
     if (!loggedIn) return null;
-
-    // Define handleEdit function
-    const handleEdit = (row) => {
-        navigate("/insertPatents", { state: { edit: row } });
-        console.log("Edited Row", row);
-    };
 
     return (
         <>
@@ -288,6 +246,7 @@ function Patents() {
                 required={state.required}
             /> */}
 
+            {/* <HomeNavbar /> */}
             <div
                 className="p-3"
                 style={{
@@ -308,15 +267,7 @@ function Patents() {
                     textColor={state.textColor}
                     fieldConfigs={fieldConfigs}
                     type={"PatentsKey"}
-                    handleEdit={handleEdit}
-                    loading={isLoading}
-                />
-                <CustomConfirmDialog
-                    open={confirmOpen}
-                    handleClose={handleCloseConfirm}
-                    handleConfirm={handleConfirmDelete}
-                    title="Confirm Delete"
-                    content={`This action will permanently delete ${rowToDelete ? rowToDelete.title : "this"} patent.`}
+                    renderEdit={(row) => <Patent edit={row} patentNo={state.patentNumbers} />}
                 />
             </div>
         </>
