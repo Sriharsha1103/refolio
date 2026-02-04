@@ -1,23 +1,53 @@
-import { Center, Checkbox } from "@mantine/core";
 import { Button } from "@mui/material";
-import { useListState } from "@mantine/hooks";
-import React, { useEffect, useState } from "react";
-// import * as FileSaver from 'file-saver';
-// import * as XLSX from 'xlsx';
-import Modal from "react-bootstrap/Modal";
-import { read, utils, writeFile } from "xlsx";
+import React, { useReducer } from "react";
+import { read, utils } from "xlsx";
 import Service from "../../Service/http";
-import { MDBRow } from "mdb-react-ui-kit";
 import { PublicationsKey } from "../../Service/keyValueMap";
-import { CSVLink } from "react-csv";
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
+import CustomBulkUploadModal from "../CustomComponents/CustomBulkUploadModal";
+
+const yearpre = new Date();
+const service = new Service();
+
+const initialState = {
+  showModal: false,
+  rows: [],
+  downloadData: [],
+  snackbar: { open: false, status: 0, message: "" },
+  confirmOpen: false,
+  uploading: false,
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "OPEN_MODAL":
+      return { ...state, showModal: true };
+    case "CLOSE_MODAL":
+      return { ...state, showModal: false };
+    case "SET_ROWS":
+      return { ...state, rows: action.rows };
+    case "SET_DOWNLOAD_DATA":
+      return { ...state, downloadData: action.data };
+    case "SHOW_SNACKBAR":
+      return { ...state, snackbar: { open: true, status: action.status, message: action.message } };
+    case "HIDE_SNACKBAR":
+      return { ...state, snackbar: { ...state.snackbar, open: false } };
+    case "OPEN_CONFIRM":
+      return { ...state, confirmOpen: true };
+    case "CLOSE_CONFIRM":
+      return { ...state, confirmOpen: false };
+    case "START_UPLOAD":
+      return { ...state, uploading: true };
+    case "END_UPLOAD":
+      return { ...state, uploading: false };
+    default:
+      return state;
+  }
+}
 
 export const BulkUpload = ({ titles }) => {
-  const [show1, setShow] = useState(false);
-  const [data, setData] = useState([]);
-  const [downloadData,setDownloadData] = useState([])
-  const handleClose = () => setShow(false);
-  const yearpre = new Date();
-  const service = new Service();
+  const [state, dispatch] = useReducer(reducer, initialState);
   const publication = {title: PublicationsKey.title+"*",
   branch: PublicationsKey.branch+"*",
   username: PublicationsKey.username+"*",
@@ -108,10 +138,9 @@ export const BulkUpload = ({ titles }) => {
           ) {
             // console.log('iffff')
             rows = rows.slice(1, rows.length);
-            setData(rows);
+            dispatch({ type: "SET_ROWS", rows });
           } else {
-            // console.log("else");
-            window.alert("INVALID Excel Format. Check the Sample Excel.");
+            dispatch({ type: "SHOW_SNACKBAR", status: 400, message: "INVALID Excel Format. Check the Sample Excel." });
           }
         //   console.log("Import", rows);
         }
@@ -150,99 +179,60 @@ export const BulkUpload = ({ titles }) => {
       return false;
     }
   };
-  const uploadData = ()=>{
-    let confirm = window.confirm("This will upload the data into the Database.");
-    if(confirm){
-      var valid = true;
-      for (let i = 0; i < data.length; i++) {
-        if (titles.includes(data[i].title)) {
-          valid = false;
-          window.alert("Duplicate Title");
-          break;
-        }
+  const uploadData = () => {
+    dispatch({ type: "OPEN_CONFIRM" });
+  };
+
+  const handleConfirmUpload = () => {
+    dispatch({ type: "CLOSE_CONFIRM" });
+    let valid = true;
+    for (let i = 0; i < state.rows.length; i++) {
+      const row = state.rows[i];
+      if (titles.includes(row.title)) {
+        valid = false;
+        dispatch({ type: "SHOW_SNACKBAR", status: 409, message: "Duplicate Title" });
+        break;
+      }
         if (
-          data[i].title == "" ||
-          data[i].username == "" ||
-          (data[i].cjb != "C" &&
-            data[i].cjb != "J" &&
-            data[i].cjb != "B" &&
-            data[i].cjb != "BC") ||
-          (data[i].branch != "CSE" &&
-            data[i].branch != "IT" &&
-            data[i].branch != "ECE" &&
-            data[i].branch != "EEE" &&
-            data[i].branch != "AI/ML" &&
-            data[i].branch != "BS&H") ||
-          (data[i].nationality != "National" &&
-            data[i].nationality != "International") ||
-          data[i].name_cjb == "" ||
-          data[i].doi == "" ||
-          data[i].cite == "" ||
-          data[i].link == "" ||
-          checkYear(data[i].year) ||
-          checkMonth(data[i].month) ||
-          (data[i].is_proceeding != "" &&
-            data[i].is_proceeding != "Yes" &&
-            data[i].is_proceeding != "No") ||
-          (data[i].is_published != "" &&
-            data[i].is_published != "Yes" &&
-            data[i].is_published != "No") ||
-          (data[i].is_affilated != "" &&
-            data[i].is_affilated != "Yes" &&
-            data[i].is_affilated != "No") ||
-          (data[i].author_no != "" &&
-            data[i].author_no != "Single" &&
-            data[i].author_no != "First" &&
-            data[i].author_no != "Second" &&
-            data[i].author_no != "Third" &&
-            data[i].author_no != "Fourth" &&
-            data[i].author_no != "Fifth" &&
-            data[i].author_no != "Others") ||
-          checkPageNo(data[i].starting_page) ||
-          checkPageNo(data[i].ending_page) ||
-          data[i].scl == ""
+          row.title == "" ||
+          row.username == "" ||
+          (row.cjb != "C" && row.cjb != "J" && row.cjb != "B" && row.cjb != "BC") ||
+          (row.branch != "CSE" && row.branch != "IT" && row.branch != "ECE" && row.branch != "EEE" && row.branch != "AI/ML" && row.branch != "BS&H") ||
+          (row.nationality != "National" && row.nationality != "International") ||
+          row.name_cjb == "" ||
+          row.doi == "" ||
+          row.cite == "" ||
+          row.link == "" ||
+          checkYear(row.year) ||
+          checkMonth(row.month) ||
+          (row.is_proceeding != "" && row.is_proceeding != "Yes" && row.is_proceeding != "No") ||
+          (row.is_published != "" && row.is_published != "Yes" && row.is_published != "No") ||
+          (row.is_affilated != "" && row.is_affilated != "Yes" && row.is_affilated != "No") ||
+          (row.author_no != "" && row.author_no != "Single" && row.author_no != "First" && row.author_no != "Second" && row.author_no != "Third" && row.author_no != "Fourth" && row.author_no != "Fifth" && row.author_no != "Others") ||
+          checkPageNo(row.starting_page) ||
+          checkPageNo(row.ending_page) ||
+          row.scl == ""
         ) {
           valid = false;
-          // console.log(data[i].title == '' )
-          // console.log(data[i].username == '' )
-          // console.log((data[i].cjb != 'C' && data[i].cjb != 'J' && data[i].cjb != 'B' && data[i].cjb !='BC'))
-          // console.log((data[i].branch != 'CSE' && data[i].branch != 'IT' && data[i].branch != 'ECE' && data[i].branch != 'EEE' && data[i].branch != 'AI/ML' && data[i].branch != 'BS&H'))
-          // console.log((data[i].nationality != 'National' && data[i].nationality != 'International'))
-          // console.log(data[i].name_cjb == '')
-          // console.log(data[i].doi == '')
-          // console.log(data[i].cite == '')
-          // console.log(data[i].link == '')
-          // console.log(checkYear(data[i].year))
-          // console.log(checkMonth(data[i].month))
-          // console.log((data[i].is_proceeding!='' && data[i].is_proceeding != 'Yes' && data[i].is_proceeding!='No'))
-          // console.log((data[i].is_published!='' && data[i].is_published != 'Yes' && data[i].is_published!='No'))
-          // console.log((data[i].is_affilated !='' && data[i].is_affilated != 'Yes' && data[i].is_affilated!='No'))
-          // console.log((data[i].author_no!='' && data[i].author_no != 'Single' && data[i].author_no!='First' && data[i].author_no != 'Second' && data[i].author_no!='Third' && data[i].author_no != 'Fourth' && data[i].author_no!='Fifth' && data[i].author_no != 'Others'))
-          // console.log(checkPageNo(data[i].starting_page))
-          // console.log(checkPageNo(data[i].ending_page))
-          // console.log(data[i].scl == '')
-          window.alert("Incorrect Data in the Excel "+ i+2 +" "+ data[i].title + " publication.");
+          dispatch({ type: "SHOW_SNACKBAR", status: 400, message: `Incorrect data at row ${i + 2} (${row.title}).` });
           break;
         }
-      }
-      if (valid && data.length != 0) {
-        // console.log("HERRREEE")
-        service
-          .post("api/publications/bulk", data)
-          .then((res) => {
-            // console.log("RESULT", res);
-            window.alert("Successfully Uploaded the data.");
-            window.location.reload();
-          })
-          .catch((err) => {
-            console.log("ERROR", err);
-            window.alert("Error while uploading data try again later.");
-          });
-      }
-    }else{
-      window.alert("Cancelled the bulk upload action."); 
     }
-  }
+    if (valid && state.rows.length !== 0) {
+      dispatch({ type: "START_UPLOAD" });
+      service
+        .post("api/publications/bulk", state.rows)
+        .then(() => {
+          dispatch({ type: "SHOW_SNACKBAR", status: 200, message: "Successfully uploaded the data." });
+          dispatch({ type: "CLOSE_MODAL" });
+        })
+        .catch((err) => {
+          console.log("ERROR", err);
+          dispatch({ type: "SHOW_SNACKBAR", status: 500, message: "Error while uploading data. Please try again later." });
+        })
+        .finally(() => dispatch({ type: "END_UPLOAD" }));
+    }
+  };
  
 
   // DownloadData.push(["PublicationsKey","Branch","Authors","C/J/B/BC","Name of C/J/B/BC","Volume","Issue","Year","Month","ISSN/ISBN/DOI","Inter/National","Organisor","In Proceedings","Abstract Published","Scopus/Wos/SCI/Others","Citation in Scopus/WoS","Citation in GoogleScholar","Link","Affiliated?", "Are you author?","Starting Page","Ending Page", "Cite Article"])
@@ -283,97 +273,59 @@ export const BulkUpload = ({ titles }) => {
   //     FileSaver.saveAs(data, fileName + fileExtension);
   // }
   const handleDownload = async () => {
-    const fields = [];
-    const data = [];
+    const header = [];
     for (let value in publication) {
-      // if (value.checked) {
-        fields.push(publication[value]);
-      // }
+      header.push(publication[value]);
     }
+    const csvRows = [header];
+    const csvContent = csvRows
+      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
 
-    data.push(fields);
-    // for await (let dat1 of csvData) {
-    //   const row = [];
-    //   for await (let value of values) {
-    //     if (value.checked) {
-    //       row.push(dat1[value.key]);
-    //     }
-    //   }
-    //   data.push(row);
-    // }
-    setDownloadData(data);
-
-    // handleClose();
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Sample_Publications_Upload_File.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
     <>
-      <Modal show={show1} onHide={handleClose} size="md" scrollable>
-        <Modal.Header closeButton>
-          <Modal.Title>Select File To Bulk Insert.</Modal.Title>
-        </Modal.Header>
-        <Modal.Body
-          className="bg-green"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <label
-            className="custom-file-label"
-            htmlFor="inputGroupFile"
-            style={{ fontSize: "20px" }}
-          >
-            <b>Choose file</b>
-          </label>
-          {/* <br/> */}
-          <input
-            type="file"
-            name="file"
-            className="custom-file-input"
-            id="inputGroupFile"
-            required
-            onChange={handleImport}
-            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-          />
-          <br />
-          <label style={{ fontSize: "20px" }}>
-            <b>Are you a first timer?</b>
-          </label>
-          {/* <a
-            href={SampleUploadfile}
-            download="Example-PublicationsKey-document"
-            target="_blank"
-            rel="noopener noreferrer"
-          > */}
-            <Button variant="contained" color="secondary" size="small">
-            <CSVLink
-              data={downloadData}
-              filename={"Sample_Publications_Upload_File"}
-              onClick={()=>{handleDownload()}}
-            >
-              <div style={{ color: "white" }}>View & Download Sample File</div>
-            </CSVLink>
-              
-            </Button>
-          {/* </a> */}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="contained" color="error" size="small" onClick={()=>{uploadData()}}>
-            Import
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <CustomBulkUploadModal
+        show={state.showModal}
+        onClose={() => dispatch({ type: "CLOSE_MODAL" })}
+        onImportFile={handleImport}
+        onImportClick={uploadData}
+        downloadData={state.downloadData}
+        onDownloadSample={handleDownload}
+      />
       <Button
         variant="contained"
         color="secondary"
-        onClick={() => {
-          setShow(true);
-        }}
+        onClick={() => dispatch({ type: "OPEN_MODAL" })}
       >
         Bulk Upload
       </Button>
+      <CustomSnackbar
+        open={state.snackbar.open}
+        handleClose={() => dispatch({ type: "HIDE_SNACKBAR" })}
+        status={state.snackbar.status}
+        message={state.snackbar.message}
+      />
+      <CustomConfirmDialog
+        open={state.confirmOpen}
+        handleClose={() => {
+          dispatch({ type: "CLOSE_CONFIRM" });
+          dispatch({ type: "SHOW_SNACKBAR", status: 400, message: "Cancelled the bulk upload action." });
+        }}
+        handleConfirm={handleConfirmUpload}
+        title={"Confirm Bulk Upload"}
+        content={"This will upload the data into the Database."}
+      />
     </>
 
     // <Button variant="warning" onClick={(e) => exportToCSV(csvData,fileName)}>Export</Button>
