@@ -4,8 +4,8 @@ var dbLib = require("../lib/fetchUtils")
 const { uploadMiddleware } = require('../utils/uploadMiddleware');
 
 router.get('/data', dbLib.getData)
-router.post('/update', dbLib.editData)
-router.post('/data', uploadMiddleware,dbLib.postData)
+router.put('/data/:id', uploadMiddleware, dbLib.putData)
+router.post('/data', uploadMiddleware, dbLib.postData)
 router.delete('/data/:id',dbLib.deleteData)
 router.post('/bulk',dbLib.bulkUpload)
 router.get('/titles',dbLib.titles)

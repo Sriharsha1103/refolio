@@ -15,9 +15,9 @@ module.exports.postData = async function(req, res) {
             myobj.year = new Date(myobj.year);
         }
 
-        // console.log('Received metadata:', myobj);
-        // console.log('Received file:', fileInfo);
-        
+        // If author_no comes as comma-separated string, keep it as-is
+        // or adjust here if you want to store as array
+
         dataModal.create(myobj, function(err, result) {  
             if (err) throw err;
             console.log("success");
@@ -31,6 +31,55 @@ module.exports.postData = async function(req, res) {
         });
     } catch (error) {
         console.error('Upload error:', error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// New: update by id (PUT /data/:id)
+module.exports.putData = async function(req, res) {
+    try {
+        const id = req.params.id;
+        const update = { ...req.body };
+        const fileInfo = req.file;
+
+        // Normalize year if present
+        if (update.year) {
+            update.year = new Date(update.year);
+        }
+
+        // Normalize month to integer if sent
+        if (update.month) {
+            update.month = parseInt(update.month, 10);
+        }
+
+        // If author_no arrives as array from client, store as comma-separated string
+        if (Array.isArray(update.author_no)) {
+            update.author_no = update.author_no.join(',');
+        }
+
+        // If file uploaded, store filename (assuming your schema has file/fileName field)
+        if (fileInfo) {
+            update.fileName = fileInfo.filename;
+        }
+
+        const result = await dataModal.findByIdAndUpdate(
+            id,
+            { $set: update },
+            { new: true, runValidators: true }
+        );
+
+        if (!result) {
+            return res.status(404).json({ message: 'Publication not found' });
+        }
+
+        console.log("updated");
+        return res.status(200).json({
+            message: 'Successfully Updated',
+            publication: result,
+            file: fileInfo ? fileInfo.filename : null,
+        });
+    } catch (error) {
+        console.error('Update error:', error);
         return res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -83,6 +132,7 @@ module.exports.deleteData = async function(req,res){
     }
 }
 
+// Old editData (no longer used by frontend, but kept if other code still calls it)
 module.exports.editData = async function(req,res){
     try{
         dataModal.findOneAndReplace({_id:req.body._id},req.body,{runValidators:true}, function(err,result){

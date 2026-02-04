@@ -251,8 +251,6 @@ function Publications() {
           backgroundColor: "#c5d299",
         }}
       >
-
-
         <EntityDataGrid
           data={state.filteredData}
           // pageNo={state.pageNo}
@@ -265,8 +263,16 @@ function Publications() {
           textColor={state.textColor}
           fieldConfigs={fieldConfigs}
           type={"Publication"}
-          handleEdit={ (data) => navigate("/insertPublications", { state: { editData: data } }) }
-          renderEdit={row => <Publication editData={row} />}
+          handleEdit={(row) =>
+            navigate("../insertPublications", {
+              state: {
+                edit: true,
+                publicationData: row,
+                // add other collections here if needed (mirroring Patents.js patentNumbers)
+              },
+            })
+          }
+          // renderEdit={(row) => <Publication editData={row} />}
           loading={isLoading}
         />
       </div>

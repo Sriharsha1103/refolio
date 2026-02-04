@@ -267,7 +267,12 @@ function Patents() {
                     textColor={state.textColor}
                     fieldConfigs={fieldConfigs}
                     type={"PatentsKey"}
-                    renderEdit={(row) => <Patent edit={row} patentNo={state.patentNumbers} />}
+                    handleEdit={
+                        (row) =>
+                            navigate("../insertPatents", {
+                                state: { edit: true, patentData: row, patentNumbers: state.patentNumbers },
+                            })
+                    }
                 />
             </div>
         </>

@@ -8,7 +8,7 @@ import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import { Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Zoom } from "@mui/material";
@@ -123,19 +123,27 @@ function reducer(state, action) {
   switch (action.type) {
     case "INIT": {
       const edit = action.value;
-      const presentYear = new Date(edit.year).getFullYear();
+      // Normalize author_no from backend to a comma-separated string
+      const normalizedAuthorNo = Array.isArray(edit.author_no)
+        ? edit.author_no.join(",")
+        : edit.author_no || "";
+
+      const presentYear = edit.year ? new Date(edit.year).getFullYear() : "";
       return {
-          ...state,
-          body: edit,
-          yearvalue: presentYear,
-          monthvalue: edit.month,
-          cjb: edit.cjb,
-          branch: edit.branch,
-          nationality: edit.nationality,
-          is_proceedings: edit.is_proceeding || edit.is_proceedings,
-          is_published: edit.is_published,
-          is_affilated: edit.is_affilated, // Note: inconsistent spelling in DB vs Model often exists
-          author_no: edit.author_no
+        ...state,
+        body: {
+          ...edit,
+          author_no: normalizedAuthorNo,
+        },
+        yearvalue: presentYear,
+        monthvalue: edit.month,
+        cjb: edit.cjb,
+        branch: edit.branch,
+        nationality: edit.nationality,
+        is_proceedings: edit.is_proceeding || edit.is_proceedings,
+        is_published: edit.is_published,
+        is_affilated: edit.is_affilated,
+        author_no: normalizedAuthorNo,
       };
     }
     case "SET_FIELD":
@@ -144,19 +152,40 @@ function reducer(state, action) {
         body: { ...state.body, [action.field]: action.value },
         [action.stateKey]: action.value,
       };
+    case "SET_BODY_FIELD":
+      return {
+        ...state,
+        body: { ...state.body, [action.field]: action.value },
+      };
+    case "SET_YEAR": {
+      const year = action.value; // numeric or string year from <Select>
+      // Build a canonical date using selected month if available, else January
+      const month =
+        state.body.month && String(state.body.month).length > 0
+          ? state.body.month
+          : "01";
+      const computedYear =
+        year !== ""
+          ? new Date(
+              `${year}-${String(month).padStart(2, "0")}-01`
+            ).toLocaleDateString()
+          : "";
+      return {
+        ...state,
+        yearvalue: year,
+        body: {
+          ...state.body,
+          year: computedYear,
+        },
+      };
+    }
     case "SET_MONTH": {
       const { value } = action;
+      const month = String(value || "01").padStart(2, "0");
       const computedYear =
         state.yearvalue !== ""
           ? new Date(
-              state.yearvalue +
-                "-" +
-                (value.length === 1
-                  ? "0" + value
-                  : value.length === 0
-                  ? "01"
-                  : value) +
-                "-01"
+              `${state.yearvalue}-${month}-01`
             ).toLocaleDateString()
           : state.body.year;
       return {
@@ -209,6 +238,12 @@ function Publication() {
   const formRef = React.useRef();
   const [month] = useState(MONTH_OPTIONS);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isEditMode = !!location.state?.edit;
+  const editData = location.state?.publicationData || null;
+
   const [state, dispatchReducer] = useReducer(reducer, initialState);
   const {
     body,
@@ -230,7 +265,6 @@ function Publication() {
 
   const [titles, setTitles] = useState([]);
   const [send, setSend] = useState(0);
-  const navigate = useNavigate();
 
   // Snackbar state
   const [snackbar, setSnackbar] = useState({
@@ -241,6 +275,17 @@ function Publication() {
 
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [errors, setErrors] = useState({});
+
+  const [file, setFile] = useState(null);
+
+  // Initialize edit state when editing
+  useEffect(() => {
+    if (isEditMode && editData) {
+      dispatchReducer({ type: "INIT", value: editData });
+      // If backend returns stored file info, you may want to set some placeholder:
+      // setFile({ name: editData.fileName || "" }); // optional, depending on your FileUploadSection
+    }
+  }, [isEditMode, editData]);
 
   const handleCloseSnackbar = (event, reason) => {
     if (reason === "clickaway") {
@@ -270,19 +315,34 @@ function Publication() {
       formData.append("fileName", newFileName);
     }
     const payload = file ? formData : body;
-    fetch("http://localhost:8001/api/publications/data", {
-      method: "POST",
+
+    const requestURL = isEditMode ?
+      `http://localhost:8001/api/publications/data/${editData._id || editData.id}` :
+      "http://localhost:8001/api/publications/data";
+    const requestType = isEditMode ? "PUT" : "POST";
+    const request = fetch(requestURL, {
+      method: requestType,
       body: payload,
     })
-      .then((json) => {
-        showSnackbar(200, "Successfully Added " + body.title);
+
+    request
+      .then(() => {
+        showSnackbar(
+          200,
+          `${isEditMode ? "Successfully Updated" : "Successfully Added"} ${
+            body.title
+          }`
+        );
         setTimeout(() => {
           navigate("/publications");
         }, 1000);
       })
       .catch((error) => {
         console.log(error);
-        showSnackbar(500, "Error adding publication");
+        showSnackbar(
+          500,
+          `Error ${isEditMode ? "updating" : "adding"} publication`
+        );
       });
   };
 
@@ -320,9 +380,19 @@ function Publication() {
       dispatchReducer({ type: "SET_DATE_INPUT", value: value, rawDate: e });
       return;
     }
-
+    if (key === "author_no") {
+      // Handle multi-select dropdown for author_no
+      const selectedValues = typeof value === "string" ? value.split(",") : value;
+      const concatenatedValue = selectedValues.join(","); // Concatenate selected values
+      dispatchReducer({
+        type: "SET_FIELD",
+        field: "author_no",
+        value: concatenatedValue,
+        stateKey: "author_no",
+      });
+    } else
     if (config.type === "SET_YEAR") {
-      dispatchReducer({ type: config.type, value: inputValue });
+      dispatchReducer({ type: "SET_YEAR", value: inputValue });
     } else if (config.type === "SET_MONTH") {
       let monthValue = inputValue;
       dispatchReducer({ type: config.type, value: monthValue });
@@ -365,13 +435,13 @@ function Publication() {
       { value: yearvalue, id: "year", name: PublicationsKey.year },
       { value: monthvalue, id: "month", name: PublicationsKey.month },
       { value: body.scl, id: "scopus", name: PublicationsKey.scl },
-      { value: file, id: "file", name: "File Upload" },
+      ...(isEditMode ? [] : [{ value: file, id: "file", name: "File Upload" }]),
     ];
 
     const newErrors = {};
     const missingFields = [];
     mandatoryFields.forEach((field) => {
-      if (!field.value) {
+      if (!field.value && field.value !== 0) {
         newErrors[field.id] = true;
         missingFields.push(field.name);
       }
@@ -384,26 +454,26 @@ function Publication() {
         400,
         `Missing mandatory fields: ${missingFields.join(", ")}`
       );
-    } else if (titles.includes(body.title)) {
+    } else if (!isEditMode && titles.includes(body.title)) {
       showSnackbar(409, "Duplicate Title");
     } else {
       setConfirmDialogOpen(true);
     }
   };
 
-  const [file, setFile] = useState(null);
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     if (errors.file) setErrors({ ...errors, file: false });
   };
 
   useEffect(() => {
-    dispatch(Tab("new-publication"));
+    dispatch(Tab(isEditMode ? "edit-publication" : "new-publication"));
     if (!loggedIn) {
       navigate("../");
     } else if (!verify) {
       navigate("../verify");
-    } else if (isSuperAdmin) {
+    } else if (isSuperAdmin && !isEditMode) {
+      // Keep behavior from new, but allow super admin to open edit page if needed
       navigate("../publications");
     }
     if (titles.length === 0) {
@@ -419,12 +489,14 @@ function Publication() {
   }, [
     dispatch,
     isSuperAdmin,
+    isEditMode,
     loggedIn,
     navigate,
     service,
     titles.length,
     verify,
   ]);
+
   return (
     <>
       <div
@@ -438,7 +510,7 @@ function Publication() {
         <Container maxWidth={false}>
           <Grid container justifyContent="center" alignItems="center">
             <Grid item xs={12} sx={{ m: 4 }}>
-              {isAdmin ? (
+              {isAdmin && !isEditMode ? (
                 <Grid container justifyContent="flex-end" sx={{ mb: 4 }}>
                   <Grid item xs={12} md={4}>
                     <BulkUpload titles={titles} />
@@ -461,8 +533,11 @@ function Publication() {
                           variant="h4"
                           sx={{ mb: 4, color: primaryColor }}
                         >
-                          Publication Information
+                          {isEditMode
+                            ? "Edit Publication Information"
+                            : "Publication Information"}
                         </Typography>
+                        {/* All TextFields/Selects now get their values from state.body / state.* to show edit data */}
                         <TextField
                           required
                           id="publication"
@@ -473,6 +548,7 @@ function Publication() {
                           sx={{ mb: 4 }}
                           onChange={handleFieldChange}
                           error={!!errors.publication}
+                          value={body.title || ""}
                         />
                         <TextField
                           required
@@ -487,6 +563,7 @@ function Publication() {
                           sx={{ mb: 4 }}
                           onChange={handleFieldChange}
                           error={!!errors.authors}
+                          value={body.username || ""}
                         />
                         <Grid container spacing={2} sx={{ mb: 4 }}>
                           <Grid item xs={12} md={4}>
@@ -521,7 +598,6 @@ function Publication() {
                               </Select>
                             </FormControl>
                           </Grid>
-
                           <Grid item xs={12} md={4}>
                             <FormControl
                               variant="standard"
@@ -592,6 +668,7 @@ function Publication() {
                           sx={{ mb: 4 }}
                           onChange={handleFieldChange}
                           error={!!errors["name_c-j-b"]}
+                          value={body.name_cjb || ""}
                         />
                         <TextField
                           required
@@ -603,6 +680,7 @@ function Publication() {
                           sx={{ mb: 4 }}
                           onChange={handleFieldChange}
                           error={!!errors.issn}
+                          value={body.doi || ""}
                         />
                         <TextField
                           required
@@ -613,6 +691,7 @@ function Publication() {
                           variant="standard"
                           onChange={handleFieldChange}
                           error={!!errors["article-cite"]}
+                          value={body.cite || ""}
                         />
                       </Grid>
 
@@ -631,6 +710,7 @@ function Publication() {
                           color="secondary"
                           sx={{ mb: 4 }}
                           onChange={handleFieldChange}
+                          value={body.organised_by || ""}
                         />
                         <TextField
                           required
@@ -643,6 +723,7 @@ function Publication() {
                           sx={{ mb: 4 }}
                           onChange={handleFieldChange}
                           error={!!errors.link}
+                          value={body.link || ""}
                         />
                         <Grid container spacing={2} sx={{ mb: 4 }}>
                           <Grid item xs={12} md={3}>
@@ -655,6 +736,7 @@ function Publication() {
                               color="secondary"
                               type="number"
                               onChange={handleFieldChange}
+                              value={body.vol || ""}
                             />
                           </Grid>
                           <Grid item xs={12} md={3}>
@@ -667,6 +749,7 @@ function Publication() {
                               color="secondary"
                               type="number"
                               onChange={handleFieldChange}
+                              value={body.issue || ""}
                             />
                           </Grid>
                           <Grid item xs={12} md={3}>
@@ -795,7 +878,12 @@ function Publication() {
                                 labelId="author_no"
                                 id="author_no"
                                 name="author_no"
-                                value={author_no}
+                                // Safely derive array value for multiple select
+                                value={
+                                  typeof author_no === "string" && author_no.length > 0
+                                    ? author_no.split(",")
+                                    : []
+                                }
                                 onChange={handleFieldChange}
                                 label="Author Order"
                                 color="secondary"
@@ -823,6 +911,7 @@ function Publication() {
                               color="secondary"
                               type="number"
                               onChange={handleFieldChange}
+                              value={body.starting_page || ""}
                             />
                           </Grid>
                           <Grid item xs={12} md={4}>
@@ -835,6 +924,7 @@ function Publication() {
                               color="secondary"
                               type="number"
                               onChange={handleFieldChange}
+                              value={body.ending_page || ""}
                             />
                           </Grid>
                         </Grid>
@@ -850,6 +940,7 @@ function Publication() {
                               color="secondary"
                               onChange={handleFieldChange}
                               error={!!errors.scopus}
+                              value={body.scl || ""}
                             />
                           </Grid>
 
@@ -862,6 +953,7 @@ function Publication() {
                               variant="standard"
                               color="secondary"
                               onChange={handleFieldChange}
+                              value={body.citation_scopus || ""}
                             />
                           </Grid>
                           <Grid item xs={12} md={4}>
@@ -873,6 +965,7 @@ function Publication() {
                               variant="standard"
                               color="secondary"
                               onChange={handleFieldChange}
+                              value={body.citation_google || ""}
                             />
                           </Grid>
                         </Grid>
@@ -920,7 +1013,7 @@ function Publication() {
                                 setSend(send + 1);
                               }}
                             >
-                              Submit
+                              {isEditMode ? "Update" : "Submit"}
                             </Button>
                           </Grid>
                           <Grid
@@ -971,8 +1064,12 @@ function Publication() {
           open={confirmDialogOpen}
           handleClose={handleCloseConfirmDialog}
           handleConfirm={handleConfirmSubmit}
-          title="Confirm Submission"
-          content="This action will add the data into the Database"
+          title={isEditMode ? "Confirm Update" : "Confirm Submission"}
+          content={
+            isEditMode
+              ? "This action will update the data in the Database"
+              : "This action will add the data into the Database"
+          }
         />
       </div>
     </>
