@@ -39,32 +39,89 @@ module.exports.postData = async function(req, res) {
 module.exports.putData = async function(req, res) {
     try {
         const id = req.params.id;
-        const update = { ...req.body };
+        const incoming = { ...req.body };
         const fileInfo = req.file;
 
-        // Normalize year if present
+        // Ensure ID exists
+        if (!id) {
+            return res.status(400).json({ message: 'Invalid request: missing id' });
+        }
+
+        // Defensive normalization: treat ""/"null"/undefined as nulls and cast types
+        const normalizeEmpty = (v) => (v === undefined || v === null || v === '' || v === 'null' ? null : v);
+
+        const update = {};
+
+        // Copy only known fields to avoid accidental overwrites
+        const fields = [
+            'username','cjb','title','name_cjb','branch','vol','issue','year','month','doi','nationality',
+            'organised_by','is_proceeding','is_published','scl','citation_scopus','citation_google','link',
+            'is_affilated','author_no','starting_page','ending_page','cite'
+        ];
+
+        for (const key of fields) {
+            if (incoming.hasOwnProperty(key)) {
+                update[key] = normalizeEmpty(incoming[key]);
+            }
+        }
+
+        // Year: cast valid values to Date, else set null
         if (update.year) {
-            update.year = new Date(update.year);
+            const d = new Date(update.year);
+            update.year = isNaN(d.getTime()) ? null : d;
         }
 
-        // Normalize month to integer if sent
-        if (update.month) {
-            update.month = parseInt(update.month, 10);
+        // Month: cast to integer or null
+        if (update.month !== undefined && update.month !== null) {
+            const m = parseInt(update.month, 10);
+            update.month = Number.isNaN(m) ? null : m;
         }
 
-        // If author_no arrives as array from client, store as comma-separated string
-        if (Array.isArray(update.author_no)) {
-            update.author_no = update.author_no.join(',');
+        // Starting/ending page: integers or 0/null
+        if (update.starting_page !== undefined && update.starting_page !== null) {
+            const sp = parseInt(update.starting_page, 10);
+            update.starting_page = Number.isNaN(sp) ? 0 : sp;
         }
 
-        // If file uploaded, store filename (assuming your schema has file/fileName field)
-        if (fileInfo) {
+        if (update.ending_page !== undefined && update.ending_page !== null) {
+            const ep = parseInt(update.ending_page, 10);
+            update.ending_page = Number.isNaN(ep) ? 0 : ep;
+        }
+
+        // Author numbers: if array, store as comma-separated string
+        if (Array.isArray(incoming.author_no)) {
+            update.author_no = incoming.author_no.join(',');
+        }
+
+        // File upload: store filename when provided
+        if (fileInfo && fileInfo.filename) {
             update.fileName = fileInfo.filename;
+        }
+
+        // Build update operations to avoid writing undefined values
+        const $set = {};
+        const $unset = {};
+
+        Object.keys(update).forEach((k) => {
+            const v = update[k];
+            if (v === null) {
+                $unset[k] = ""; // Unset field if explicitly null-like
+            } else {
+                $set[k] = v;
+            }
+        });
+
+        const ops = {};
+        if (Object.keys($set).length) ops.$set = $set;
+        if (Object.keys($unset).length) ops.$unset = $unset;
+
+        if (!Object.keys(ops).length) {
+            return res.status(400).json({ message: 'No valid fields to update' });
         }
 
         const result = await dataModal.findByIdAndUpdate(
             id,
-            { $set: update },
+            ops,
             { new: true, runValidators: true }
         );
 
@@ -72,7 +129,6 @@ module.exports.putData = async function(req, res) {
             return res.status(404).json({ message: 'Publication not found' });
         }
 
-        console.log("updated");
         return res.status(200).json({
             message: 'Successfully Updated',
             publication: result,

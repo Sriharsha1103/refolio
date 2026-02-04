@@ -314,16 +314,25 @@ function Publication() {
       formData.append("file", file, newFileName);
       formData.append("fileName", newFileName);
     }
-    const payload = file ? formData : body;
-
-    const requestURL = isEditMode ?
-      `http://localhost:8001/api/publications/data/${editData._id || editData.id}` :
-      "http://localhost:8001/api/publications/data";
+    const isMultipart = !!file;
+    const baseURL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8001";
+    const requestURL = isEditMode
+      ? `${baseURL}/api/publications/data/${editData._id || editData.id}`
+      : `${baseURL}/api/publications/data`;
     const requestType = isEditMode ? "PUT" : "POST";
-    const request = fetch(requestURL, {
+
+    // Build fetch options based on payload type
+    const requestOptions = {
       method: requestType,
-      body: payload,
-    })
+      ...(isMultipart
+        ? { body: formData } // Let browser set multipart boundary
+        : {
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          }),
+    };
+
+    const request = fetch(requestURL, requestOptions)
 
     request
       .then(() => {
