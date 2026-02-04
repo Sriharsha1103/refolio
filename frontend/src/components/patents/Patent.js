@@ -13,11 +13,11 @@ import { Button, Typography } from "@mui/material";
 import Service from "../../Service/http";
 import { Departments, PatentsKey } from "../../Service/keyValueMap";
 import { useDispatch, useSelector } from "react-redux";
-import { PatentsBulkUpload } from "./PatentsBulkUpload";
 import { Tab } from "../../store/Actions";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import { primary, primaryColor, primaryHover, white } from "../../utils/colors";
+import { BulkUpload } from "./BulkUpload";
 
 function Patent() {
   const formatDateForInput = (d) => {
@@ -263,7 +263,7 @@ function Patent() {
               {isAdmin ? (
                 <Grid container justifyContent="flex-end" sx={{ mb: 4 }}>
                   <Grid item xs={12} md={4}>
-                    <PatentsBulkUpload titles={titles} />
+                    <BulkUpload titles={titles} />
                   </Grid>
                 </Grid>
               ) : (
