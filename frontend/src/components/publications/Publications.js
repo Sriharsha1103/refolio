@@ -3,9 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Service from "../../Service/http";
 import AdvancedSearch from "../CustomComponents/AdvancedSearch";
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import { Tab } from "../../store/Actions";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
-import Publication from "./Publication";
 
 // --- Constants & Config ---
 
@@ -159,6 +160,20 @@ const reducer = (state, action) => {
       return { ...state, showModal: action.value };
     case "SET_REQUIRED":
       return { ...state, required: action.value };
+    case "REMOVE_ITEM": {
+      const newAllData = state.allData.filter((item) => item._id !== action.id);
+      const newFilteredData = filterData(newAllData, state.filters);
+      const totalPages = state.perPage === 0 ? 1 : Math.ceil(newFilteredData.length / state.perPage);
+      const newPageNo = Math.min(state.pageNo, Math.max(totalPages, 1));
+      return {
+        ...state,
+        allData: newAllData,
+        filteredData: newFilteredData,
+        pageData: totalPages,
+        pageNo: newPageNo,
+        data: paginateData(newFilteredData, newPageNo, state.perPage),
+      };
+    }
     default:
       return state;
   }
@@ -176,6 +191,10 @@ function Publications() {
 
   const [state, localDispatch] = useReducer(reducer, initialState);
   const [isLoading, setIsLoading] = useState(true);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", status: null });
+  const [confirmState, setConfirmState] = useState({ open: false, row: null });
+
+  const closeSnackbar = () => setSnackbar((prev) => ({ ...prev, open: false }));
 
   // --- Handlers ---
   const handleClose = () => localDispatch({ type: "SET_MODAL", value: false });
@@ -192,19 +211,38 @@ function Publications() {
   const handleStartDateChange = (date) => localDispatch({ type: "SET_FILTER", field: "startDate", value: date });
   const handleEndDateChange = (date) => localDispatch({ type: "SET_FILTER", field: "endDate", value: date });
 
-  const handleDelete = (data) => {
-    if (window.confirm("This action will permenently delete " + data.title + " publication.")) {
-      service
-        .delete("api/publications/data/" + data._id)
-        .then(() => {
-          window.alert("Successfully Deleted " + data.title + " Publication.");
-          window.location.reload();
-        })
-        .catch((err) => {
-          console.error("ERROR", err);
-          window.alert("Error while deleting the publication");
+  const openDeleteConfirm = (row) => {
+    setConfirmState({ open: true, row });
+  };
+
+  const closeDeleteConfirm = () => setConfirmState({ open: false, row: null });
+
+  const handleDeleteConfirm = () => {
+    const data = confirmState.row;
+    if (!data) return;
+
+    service
+      .delete("api/publications/data/" + data._id)
+      .then(() => {
+        setSnackbar({
+          open: true,
+          message: "Successfully Deleted " + data.title + " Publication.",
+          status: 200,
         });
-    }
+        // Remove the deleted item locally and refresh the table
+        localDispatch({ type: "REMOVE_ITEM", id: data._id });
+      })
+      .catch((err) => {
+        console.error("ERROR", err);
+        setSnackbar({
+          open: true,
+          message: "Error while deleting the publication",
+          status: 500,
+        });
+      })
+      .finally(() => {
+        closeDeleteConfirm();
+      });
   };
 
   useEffect(() => {
@@ -222,7 +260,11 @@ function Publications() {
         setIsLoading(false);
       })
       .catch((error) => {
-        window.alert("Error while fetching the publications.\n Please try again later.");
+        setSnackbar({
+          open: true,
+          message: "Error while fetching the publications. Please try again later.",
+          status: 500,
+        });
         console.error(error);
         setIsLoading(false);
       });
@@ -232,6 +274,12 @@ function Publications() {
 
   return (
     <>
+      <CustomSnackbar
+        open={snackbar.open}
+        handleClose={closeSnackbar}
+        status={snackbar.status}
+        message={snackbar.message}
+      />
       <AdvancedSearch
         show={state.showModal}
         onHide={handleClose}
@@ -255,7 +303,7 @@ function Publications() {
           data={state.filteredData}
           // pageNo={state.pageNo}
           perPage={state.perPage}
-          handleDelete={handleDelete}
+          handleDelete={openDeleteConfirm}
           isAdmin={isAdmin}
           isSuperAdmin={isSuperAdmin}
           color={state.color}
@@ -276,6 +324,17 @@ function Publications() {
           loading={isLoading}
         />
       </div>
+      <CustomConfirmDialog
+        open={confirmState.open}
+        handleClose={closeDeleteConfirm}
+        handleConfirm={handleDeleteConfirm}
+        title={"Confirm Delete"}
+        content={
+          confirmState.row
+            ? `This action will permanently delete "${confirmState.row.title}" publication.`
+            : "This action will permanently delete the selected publication."
+        }
+      />
     </>
   );
 }
