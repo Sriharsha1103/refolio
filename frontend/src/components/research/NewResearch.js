@@ -1,446 +1,565 @@
-import React, { useEffect, useState } from "react";
-
-// import Select from "@mui/material/Select";
-import { DateInput } from "@mantine/dates";
+import React, { useEffect, useState, useReducer, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
-  MDBContainer,
-  MDBRow,
-  MDBCol,
-  MDBCard,
-  MDBCardBody,
-} from "mdb-react-ui-kit";
-import { useNavigate } from "react-router-dom";
-
-import { Button } from '@mui/material';
-import Service from '../../Service/http';
-import { Departments, ResearchKey } from '../../Service/keyValueMap';
-import { useDispatch, useSelector } from 'react-redux';
-import { MultiSelect,TextInput, Textarea,Select, NumberInput } from "@mantine/core";
+  Button,
+  TextField,
+  Autocomplete,
+  Card,
+  CardContent,
+  Grid,
+  Container,
+  Typography,
+  FormControl,
+  InputLabel,
+  FormHelperText,
+  Select as MUISelect,
+  MenuItem,
+} from "@mui/material";
+import Service from "../../Service/http";
+import { Departments, ResearchKey } from "../../Service/keyValueMap";
+import { useDispatch, useSelector } from "react-redux";
 import { Tab } from "../../store/Actions";
-// import { PatentsBulkUpload } from "./PatentsBulkUpload";
-// import { events } from "../../../backend/db/LoginSchema";
-
+import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import { primaryColor, white } from "../../utils/colors";
 
 function NewResearch() {
-  // const classes = useStyles();
+  const containsIgnoreCase = (array, searchString) => {
+    const lowerCaseSearch = (searchString || "").toLowerCase();
+    return array.some((item) => (item || "").toLowerCase() === lowerCaseSearch);
+  };
+
   const yearpre = new Date();
   const years = [];
   for (let step = 2012; step < 1 + yearpre.getFullYear(); step++) {
     years.push(step);
   }
-  const loggedIn = useSelector((state)=>state.logged);
-  const verify = useSelector((state)=>state.verify);
-  const dispatch=useDispatch();
-  const isSuperAdmin = useSelector((state)=>state.isSuperAdmin);
-  const isAdmin = useSelector((state)=>state.isAdmin);
-  const service = new Service();
-  const multiSelectRef = React.useRef(null);
-  const designRef = React.useRef(null)
-  const durationRef = React.useRef(null)
-  const patentRef = React.useRef(null)
 
-   // console.log("HERE", here)
-  // const username = query.get('')
-  const formRef = React.useRef();
-  const [design,setDesign] = useState("")
-  const [body, setBody] = useState({
-    title : "",
-    pi : "",
-    co_pi  : "",
-    dept : [],
-    amount : "",
-    scheme : "",
-    year : [],
-    duration : 0
+  const loggedIn = useSelector((state) => state.logged);
+  const verify = useSelector((state) => state.verify);
+  const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
+  const dispatch = useDispatch();
+  const service = useMemo(() => new Service(), []);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const editData = location.state?.edit ? location.state.researchData : null;
+  const isEdit = !!editData;
+
+  const [validationErrors, setValidationErrors] = useState({
+    title: "",
+    dept: "",
+    year: "",
+    duration: "",
+  });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [snackbarConfig, setSnackbarConfig] = useState({
+    open: false,
+    status: null,
+    message: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const bodyInitialState = {
+    _id: "",
+    __v: "",
+    title: "",
+    pi: "",
+    co_pi: "",
+    dept: [],
+    amount: "",
+    scheme: "",
+    year: "",
+    duration: "",
+  };
+
+  const bodyReducer = (state, action) => {
+    switch (action.type) {
+      case "SET_FIELD":
+        return {
+          ...state,
+          [action.field]: action.value,
+        };
+      case "SET_MULTIPLE":
+        return {
+          ...state,
+          ...action.payload,
+        };
+      case "RESET":
+        return bodyInitialState;
+      default:
+        return state;
+    }
+  };
+
+  const [body, dispatchBody] = useReducer(bodyReducer, null, () => {
+    if (!editData) return bodyInitialState;
+
+    const normalizedDept = Array.isArray(editData.dept)
+      ? editData.dept
+      : typeof editData.dept === "string"
+        ? editData.dept
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+
+    return {
+      _id: editData._id,
+      __v: editData.__v,
+      title: editData.title || "",
+      pi: editData.pi || "",
+      co_pi: editData.co_pi || "",
+      dept: normalizedDept,
+      amount: editData.amount || "",
+      scheme: editData.scheme || "",
+      year: editData.year || "",
+      duration: editData.duration || "",
+    };
   });
 
-  const [cjb, setCjb] = useState([]);
-  const [titles, setTitles] = useState([]);
-  const [send, setSend] = useState(0);
-  const [show, setShow] = useState(false);
-  const [duration,setDuration] = useState("");
-
-  const navigate = useNavigate();
-
-  const handleChangeDept = (event) => {
-   
-    setCjb(event);
-    setBody({
-        
-            title : body.title,
-            pi : body.pi,
-            co_pi  : body.co_pi,
-            dept : event,
-            amount : body.amount,
-            scheme : body.scheme,
-            year : body.year,
-        duration : body.duration
-
-          });
-  };
-  const handleChangeDesign = (event) => {
-    setDesign(event);
-    // body.author_no = event.target.value
-    setBody({
-        title : body.title,
-        pi : body.pi,
-        co_pi  : body.co_pi,
-        dept : body.dept,
-        amount : body.amount,
-        scheme : body.scheme,
-        year : event,
-        duration : body.duration
-
-      });
-  };
-  const handleDuration = (event) => {
-    setDuration(event);
-    setBody({
-      title : body.title,
-      pi : body.pi,
-      co_pi  : body.co_pi,
-      dept : body.dept,
-      amount : body.amount,
-      scheme : body.scheme,
-      year : body.year,
-      duration : event
-
-    });
-  }
-  
-  const onSubmit = (event) => {
-    console.log("HERE sub",event)
-    
-    if(body.year==""||body.year==null){
-      window.alert('Select Year')
-      event.preventDefault()
+  const [cjb, setCjb] = useState(() => {
+    if (!editData) return [];
+    if (Array.isArray(editData.dept)) return editData.dept;
+    if (typeof editData.dept === "string") {
+      return editData.dept
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
-    else{
-        // designRef.current.setCustomValidity((design===""||design===null)?"Please Select A Value.":"")
-        
-      let confirm = window.confirm("This action will add the data into the Database")
-      if(confirm){
+    return [];
+  });
+  const [selectedYear, setSelectedYear] = useState(() => editData?.year || "");
+  const [duration, setDuration] = useState(() => editData?.duration || "");
+  const [titles, setTitles] = useState([]);
+  const [originalTitle] = useState(() =>
+    editData?.title ? editData.title.replace(/\s+/g, " ").trim() : "",
+  );
+
+  const handleSnackbarClose = (_, reason) => {
+    if (reason === "clickaway") return;
+    setSnackbarConfig((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleConfirmClose = () => {
+    setConfirmOpen(false);
+  };
+
+  const handleConfirmSubmission = () => {
+    setConfirmOpen(false);
+    setIsSubmitting(true);
+
+    const endpoint = isEdit ? "api/research/update" : "api/research/data";
+
     service
-      .post("api/research/data", body)
-      .then((json) => {
-        // console.log("JSON", json);
-        window.alert("Succesfully Added "+body.title)
+      .post(endpoint, body)
+      .then(() => {
+        setSnackbarConfig({
+          open: true,
+          status: 200,
+          message: isEdit
+            ? `Updated ${body.title} research project.`
+            : `Succesfully Added ${body.title}`,
+        });
         navigate("/research");
       })
       .catch((error) => {
-        window.alert("Error while adding "+body.title+ ". \nPlease Try again later.")
         console.log(error);
-      });
-    }else{
-      window.alert("Cancelled the insert action."); 
-      event.preventDefault()
-    }}
-    
-    // console.log("EVENT",body)
-  };
-  const handleChange = (e) => {
-    console.log("EEEE", e)
-   if (e.currentTarget.id === "title") {
-      // body.title = e.target.value
-      setBody({        
-        title : e.currentTarget.value.replace(/\s+/g, ' '),
-        pi : body.pi,
-        co_pi  : body.co_pi,
-        dept : body.dept,
-        amount : body.amount,
-        scheme : body.scheme,
-        year : body.year,
-        duration : body.duration
-
-      });
-    } else if (e.currentTarget.id === "authors") {
-      // body.username = e.target.value
-      setBody({
-        
-        title : body.title,
-        pi : e.currentTarget.value,
-        co_pi  : body.co_pi,
-        dept : body.dept,
-        amount : body.amount,
-        scheme : body.scheme,
-        year : body.year,
-        duration : body.duration
-
-      });    } else if (e.currentTarget.id === "co_authors") {
-      // body.name_cjb = e.target.value
-      setBody({
-        
-        title : body.title,
-        pi : body.pi,
-        co_pi  : e.currentTarget.value,
-        dept : body.dept,
-        amount : body.amount,
-        scheme : body.scheme,
-        year : body.year,
-        duration : body.duration
-
-      });
-    } else if (e.currentTarget.id === "amount") {
-      // body.vol = e.target.value
-      setBody({
-        
-        title : body.title,
-        pi : body.pi,
-        co_pi  : body.co_pi,
-        dept : body.dept,
-        amount : e.currentTarget.value,
-        scheme : body.scheme,
-        year : body.year,
-        duration : body.duration
-      });
-    }else if(e.currentTarget.id === "duration"){
-      setBody({
-        
-        title : body.title,
-        pi : body.pi,
-        co_pi  : body.co_pi,
-        dept : body.dept,
-        amount : body.amount,
-        scheme : body.scheme,
-        year : body.year,
-        duration: e.currentTarget.value
-      });
-    } else{
-        setBody({
-            title : body.title,
-            pi : body.pi,
-            co_pi  : body.co_pi,
-            dept : body.dept,
-            amount : body.amount,
-            scheme : e.currentTarget.value,
-            year : body.year,
-        duration : body.duration
-          });
-    } 
-   
-    // console.log("IN HANDLE CHANGE", body)
-  };
-  // const navigate = useNavigate();
-    useEffect(()=>{
-      dispatch(Tab('new-research'));
-      if(!loggedIn){
-          navigate("../")}
-      else if(!verify){
-        navigate("../verify")
-      }else if(isSuperAdmin){
-        navigate("../research")
-      }
-      if(titles.length==0){
-      service.get('api/research/titles').then((res)=>{
-        // console.log('titles',res)
-        setTitles(res);
-        // console.log("inside",titles)
-      }).catch((error)=>{
-        console.log("ERROR",error)
+        setSnackbarConfig({
+          open: true,
+          status: 500,
+          message: isEdit
+            ? `Error while updating ${body.title}. Please Try again later.`
+            : `Error while adding ${body.title}. Please Try again later.`,
+        });
       })
+      .finally(() => setIsSubmitting(false));
+  };
+
+  const runValidation = () => {
+    const errors = {
+      title: "",
+      dept: "",
+      year: "",
+      duration: "",
+    };
+
+    const sanitizedTitle = (body.title || "").replace(/\s+/g, " ").trim();
+    const isSameAsOriginal =
+      isEdit &&
+      originalTitle &&
+      sanitizedTitle.toLowerCase() === originalTitle.toLowerCase();
+
+    if (
+      sanitizedTitle &&
+      !isSameAsOriginal &&
+      containsIgnoreCase(titles, sanitizedTitle)
+    ) {
+      errors.title = "Title Already exists";
     }
-    },[])
+    if (cjb.length === 0) {
+      errors.dept = "Please select a value.";
+    }
+    if (!selectedYear) {
+      errors.year = "Please select a value.";
+    }
+    if (!duration) {
+      errors.duration = "Please enter duration.";
+    }
+
+    setValidationErrors(errors);
+    return !errors.title && !errors.dept && !errors.year && !errors.duration;
+  };
+
+  const handleFieldChange = (field, value) => {
+    let updatedValue = value;
+
+    if (field === "title") {
+      updatedValue = (updatedValue || "").replace(/\s+/g, " ");
+      const sanitized = updatedValue.trim();
+      const isSameAsOriginal =
+        isEdit &&
+        originalTitle &&
+        sanitized.toLowerCase() === originalTitle.toLowerCase();
+      const duplicateTitle =
+        sanitized && !isSameAsOriginal && containsIgnoreCase(titles, sanitized);
+      setValidationErrors((prev) => ({
+        ...prev,
+        title: duplicateTitle ? "Title Already exists" : "",
+      }));
+    }
+
+    if (field === "dept") {
+      const deptValues = Array.isArray(updatedValue) ? updatedValue : [];
+      setCjb(deptValues);
+      setValidationErrors((prev) => ({
+        ...prev,
+        dept: deptValues.length === 0 ? "Please select a value." : "",
+      }));
+      updatedValue = deptValues;
+    }
+
+    if (field === "year") {
+      setSelectedYear(updatedValue);
+      setValidationErrors((prev) => ({
+        ...prev,
+        year: updatedValue ? "" : "Please select a value.",
+      }));
+    }
+
+    if (field === "duration") {
+      setDuration(updatedValue);
+      setValidationErrors((prev) => ({
+        ...prev,
+        duration: updatedValue ? "" : "Please enter duration.",
+      }));
+    }
+
+    dispatchBody({
+      type: "SET_FIELD",
+      field,
+      value: updatedValue,
+    });
+  };
+
+  const onSubmit = (event) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+    if (!runValidation()) return;
+    setConfirmOpen(true);
+  };
+
+  useEffect(() => {
+    dispatch(Tab("new-research"));
+    if (!loggedIn) {
+      navigate("../");
+    } else if (!verify) {
+      navigate("../verify");
+    } else if (isSuperAdmin) {
+      navigate("../research");
+    }
+
+    if (titles.length === 0) {
+      service
+        .get("api/research/titles")
+        .then((res) => {
+          setTitles(res || []);
+        })
+        .catch((error) => {
+          console.log("ERROR", error);
+        });
+    }
+  }, [
+    dispatch,
+    isSuperAdmin,
+    loggedIn,
+    navigate,
+    service,
+    titles.length,
+    verify,
+  ]);
+
   return (
     <>
-      {/* <Modal show={show} onHide={handleClose} size="xl">
-        <Modal.Header closeButton>
-          <Modal.Title>Sample Publication Data</Modal.Title>
-        </Modal.Header>
-        <Modal.Body
-          style={{
-            overflowY: "scroll",
-            paddingBottom: "20px",
-            backgroundColor: "#c5d299",
-          }}
-        >
-          <HelpModal />
-          <br />
-          <br />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="contained" color="error" onClick={handleClose}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal> */}
       <div
         style={{
-          height: "81.5vh",
+          height: "88vh",
           width: "100wh",
           backgroundColor: "#c5d299",
-          // paddingBottom: "5",
+          paddingBottom: "150px",
+          display: "flex",
+          alignItems: "center",
         }}
       >
-        {/* <br/> */}
-        <MDBContainer fluid className="h-custom">
-          <MDBRow className="h-100">
-            <MDBCol col="12" className="m-4">
-              <MDBCard
-                className="card-registration card-registration-2"
-                style={{ borderRadius: "15px" }}
-              >
-                <MDBCardBody className="p-0">
-                  <form id="insert-data" ref={formRef} onSubmit={onSubmit}>
-                    <MDBRow>
-                      <MDBCol md="6" className="p-5 bg-white">
-                        <h3
-                          className="fw-normal mb-5"
-                          style={{ color: "#6C9449" }}
-                        >
-                          Research Project Information
-                        </h3>
-                        <TextInput
-                        styles={{"label": {"color": "#6C9449","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        ref={patentRef}
-                        label={ResearchKey.title}
-                        placeholder={ResearchKey.title}
-                        onChange={(event)=>{handleChange(event)}}
-                        id="title"
-                        withAsterisk
-                        required
-                        />
-                        <br />
-                        <TextInput
-                        styles={{"label": {"color": "#6C9449","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        label={ResearchKey.pi+'  (Add multiple authors seperated by ",")'}
-                        id="authors"
-                        placeholder={ResearchKey.pi}
-                        onChange={(event)=>{handleChange(event)}}
-                        withAsterisk
-                        required
-                        />
-                        <br />
-                        <TextInput
-                        styles={{"label": {"color": "#6C9449","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        label={ResearchKey.co_pi+'  (Add multiple authors seperated by ",")'}
-                        id="co_authors"
-                        placeholder={ResearchKey.co_pi}
-                        onChange={(event)=>{handleChange(event)}}
-                        withAsterisk
-                        required
-                        />
-                        {/* <TextInput
-                        styles={{"label": {"color": "#6C9449","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        label={ResearchKey.pat_no}
-                        placeholder={ResearchKey.pat_no}
-                        onChange={(event)=>{handleChange(event)}}
-                        id="pat_no"
-                        withAsterisk
-                        required
-                        /> */}
-                        <br />
-                      </MDBCol>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Card sx={{ borderRadius: "15px" }}>
+            <CardContent sx={{ p: "0px !important" }}>
+              <form id="insert-data" onSubmit={onSubmit}>
+                <Grid container>
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    sx={{ p: { xs: 2, md: 5 }, bgcolor: white }}
+                  >
+                    <Typography
+                      variant="h5"
+                      component="h3"
+                      gutterBottom
+                      sx={{ color: "#6C9449", fontWeight: 500 }}
+                    >
+                      Research Project Information
+                    </Typography>
 
-                      <MDBCol md="6" className="bg-indigo p-5">
-                        <br/>
-                        <br/>
-                      <MDBRow>
-                                          <MDBCol md="6">
-                          <Select 
-                               ref={designRef}
-                              styles={{"label": {"color": "white","text-align":"left"}}}
-                              style={{"text-align":"left"}} 
-                              withAsterisk 
-                              placeholder="Select One"
-                              label={ResearchKey.year} 
-                              searchable 
-                              // maxValues={2}
-                              id = "year"
-                              data={years} 
-                            //   value={cjb} 
-                              onChange={(e)=>{handleChangeDesign(e)}} />
-                          </MDBCol>
-                          <MDBCol md="6">
-                          <NumberInput 
-                               ref={durationRef}
-                              styles={{"label": {"color": "white","text-align":"left"}}}
-                              style={{"text-align":"left"}} 
-                              withAsterisk 
-                              placeholder={"Enter Duration"}
-                              label={ResearchKey.duration} 
-                              id = "duration"
-                            //   value={cjb} 
-                              onChange={(e)=>{handleDuration(e)}} />
-                          </MDBCol>
-                        </MDBRow>
-                        <br />
-                        <MDBRow>
-                          <MDBCol md="6">
-                              <MultiSelect 
-                               ref={multiSelectRef}
-                              styles={{"label": {"color": "white","text-align":"left"}}}
-                              style={{"text-align":"left"}} 
-                              withAsterisk 
-                              placeholder={cjb.length==0?"Select At least One":"Type to search"}
-                              label={ResearchKey.dept} 
-                              searchable 
-                              id = "dept"
-                              data={Departments} 
-                              value={cjb} 
-                              onChange={(e)=>{handleChangeDept(e)}} />
-                                
-                            {/* </FormControl> */}
-                          </MDBCol>
-                          <MDBCol md="6">
-                        <TextInput
-                        styles={{"label": {"color": "white","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        label={ResearchKey.amount}
-                        placeholder="Enter Amount"
-                        onChange={(event)=>{handleChange(event)}}
-                        id="amount"
-                        withAsterisk
-                        required
+                    <TextField
+                      label={ResearchKey.title}
+                      placeholder={ResearchKey.title}
+                      id="title"
+                      required
+                      fullWidth
+                      margin="normal"
+                      value={body.title}
+                      onChange={(event) =>
+                        handleFieldChange("title", event.target.value)
+                      }
+                      error={!!validationErrors.title}
+                      helperText={validationErrors.title}
+                    />
+
+                    <TextField
+                      label={
+                        ResearchKey.pi +
+                        '  (Add multiple authors seperated by ",")'
+                      }
+                      id="authors"
+                      placeholder={ResearchKey.pi}
+                      required
+                      fullWidth
+                      margin="normal"
+                      value={body.pi}
+                      onChange={(event) =>
+                        handleFieldChange("pi", event.target.value)
+                      }
+                    />
+
+                    <TextField
+                      label={
+                        ResearchKey.co_pi +
+                        '  (Add multiple authors seperated by ",")'
+                      }
+                      id="co_authors"
+                      placeholder={ResearchKey.co_pi}
+                      required
+                      fullWidth
+                      margin="normal"
+                      value={body.co_pi}
+                      onChange={(event) =>
+                        handleFieldChange("co_pi", event.target.value)
+                      }
+                    />
+                  </Grid>
+
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    sx={{ p: { xs: 2, md: 5 }, bgcolor: primaryColor }}
+                  >
+                    <Grid container spacing={2} sx={{ mt: { xs: 0, md: 4 } }}>
+                      <Grid item xs={12} md={6}>
+                        <FormControl
+                          fullWidth
+                          required
+                          error={!!validationErrors.year}
+                        >
+                          <InputLabel id="year-label">
+                            {ResearchKey.year}
+                          </InputLabel>
+                          <MUISelect
+                            labelId="year-label"
+                            id="year"
+                            label={ResearchKey.year}
+                            value={selectedYear}
+                            onChange={(event) =>
+                              handleFieldChange("year", event.target.value)
+                            }
+                          >
+                            {years.map((year) => (
+                              <MenuItem key={year} value={year}>
+                                {year}
+                              </MenuItem>
+                            ))}
+                          </MUISelect>
+                          {validationErrors.year && (
+                            <FormHelperText>
+                              {validationErrors.year}
+                            </FormHelperText>
+                          )}
+                        </FormControl>
+                      </Grid>
+
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          label={ResearchKey.duration}
+                          placeholder="Enter Duration"
+                          id="duration"
+                          required
+                          fullWidth
+                          margin="normal"
+                          type="number"
+                          value={duration}
+                          onChange={(event) =>
+                            handleFieldChange("duration", event.target.value)
+                          }
+                          error={!!validationErrors.duration}
+                          helperText={validationErrors.duration}
                         />
-                        </MDBCol>
-                        </MDBRow>
-                        <br/>
-                        <TextInput
-                        styles={{"label": {"color": "white","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        label={ResearchKey.scheme}
-                        placeholder="Enter Scheme"
-                        onChange={(event)=>{handleChange(event)}}
-                        id="scheme"
-                        withAsterisk
-                        required
+                      </Grid>
+                    </Grid>
+
+                    <Grid container spacing={2} sx={{ mt: 1 }}>
+                      <Grid item xs={12} md={6}>
+                        <Autocomplete
+                          multiple
+                          disableCloseOnSelect
+                          options={Departments}
+                          value={cjb}
+                          onChange={(_, value) =>
+                            handleFieldChange("dept", value)
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label={ResearchKey.dept}
+                              placeholder={
+                                cjb.length === 0
+                                  ? "Select At least One"
+                                  : "Type to search"
+                              }
+                              error={!!validationErrors.dept}
+                              helperText={validationErrors.dept}
+                            />
+                          )}
                         />
-                        <br/>
-                       
+                      </Grid>
+
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          label={ResearchKey.amount}
+                          placeholder="Enter Amount"
+                          id="amount"
+                          required
+                          fullWidth
+                          margin="normal"
+                          value={body.amount}
+                          onChange={(event) =>
+                            handleFieldChange("amount", event.target.value)
+                          }
+                        />
+                      </Grid>
+                    </Grid>
+
+                    <TextField
+                      label={ResearchKey.scheme}
+                      placeholder="Enter Scheme"
+                      id="scheme"
+                      required
+                      fullWidth
+                      margin="normal"
+                      value={body.scheme}
+                      onChange={(event) =>
+                        handleFieldChange("scheme", event.target.value)
+                      }
+                    />
+                    <Grid
+                      container
+                      spacing={2}
+                      alignItems="center"
+                      justifyContent={"center"}
+                      mt={2}
+                    >
+                      <Grid
+                        item
+                        xs={12}
+                        md={4}
+                        sx={{
+                          display: "flex",
+                          justifyContent: {
+                            md: "flex-start",
+                            xs: "center",
+                          },
+                        }}
+                      >
                         <Button
                           variant="contained"
                           color="secondary"
                           type="submit"
                           form="insert-data"
-                          onClick={(event) => {
-                            console.log("SUBMITTT",(designRef.current))
-                            patentRef.current.setCustomValidity(titles.includes(body.title)?"Title Already exist":"")
-                            multiSelectRef.current.setCustomValidity(cjb.length===0?"Please Select a Value.":"")
-                            durationRef.current.setCustomValidity(duration===""?"Please Enter Duration.":"")
-                            designRef.current.setCustomValidity((design==="")?"Please Select A Value.":"")
-                            formRef.current.reportValidity();
-                            // formRef.current.submit();
-                            setSend(send + 1);
-                          }}
+                          disabled={isSubmitting}
+                          sx={{ mt: 2, mr: { xs: 0, md: 2 } }}
                         >
-                          Submit
+                          {isEdit ? "Update" : "Submit"}
                         </Button>
-                        {/* </MDBCol> */}
-                        {/* </MDBRow> */}
-                      </MDBCol>
-                    </MDBRow>
-                  </form>
-                </MDBCardBody>
-              </MDBCard>
-            </MDBCol>
-          </MDBRow>
-        </MDBContainer>
+                        <Button
+                          variant="outlined"
+                          sx={{
+                            mt: 2,
+                            color: "#ffffff",
+                            borderColor: "#ffffff",
+                            fontWeight: "bold",
+                            "&:hover": {
+                              backgroundColor: "#ffffff",
+                              color: "#6C9449",
+                              borderColor: "#ffffff",
+                            },
+                          }}
+                          onClick={() => navigate("/research")}
+                        >
+                          Cancel
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </form>
+            </CardContent>
+          </Card>
+        </Container>
       </div>
+      <CustomConfirmDialog
+        open={confirmOpen}
+        handleClose={handleConfirmClose}
+        handleConfirm={handleConfirmSubmission}
+        title="Confirm Submission"
+        content="This action will add the data into the Database."
+      />
+      <CustomSnackbar
+        open={snackbarConfig.open}
+        handleClose={handleSnackbarClose}
+        status={snackbarConfig.status}
+        message={snackbarConfig.message}
+      />
     </>
   );
 }

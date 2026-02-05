@@ -2,13 +2,10 @@ import { useEffect, useMemo, useReducer, useState } from "react";
 import Service from "../../Service/http";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ResearchExportCSV } from "./ResearchExportCSV";
-import EditResearch from "./EditResearch";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import { Tab } from "../../store/Actions";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
+import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 
 const fieldConfigs = [
   { field: "title", width: 250 },
@@ -62,20 +59,49 @@ function Research() {
   const [state, localDispatch] = useReducer(reducer, initialState);
   const [snack, setSnack] = useState({ open: false, status: 0, message: "" });
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    content: "",
+    onConfirm: null,
+  });
 
   const handleDelete = (data) => {
-    if (window.confirm("This action will permenently delete " + data.title + " research project.")) {
-      service
-        .delete("api/research/data/" + data._id)
-        .then(() => {
-          localDispatch({ type: "REMOVE_ITEM", id: data._id });
-          setSnack({ open: true, status: 200, message: `Deleted ${data.title} research project.` });
-        })
-        .catch((err) => {
-          console.error("ERROR", err);
-          setSnack({ open: true, status: 500, message: "Error while deleting the research project" });
-        });
-    }
+    setConfirmDialog({
+      open: true,
+      title: "Delete research project",
+      content:
+        "This action will permanently delete \"" +
+        data.title +
+        "\" research project.",
+      onConfirm: () => {
+        setConfirmDialog((prev) => ({ ...prev, open: false }));
+        service
+          .delete("api/research/data/" + data._id)
+          .then(() => {
+            localDispatch({ type: "REMOVE_ITEM", id: data._id });
+            setSnack({
+              open: true,
+              status: 200,
+              message: `Deleted ${data.title} research project.`,
+            });
+          })
+          .catch((err) => {
+            console.error("ERROR", err);
+            setSnack({
+              open: true,
+              status: 500,
+              message: "Error while deleting the research project",
+            });
+          });
+      },
+    });
+  };
+
+  const handleEdit = (row) => {
+    navigate("../insertResearch", {
+      state: { edit: true, researchData: row },
+    });
   };
 
   useEffect(() => {
@@ -126,17 +152,13 @@ function Research() {
           backgroundColor: "#c5d299",
         }}
       >
-        <Box sx={{ mb: 2 }}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <ResearchExportCSV csvData={state.data} fileName={"Research"} />
-          </Stack>
-        </Box>
 
         <EntityDataGrid
           data={state.data}
           pageNo={state.pageNo}
           perPage={state.perPage}
           handleDelete={handleDelete}
+          handleEdit={handleEdit}
           isAdmin={isAdmin}
           isSuperAdmin={isSuperAdmin}
           color={state.color}
@@ -144,7 +166,6 @@ function Research() {
           textColor={state.textColor}
           fieldConfigs={fieldConfigs}
           type={"ResearchKey"}
-          renderEdit={(row) => <EditResearch edit={row} titles={titles} />}
           loading={isLoading}
         />
       </div>
@@ -153,6 +174,19 @@ function Research() {
         status={snack.status}
         message={snack.message}
         handleClose={() => setSnack((s) => ({ ...s, open: false }))}
+      />
+      <CustomConfirmDialog
+        open={confirmDialog.open}
+        title={confirmDialog.title}
+        content={confirmDialog.content}
+        handleClose={() =>
+          setConfirmDialog((prev) => ({ ...prev, open: false }))
+        }
+        handleConfirm={() => {
+          if (confirmDialog.onConfirm) {
+            confirmDialog.onConfirm();
+          }
+        }}
       />
     </>
   );
