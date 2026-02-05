@@ -6,6 +6,7 @@ import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import { Tab } from "../../store/Actions";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
+import PdfViewerDialog from "../CustomComponents/PdfViewerDialog";
 
 const fieldConfigs = [
   { field: "title", width: 250 },
@@ -65,6 +66,26 @@ function Research() {
     content: "",
     onConfirm: null,
   });
+  const [pdfViewer, setPdfViewer] = useState({ open: false, url: "", title: "" });
+
+  const handlePdfClose = () => {
+    setPdfViewer({ open: false, url: "", title: "" });
+  };
+
+    const handleView = (row) => {
+    console.log('Row',row)
+    if (!row || !row.fileName) {
+      setSnack({
+        open: true,
+        message: "No document Uploaded",
+        status: 400,
+      });
+      return;
+    }
+    const fileUrl = service.getFileUrl(row.fileName);
+    setPdfViewer({ open: true, url: fileUrl, title: row.title });
+  };
+
 
   const handleDelete = (data) => {
     setConfirmDialog({
@@ -152,6 +173,12 @@ function Research() {
           backgroundColor: "#c5d299",
         }}
       >
+        <PdfViewerDialog
+                open={pdfViewer.open}
+                onClose={handlePdfClose}
+                title={pdfViewer.title}
+                fileUrl={pdfViewer.url}
+              />
 
         <EntityDataGrid
           data={state.data}
@@ -167,6 +194,7 @@ function Research() {
           fieldConfigs={fieldConfigs}
           type={"ResearchKey"}
           loading={isLoading}
+            handleView={handleView}
         />
       </div>
       <CustomSnackbar

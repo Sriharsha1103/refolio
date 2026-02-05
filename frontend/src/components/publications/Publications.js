@@ -7,6 +7,7 @@ import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import { Tab } from "../../store/Actions";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
+import PdfViewerDialog from "../CustomComponents/PdfViewerDialog";
 
 // --- Constants & Config ---
 
@@ -193,6 +194,7 @@ function Publications() {
   const [isLoading, setIsLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", status: null });
   const [confirmState, setConfirmState] = useState({ open: false, row: null });
+  const [pdfViewer, setPdfViewer] = useState({ open: false, url: "", title: "" });
 
   const closeSnackbar = () => setSnackbar((prev) => ({ ...prev, open: false }));
 
@@ -245,6 +247,32 @@ function Publications() {
       });
   };
 
+  const handleView = (row) => {
+    console.log('Row',row)
+    if (!row || !row.fileName) {
+      setSnackbar({
+        open: true,
+        message: "No document Uploaded",
+        status: 400,
+      });
+      return;
+    }
+
+    const backendBase = process.env.REACT_APP_BACKEND_URL || "";
+    const branch = row.branch || "";
+    const fileUrl = `${backendBase}/uploads/${branch}/${row.fileName}`;
+
+    setPdfViewer({
+      open: true,
+      url: fileUrl,
+      title: row.title || "Publication File",
+    });
+  };
+
+  const handlePdfClose = () => {
+    setPdfViewer((prev) => ({ ...prev, open: false }));
+  };
+
   useEffect(() => {
     dispatchRedux(Tab("publication"));
     if (!loggedIn) {
@@ -280,7 +308,13 @@ function Publications() {
         status={snackbar.status}
         message={snackbar.message}
       />
-      <AdvancedSearch
+      <PdfViewerDialog
+        open={pdfViewer.open}
+        onClose={handlePdfClose}
+        title={pdfViewer.title}
+        fileUrl={pdfViewer.url}
+      />
+      {/* <AdvancedSearch
         show={state.showModal}
         onHide={handleClose}
         startDate={state.filters.startDate}
@@ -289,7 +323,7 @@ function Publications() {
         onEndDateChange={handleEndDateChange}
         onSearch={handleSearch}
         required={state.required}
-      />
+      /> */}
 
       <div
         className="p-3"
@@ -316,11 +350,10 @@ function Publications() {
               state: {
                 edit: true,
                 publicationData: row,
-                // add other collections here if needed (mirroring Patents.js patentNumbers)
               },
             })
           }
-          // renderEdit={(row) => <Publication editData={row} />}
+          handleView={handleView}
           loading={isLoading}
         />
       </div>

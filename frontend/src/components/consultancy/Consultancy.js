@@ -6,6 +6,7 @@ import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import { Tab } from "../../store/Actions";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
+import PdfViewerDialog from "../CustomComponents/PdfViewerDialog";
 
 const fieldConfigs = [
   { field: "title", width: 250 },
@@ -63,15 +64,38 @@ function Consultancy() {
     content: "",
     onConfirm: null,
   });
+  const [pdfViewer, setPdfViewer] = useState({
+    open: false,
+    url: "",
+    title: "",
+  });
+
+  const handlePdfClose = () => {
+    setPdfViewer({ open: false, url: "", title: "" });
+  };
+
+  const handleView = (row) => {
+    console.log("Row", row);
+    if (!row || !row.fileName) {
+      setSnack({
+        open: true,
+        message: "No document Uploaded",
+        status: 400,
+      });
+      return;
+    }
+    const fileUrl = service.getFileUrl(row.fileName);
+    setPdfViewer({ open: true, url: fileUrl, title: row.title });
+  };
 
   const handleDelete = (data) => {
     setConfirmDialog({
       open: true,
       title: "Delete consultancy project",
       content:
-        "This action will permanently delete \"" +
+        'This action will permanently delete "' +
         data.title +
-        "\" consultancy project.",
+        '" consultancy project.',
       onConfirm: () => {
         setConfirmDialog((prev) => ({ ...prev, open: false }));
         service
@@ -123,7 +147,11 @@ function Consultancy() {
       })
       .catch((error) => {
         console.error(error);
-        setSnack({ open: true, status: 500, message: "Error while fetching consultancy projects" });
+        setSnack({
+          open: true,
+          status: 500,
+          message: "Error while fetching consultancy projects",
+        });
         setIsLoading(false);
       });
   }, [dispatch, loggedIn, navigate, service, verify]);
@@ -135,11 +163,18 @@ function Consultancy() {
       <div
         className="p-3"
         style={{
-          height: state.data.length > 0 && state.data.length < 10 ? "90vh" : "100%",
+          height:
+            state.data.length > 0 && state.data.length < 10 ? "90vh" : "100%",
           width: "99vw",
           backgroundColor: "#c5d299",
         }}
       >
+        <PdfViewerDialog
+          open={pdfViewer.open}
+          onClose={handlePdfClose}
+          title={pdfViewer.title}
+          fileUrl={pdfViewer.url}
+        />
 
         <EntityDataGrid
           data={state.data}
@@ -155,6 +190,7 @@ function Consultancy() {
           fieldConfigs={fieldConfigs}
           type={"ConsultancyKey"}
           loading={isLoading}
+          handleView={handleView}
         />
       </div>
 

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Tooltip, Zoom } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import CustomDataGrid from "./CustomDataGrid";
 import {
@@ -74,6 +75,7 @@ const EntityDataGrid = ({
   perPage,
   handleDelete,
   handleEdit,
+  handleView, 
   isAdmin,
   isSuperAdmin,
   color,
@@ -199,15 +201,22 @@ const EntityDataGrid = ({
                 gap: 8,
               }}
             >
+              {<Tooltip title="View Details" arrow TransitionComponent={Zoom}>
+                <VisibilityIcon 
+                  style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "#616161", "&:hover":{color:'#424242'} }}
+                  onClick={() => handleView(params.row)}
+                  disabled={!params.row.fileName}
+                />
+              </Tooltip>}
               <Tooltip title="Edit" arrow TransitionComponent={Zoom}>
                 <EditIcon
-                  style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "black" }}
+                  style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "#1976D2" , "&:hover":{color:'#1565C0'} }}
                   onClick={() => handleEdit(params.row)}
                 />
               </Tooltip>
               <Tooltip title="Delete" arrow TransitionComponent={Zoom}>
                 <DeleteIcon
-                  style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "#ff1744" }}
+                  style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "#D32F2F" , "&:hover":{color:'#B71C1C'} }}
                   onClick={() => handleDelete(params.row)}
                 />
               </Tooltip>

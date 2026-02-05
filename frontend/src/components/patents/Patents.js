@@ -6,6 +6,7 @@ import { Tab } from "../../store/Actions";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
+import PdfViewerDialog from "../CustomComponents/PdfViewerDialog";
 
 // --- Columns Config ---
 const fieldConfigs = [
@@ -154,6 +155,7 @@ function Patents() {
 
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
+    const [pdfViewer, setPdfViewer] = useState({ open: false, url: "", title: "" });
 
     const handleClose = () => localDispatch({ type: "SET_MODAL", value: false });
     const handleSearch = () => {
@@ -202,6 +204,32 @@ function Patents() {
             });
     };
 
+    const handleView = (row) => {
+    console.log('Row',row)
+    if (!row || !row.fileName) {
+      setSnack({
+        open: true,
+        message: "No document Uploaded",
+        status: 400,
+      });
+      return;
+    }
+
+    const backendBase = process.env.REACT_APP_BACKEND_URL || "";
+    const branch = row.branch || "";
+    const fileUrl = `${backendBase}/uploads/${branch}/${row.fileName}`;
+
+    setPdfViewer({
+      open: true,
+      url: fileUrl,
+      title: row.title || "Publication File",
+    });
+  };
+
+  const handlePdfClose = () => {
+    setPdfViewer((prev) => ({ ...prev, open: false }));
+  };
+
     useEffect(() => {
         dispatchRedux(Tab("patent"));
         if (!loggedIn) {
@@ -248,6 +276,12 @@ function Patents() {
                 message={snack.message}
                 handleClose={() => setSnack((prev) => ({ ...prev, open: false }))}
             />
+            <PdfViewerDialog
+                    open={pdfViewer.open}
+                    onClose={handlePdfClose}
+                    title={pdfViewer.title}
+                    fileUrl={pdfViewer.url}
+                  />
             <CustomConfirmDialog
                 open={confirmOpen}
                 handleClose={handleConfirmClose}
@@ -297,6 +331,7 @@ function Patents() {
                                 state: { edit: true, patentData: row, patentNumbers: state.patentNumbers },
                             })
                     }
+                    handleView={handleView}
                 />
             </div>
         </>
