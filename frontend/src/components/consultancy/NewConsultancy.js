@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useReducer } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useReducer, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   Button,
@@ -16,9 +16,9 @@ import {
   Select as MUISelect,
   MenuItem,
 } from "@mui/material";
-import Service from '../../Service/http';
-import { Departments, ConsultancyKey } from '../../Service/keyValueMap';
-import { useDispatch, useSelector } from 'react-redux';
+import Service from "../../Service/http";
+import { Departments, ConsultancyKey } from "../../Service/keyValueMap";
+import { useDispatch, useSelector } from "react-redux";
 import { Tab } from "../../store/Actions";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
@@ -39,8 +39,13 @@ function NewConsultancy() {
   const verify = useSelector((state)=>state.verify);
   const isSuperAdmin = useSelector((state)=>state.isSuperAdmin);
   const isAdmin = useSelector((state)=>state.isAdmin);
-  const service = new Service();
+  const service = useMemo(() => new Service(), []);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const editData = location.state?.edit ? location.state.consultancyData : null;
+  const isEdit = !!editData;
   const [validationErrors, setValidationErrors] = useState({
     title: "",
     dept: "",
@@ -83,13 +88,44 @@ function NewConsultancy() {
     }
   };
 
-  const [body, dispatchBody] = useReducer(bodyReducer, bodyInitialState);
+  const [body, dispatchBody] = useReducer(
+    bodyReducer,
+    null,
+    () => {
+      if (!editData) return bodyInitialState;
 
-  const [cjb, setCjb] = useState([]);
-  const [ngo, setNGO] = useState("");
+      const normalizedDept = Array.isArray(editData.dept)
+        ? editData.dept
+        : typeof editData.dept === "string"
+        ? editData.dept
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+
+      return {
+        ...editData,
+        dept: normalizedDept,
+      };
+    }
+  );
+
+  const [cjb, setCjb] = useState(() => {
+    if (!editData) return [];
+    if (Array.isArray(editData.dept)) return editData.dept;
+    if (typeof editData.dept === "string") {
+      return editData.dept
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    return [];
+  });
+  const [ngo, setNGO] = useState(() => (editData?.ngo || ""));
   const [titles, setTitles] = useState([]);
-
-  const navigate = useNavigate();
+  const [originalTitle] = useState(() =>
+    editData?.title ? editData.title.replace(/\s+/g, " ").trim() : ""
+  );
   
   const handleSnackbarClose = (_,reason) => {
     if (reason === "clickaway") return;
@@ -103,13 +139,19 @@ function NewConsultancy() {
   const handleConfirmSubmission = () => {
     setConfirmOpen(false);
     setIsSubmitting(true);
+    const endpoint = isEdit
+      ? "api/consultancy/update"
+      : "api/consultancy/data";
+
     service
-      .post("api/consultancy/data", body)
+      .post(endpoint, body)
       .then(() => {
         setSnackbarConfig({
           open: true,
           status: 200,
-          message: `Succesfully Added ${body.title}`,
+          message: isEdit
+            ? `Updated ${body.title} consultancy project.`
+            : `Succesfully Added ${body.title}`,
         });
         navigate("/consultancy");
       })
@@ -118,7 +160,9 @@ function NewConsultancy() {
         setSnackbarConfig({
           open: true,
           status: 500,
-          message: `Error while adding ${body.title}. Please Try again later.`,
+          message: isEdit
+            ? `Error while updating ${body.title}. Please Try again later.`
+            : `Error while adding ${body.title}. Please Try again later.`,
         });
       })
       .finally(() => setIsSubmitting(false));
@@ -130,8 +174,17 @@ function NewConsultancy() {
       dept: "",
       ngo: "",
     };
-    const sanitizedTitle = body.title.replace(/\s+/g, " ").trim();
-    if (sanitizedTitle && containsIgnoreCase(titles, sanitizedTitle)) {
+    const sanitizedTitle = (body.title || "").replace(/\s+/g, " ").trim();
+    const isSameAsOriginal =
+      isEdit &&
+      originalTitle &&
+      sanitizedTitle.toLowerCase() === originalTitle.toLowerCase();
+
+    if (
+      sanitizedTitle &&
+      !isSameAsOriginal &&
+      containsIgnoreCase(titles, sanitizedTitle)
+    ) {
       errors.title = "Title Already exists";
     }
     if (cjb.length === 0) {
@@ -148,8 +201,15 @@ function NewConsultancy() {
     let updatedValue = value;
     if (field === "title") {
       updatedValue = updatedValue.replace(/\s+/g, " ");
+      const sanitized = updatedValue.trim();
+      const isSameAsOriginal =
+        isEdit &&
+        originalTitle &&
+        sanitized.toLowerCase() === originalTitle.toLowerCase();
       const duplicateTitle =
-        updatedValue && containsIgnoreCase(titles, updatedValue);
+        sanitized &&
+        !isSameAsOriginal &&
+        containsIgnoreCase(titles, sanitized);
       setValidationErrors((prev) => ({
         ...prev,
         title: duplicateTitle ? "Title Already exists" : "",
@@ -216,9 +276,8 @@ function NewConsultancy() {
           backgroundColor: "#c5d299",
         }}
       >
-        {/* <br/> */}
         <Container maxWidth="lg" sx={{ py: 4 }}>
-          <Card sx={{ borderRadius: 2 }}>
+          <Card sx={{ borderRadius: 2,  }}>
             <CardContent>
               <form id="insert-data" onSubmit={onSubmit}>
                 <Grid container spacing={4}>
@@ -340,7 +399,7 @@ function NewConsultancy() {
                       disabled={isSubmitting}
                       sx={{ mt: 2 }}
                     >
-                      Submit
+                      {isEdit ? "Update" : "Submit"}
                     </Button>
                   </Grid>
                 </Grid>

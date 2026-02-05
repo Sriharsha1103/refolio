@@ -3,10 +3,10 @@ import Service from "../../Service/http";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ConsultancyExportCSV } from "./ConsultancyExportCSV";
-import EditConsultancy from "./EditConsultancy";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import { Tab } from "../../store/Actions";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 
@@ -57,24 +57,52 @@ function Consultancy() {
   const isAdmin = useSelector((state) => state.isAdmin);
   const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
 
-  const [titles, setTitles] = useState([]);
   const [state, localDispatch] = useReducer(reducer, initialState);
   const [snack, setSnack] = useState({ open: false, status: 0, message: "" });
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    content: "",
+    onConfirm: null,
+  });
 
   const handleDelete = (data) => {
-    if (window.confirm("This action will permenently delete " + data.title + " consultancy project.")) {
-      service
-        .delete("api/consultancy/data/" + data._id)
-        .then(() => {
-          localDispatch({ type: "REMOVE_ITEM", id: data._id });
-          setSnack({ open: true, status: 200, message: `Deleted ${data.title} consultancy project.` });
-        })
-        .catch((err) => {
-          console.error("ERROR", err);
-          setSnack({ open: true, status: 500, message: "Error while deleting the consultancy project" });
-        });
-    }
+    setConfirmDialog({
+      open: true,
+      title: "Delete consultancy project",
+      content:
+        "This action will permanently delete \"" +
+        data.title +
+        "\" consultancy project.",
+      onConfirm: () => {
+        setConfirmDialog((prev) => ({ ...prev, open: false }));
+        service
+          .delete("api/consultancy/data/" + data._id)
+          .then(() => {
+            localDispatch({ type: "REMOVE_ITEM", id: data._id });
+            setSnack({
+              open: true,
+              status: 200,
+              message: `Deleted ${data.title} consultancy project.`,
+            });
+          })
+          .catch((err) => {
+            console.error("ERROR", err);
+            setSnack({
+              open: true,
+              status: 500,
+              message: "Error while deleting the consultancy project",
+            });
+          });
+      },
+    });
+  };
+
+  const handleEdit = (row) => {
+    navigate("../insertConsultancy", {
+      state: { edit: true, consultancyData: row },
+    });
   };
 
   useEffect(() => {
@@ -83,16 +111,6 @@ function Consultancy() {
       navigate("../");
       if (!verify) navigate("../verify");
       return;
-    }
-
-    if (titles.length === 0) {
-      service
-        .get("api/consultancy/titles")
-        .then((res) => setTitles(res))
-        .catch((error) => {
-          console.error("ERROR", error);
-          setSnack({ open: true, status: 500, message: "Failed to load consultancy titles" });
-        });
     }
 
     setIsLoading(true);
@@ -111,7 +129,7 @@ function Consultancy() {
         setSnack({ open: true, status: 500, message: "Error while fetching consultancy projects" });
         setIsLoading(false);
       });
-  }, [dispatch, loggedIn, navigate, service, titles.length, verify]);
+  }, [dispatch, loggedIn, navigate, service, verify]);
 
   if (!loggedIn) return null;
 
@@ -136,6 +154,7 @@ function Consultancy() {
           pageNo={state.pageNo}
           perPage={state.perPage}
           handleDelete={handleDelete}
+          handleEdit={handleEdit}
           isAdmin={isAdmin}
           isSuperAdmin={isSuperAdmin}
           color={state.color}
@@ -143,7 +162,6 @@ function Consultancy() {
           textColor={state.textColor}
           fieldConfigs={fieldConfigs}
           type={"ConsultancyKey"}
-          renderEdit={(row) => <EditConsultancy edit={row} titles={titles} />}
           loading={isLoading}
         />
       </div>
@@ -153,6 +171,20 @@ function Consultancy() {
         status={snack.status}
         message={snack.message}
         handleClose={() => setSnack((s) => ({ ...s, open: false }))}
+      />
+
+      <CustomConfirmDialog
+        open={confirmDialog.open}
+        title={confirmDialog.title}
+        content={confirmDialog.content}
+        handleClose={() =>
+          setConfirmDialog((prev) => ({ ...prev, open: false }))
+        }
+        handleConfirm={() => {
+          if (confirmDialog.onConfirm) {
+            confirmDialog.onConfirm();
+          }
+        }}
       />
     </>
   );
