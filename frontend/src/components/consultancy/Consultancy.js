@@ -2,13 +2,10 @@ import { useEffect, useMemo, useReducer, useState } from "react";
 import Service from "../../Service/http";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ConsultancyExportCSV } from "./ConsultancyExportCSV";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import { Tab } from "../../store/Actions";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 
 const fieldConfigs = [
   { field: "title", width: 250 },
@@ -143,11 +140,6 @@ function Consultancy() {
           backgroundColor: "#c5d299",
         }}
       >
-        <Box sx={{ mb: 2 }}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <ConsultancyExportCSV csvData={state.data} fileName={"Consultancy"} />
-          </Stack>
-        </Box>
 
         <EntityDataGrid
           data={state.data}
