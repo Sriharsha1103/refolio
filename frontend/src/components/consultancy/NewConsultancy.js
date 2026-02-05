@@ -12,6 +12,7 @@ import {
   Typography,
   FormControl,
   InputLabel,
+  FormHelperText,
   Select as MUISelect,
   MenuItem,
 } from "@mui/material";
@@ -19,10 +20,11 @@ import Service from '../../Service/http';
 import { Departments, ConsultancyKey } from '../../Service/keyValueMap';
 import { useDispatch, useSelector } from 'react-redux';
 import { Tab } from "../../store/Actions";
+import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 
 
 function NewConsultancy() {
-  // const classes = useStyles();
   const containsIgnoreCase = (array, searchString) => {
     const lowerCaseSearch = searchString.toLowerCase();
     return array.some(item => item.toLowerCase() === lowerCaseSearch);
@@ -38,11 +40,19 @@ function NewConsultancy() {
   const isSuperAdmin = useSelector((state)=>state.isSuperAdmin);
   const isAdmin = useSelector((state)=>state.isAdmin);
   const service = new Service();
-  const multiSelectRef = React.useRef(null);
-  const patentRef = React.useRef(null)
-  const designRef = React.useRef(null)
-  const dispatch=useDispatch()
-  const formRef = React.useRef();
+  const dispatch = useDispatch();
+  const [validationErrors, setValidationErrors] = useState({
+    title: "",
+    dept: "",
+    ngo: "",
+  });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [snackbarConfig, setSnackbarConfig] = useState({
+    open: false,
+    status: null,
+    message: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const bodyInitialState = {
     title : "",
@@ -81,76 +91,101 @@ function NewConsultancy() {
 
   const navigate = useNavigate();
   
-  const onSubmit = (event) => {
-    console.log("HERE sub",event)
-    event.preventDefault();
-    
-    // if(body.year==""||body.year==null){
-    //   window.alert('Select Year')
-    //   event.preventDefault()
-    // }
-    
-        // designRef.current.setCustomValidity((design===""||design===null)?"Please Select A Value.":"")
-        
-      let confirm = window.confirm("This action will add the data into the Database")
-      if(confirm){
+  const handleSnackbarClose = (_,reason) => {
+    if (reason === "clickaway") return;
+    setSnackbarConfig((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleConfirmClose = () => {
+    setConfirmOpen(false);
+  };
+
+  const handleConfirmSubmission = () => {
+    setConfirmOpen(false);
+    setIsSubmitting(true);
     service
       .post("api/consultancy/data", body)
-      .then((json) => {
-        // console.log("JSON", json);
-        window.alert("Succesfully Added "+body.title)
+      .then(() => {
+        setSnackbarConfig({
+          open: true,
+          status: 200,
+          message: `Succesfully Added ${body.title}`,
+        });
         navigate("/consultancy");
       })
       .catch((error) => {
-        window.alert("Error while adding "+body.title+ ". \nPlease Try again later.")
         console.log(error);
-      });
-    }else{
-      window.alert("Cancelled the insert action."); 
-      event.preventDefault()
-    }
-    
-    // console.log("EVENT",body)
+        setSnackbarConfig({
+          open: true,
+          status: 500,
+          message: `Error while adding ${body.title}. Please Try again later.`,
+        });
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
-  const handleChange = (e) => {
-    const { id, value } = e.target;
-    if (id === "title") {
-      dispatchBody({
-        type: 'SET_FIELD',
-        field: 'title',
-        value: value.replace(/\s+/g, ' ')
-      });
-    } else if (id === "authors") {
-      dispatchBody({ type: 'SET_FIELD', field: 'pi', value });
-    } else if (id === "co_authors") {
-      dispatchBody({ type: 'SET_FIELD', field: 'co_pi', value });
-    } else if (id === "amount") {
-      dispatchBody({ type: 'SET_FIELD', field: 'amount', value });
-    } else if (id === "ngo") {
-      dispatchBody({ type: 'SET_FIELD', field: 'ngo', value });
-    } else if (id === "industry") {
-      dispatchBody({ type: 'SET_FIELD', field: 'industry', value });
+  const runValidation = () => {
+    const errors = {
+      title: "",
+      dept: "",
+      ngo: "",
+    };
+    const sanitizedTitle = body.title.replace(/\s+/g, " ").trim();
+    if (sanitizedTitle && containsIgnoreCase(titles, sanitizedTitle)) {
+      errors.title = "Title Already exists";
     }
+    if (cjb.length === 0) {
+      errors.dept = "Please select a value.";
+    }
+    if (!ngo) {
+      errors.ngo = "Please select a value.";
+    }
+    setValidationErrors(errors);
+    return !errors.title && !errors.dept && !errors.ngo;
   };
 
-  const handleChangeDesign = (event) => {
-    const value = event.target.value;
-    setNGO(value);
+  const handleFieldChange = (field, value) => {
+    let updatedValue = value;
+    if (field === "title") {
+      updatedValue = updatedValue.replace(/\s+/g, " ");
+      const duplicateTitle =
+        updatedValue && containsIgnoreCase(titles, updatedValue);
+      setValidationErrors((prev) => ({
+        ...prev,
+        title: duplicateTitle ? "Title Already exists" : "",
+      }));
+    }
+
+    if (field === "dept") {
+      const deptValues = Array.isArray(updatedValue) ? updatedValue : [];
+      setCjb(deptValues);
+      setValidationErrors((prev) => ({
+        ...prev,
+        dept: deptValues.length === 0 ? "Please select a value." : "",
+      }));
+      updatedValue = deptValues;
+    }
+
+    if (field === "ngo") {
+      setNGO(updatedValue);
+      setValidationErrors((prev) => ({
+        ...prev,
+        ngo: updatedValue ? "" : "Please select a value.",
+      }));
+    }
+
     dispatchBody({
-      type: 'SET_FIELD',
-      field: 'ngo',
-      value,
+      type: "SET_FIELD",
+      field,
+      value: updatedValue,
     });
   };
 
-  const handleChangeDept = (event, value) => {
-    setCjb(value);
-    dispatchBody({
-      type: 'SET_FIELD',
-      field: 'dept',
-      value,
-    });
+  const onSubmit = (event) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+    if (!runValidation()) return;
+    setConfirmOpen(true);
   };
 
   useEffect(()=>{
@@ -174,40 +209,18 @@ function NewConsultancy() {
   },[])
   return (
     <>
-      {/* <Modal show={show} onHide={handleClose} size="xl">
-        <Modal.Header closeButton>
-          <Modal.Title>Sample Publication Data</Modal.Title>
-        </Modal.Header>
-        <Modal.Body
-          style={{
-            overflowY: "scroll",
-            paddingBottom: "20px",
-            backgroundColor: "#c5d299",
-          }}
-        >
-          <HelpModal />
-          <br />
-          <br />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="contained" color="error" onClick={handleClose}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal> */}
       <div
         style={{
-          height: "81.5vh",
+          height: "88vh",
           width: "100wh",
           backgroundColor: "#c5d299",
-          // paddingBottom: "100px",
         }}
       >
         {/* <br/> */}
         <Container maxWidth="lg" sx={{ py: 4 }}>
           <Card sx={{ borderRadius: 2 }}>
             <CardContent>
-              <form id="insert-data" ref={formRef} onSubmit={onSubmit}>
+              <form id="insert-data" onSubmit={onSubmit}>
                 <Grid container spacing={4}>
                   <Grid item xs={12} md={6}>
                     <Typography
@@ -220,7 +233,6 @@ function NewConsultancy() {
                     </Typography>
 
                     <TextField
-                      inputRef={patentRef}
                       label={ConsultancyKey.title}
                       placeholder={ConsultancyKey.title}
                       id="title"
@@ -228,7 +240,9 @@ function NewConsultancy() {
                       fullWidth
                       margin="normal"
                       value={body.title}
-                      onChange={handleChange}
+                      onChange={(event) => handleFieldChange("title", event.target.value)}
+                      error={!!validationErrors.title}
+                      helperText={validationErrors.title}
                     />
 
                     <TextField
@@ -239,7 +253,7 @@ function NewConsultancy() {
                       fullWidth
                       margin="normal"
                       value={body.pi}
-                      onChange={handleChange}
+                      onChange={(event) => handleFieldChange("pi", event.target.value)}
                     />
 
                     <TextField
@@ -250,7 +264,7 @@ function NewConsultancy() {
                       fullWidth
                       margin="normal"
                       value={body.co_pi}
-                      onChange={handleChange}
+                      onChange={(event) => handleFieldChange("co_pi", event.target.value)}
                     />
                   </Grid>
 
@@ -262,34 +276,36 @@ function NewConsultancy() {
                           disableCloseOnSelect
                           options={Departments}
                           value={cjb}
-                          onChange={handleChangeDept}
+                          onChange={(_, value) => handleFieldChange("dept", value)}
                           renderInput={(params) => (
                             <TextField
                               {...params}
                               label={ConsultancyKey.dept}
                               placeholder={cjb.length === 0 ? "Select At least One" : "Type to search"}
-                              required
-                              inputRef={multiSelectRef}
+                              error={!!validationErrors.dept}
+                              helperText={validationErrors.dept}
                             />
                           )}
                         />
                       </Grid>
 
                       <Grid item xs={12} md={6}>
-                        <FormControl fullWidth required>
+                        <FormControl fullWidth required error={!!validationErrors.ngo}>
                           <InputLabel id="ngo-label">{ConsultancyKey.ngo}</InputLabel>
                           <MUISelect
                             labelId="ngo-label"
                             id="ngo"
                             label={ConsultancyKey.ngo}
-                            inputRef={designRef}
                             value={ngo}
-                            onChange={handleChangeDesign}
+                            onChange={(event) => handleFieldChange("ngo", event.target.value)}
                           >
                             <MenuItem value="Private">Private</MenuItem>
                             <MenuItem value="Public">Public</MenuItem>
                             <MenuItem value="NGO">NGO</MenuItem>
                           </MUISelect>
+                          {validationErrors.ngo && (
+                            <FormHelperText>{validationErrors.ngo}</FormHelperText>
+                          )}
                         </FormControl>
                       </Grid>
                     </Grid>
@@ -302,7 +318,7 @@ function NewConsultancy() {
                       fullWidth
                       margin="normal"
                       value={body.industry}
-                      onChange={handleChange}
+                      onChange={(event) => handleFieldChange("industry", event.target.value)}
                     />
 
                     <TextField
@@ -313,7 +329,7 @@ function NewConsultancy() {
                       fullWidth
                       margin="normal"
                       value={body.amount}
-                      onChange={handleChange}
+                      onChange={(event) => handleFieldChange("amount", event.target.value)}
                     />
 
                     <Button
@@ -321,21 +337,8 @@ function NewConsultancy() {
                       color="secondary"
                       type="submit"
                       form="insert-data"
+                      disabled={isSubmitting}
                       sx={{ mt: 2 }}
-                      onClick={() => {
-                        patentRef.current?.setCustomValidity(
-                          containsIgnoreCase(titles, body.title)
-                            ? "Title Already exist"
-                            : ""
-                        );
-                        multiSelectRef.current?.setCustomValidity(
-                          cjb.length === 0 ? "Please Select a Value." : ""
-                        );
-                        designRef.current?.setCustomValidity(
-                          ngo === "" ? "Please Select A Value." : ""
-                        );
-                        formRef.current.reportValidity();
-                      }}
                     >
                       Submit
                     </Button>
@@ -346,6 +349,19 @@ function NewConsultancy() {
           </Card>
         </Container>
       </div>
+      <CustomConfirmDialog
+        open={confirmOpen}
+        handleClose={handleConfirmClose}
+        handleConfirm={handleConfirmSubmission}
+        title="Confirm Submission"
+        content="This action will add the data into the Database."
+      />
+      <CustomSnackbar
+        open={snackbarConfig.open}
+        handleClose={handleSnackbarClose}
+        status={snackbarConfig.status}
+        message={snackbarConfig.message}
+      />
     </>
   );
 }
