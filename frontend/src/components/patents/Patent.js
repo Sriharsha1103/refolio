@@ -257,7 +257,7 @@ function Patent() {
           alignItems: "center",
         }}
       >
-        <Container maxWidth={false}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
           <Grid container justifyContent="center" alignItems="center">
             <Grid item xs={12} sx={{ m: 4 }}>
               {isAdmin ? (

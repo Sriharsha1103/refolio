@@ -521,6 +521,19 @@ function NewResearch() {
                         >
                           {isEdit ? "Update" : "Submit"}
                         </Button>
+                      </Grid>
+                      <Grid
+                        item
+                        xs={12}
+                        md={4}
+                        sx={{
+                          display: "flex",
+                          justifyContent: {
+                            md: "flex-end",
+                            xs: "center",
+                          },
+                        }}
+                      >
                         <Button
                           variant="outlined"
                           sx={{

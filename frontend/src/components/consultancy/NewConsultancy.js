@@ -22,23 +22,23 @@ import { useDispatch, useSelector } from "react-redux";
 import { Tab } from "../../store/Actions";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
-
+import { primaryColor, white } from "../../utils/colors";
 
 function NewConsultancy() {
   const containsIgnoreCase = (array, searchString) => {
     const lowerCaseSearch = searchString.toLowerCase();
-    return array.some(item => item.toLowerCase() === lowerCaseSearch);
-  }
-  
+    return array.some((item) => item.toLowerCase() === lowerCaseSearch);
+  };
+
   const yearpre = new Date();
   const years = [];
   for (let step = 2012; step < 1 + yearpre.getFullYear(); step++) {
     years.push(step);
   }
-  const loggedIn = useSelector((state)=>state.logged);
-  const verify = useSelector((state)=>state.verify);
-  const isSuperAdmin = useSelector((state)=>state.isSuperAdmin);
-  const isAdmin = useSelector((state)=>state.isAdmin);
+  const loggedIn = useSelector((state) => state.logged);
+  const verify = useSelector((state) => state.verify);
+  const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
+  const isAdmin = useSelector((state) => state.isAdmin);
   const service = useMemo(() => new Service(), []);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -60,55 +60,51 @@ function NewConsultancy() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const bodyInitialState = {
-    title : "",
+    title: "",
     industry: "",
-    ngo : "",
-    pi : "",
-    co_pi  : "",
-    dept : [],
-    amount : "",
+    ngo: "",
+    pi: "",
+    co_pi: "",
+    dept: [],
+    amount: "",
   };
 
   const bodyReducer = (state, action) => {
     switch (action.type) {
-      case 'SET_FIELD':
+      case "SET_FIELD":
         return {
           ...state,
           [action.field]: action.value,
         };
-      case 'SET_MULTIPLE':
+      case "SET_MULTIPLE":
         return {
           ...state,
           ...action.payload,
         };
-      case 'RESET':
+      case "RESET":
         return bodyInitialState;
       default:
         return state;
     }
   };
 
-  const [body, dispatchBody] = useReducer(
-    bodyReducer,
-    null,
-    () => {
-      if (!editData) return bodyInitialState;
+  const [body, dispatchBody] = useReducer(bodyReducer, null, () => {
+    if (!editData) return bodyInitialState;
 
-      const normalizedDept = Array.isArray(editData.dept)
-        ? editData.dept
-        : typeof editData.dept === "string"
+    const normalizedDept = Array.isArray(editData.dept)
+      ? editData.dept
+      : typeof editData.dept === "string"
         ? editData.dept
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean)
         : [];
 
-      return {
-        ...editData,
-        dept: normalizedDept,
-      };
-    }
-  );
+    return {
+      ...editData,
+      dept: normalizedDept,
+    };
+  });
 
   const [cjb, setCjb] = useState(() => {
     if (!editData) return [];
@@ -121,13 +117,13 @@ function NewConsultancy() {
     }
     return [];
   });
-  const [ngo, setNGO] = useState(() => (editData?.ngo || ""));
+  const [ngo, setNGO] = useState(() => editData?.ngo || "");
   const [titles, setTitles] = useState([]);
   const [originalTitle] = useState(() =>
-    editData?.title ? editData.title.replace(/\s+/g, " ").trim() : ""
+    editData?.title ? editData.title.replace(/\s+/g, " ").trim() : "",
   );
-  
-  const handleSnackbarClose = (_,reason) => {
+
+  const handleSnackbarClose = (_, reason) => {
     if (reason === "clickaway") return;
     setSnackbarConfig((prev) => ({ ...prev, open: false }));
   };
@@ -139,9 +135,7 @@ function NewConsultancy() {
   const handleConfirmSubmission = () => {
     setConfirmOpen(false);
     setIsSubmitting(true);
-    const endpoint = isEdit
-      ? "api/consultancy/update"
-      : "api/consultancy/data";
+    const endpoint = isEdit ? "api/consultancy/update" : "api/consultancy/data";
 
     service
       .post(endpoint, body)
@@ -207,9 +201,7 @@ function NewConsultancy() {
         originalTitle &&
         sanitized.toLowerCase() === originalTitle.toLowerCase();
       const duplicateTitle =
-        sanitized &&
-        !isSameAsOriginal &&
-        containsIgnoreCase(titles, sanitized);
+        sanitized && !isSameAsOriginal && containsIgnoreCase(titles, sanitized);
       setValidationErrors((prev) => ({
         ...prev,
         title: duplicateTitle ? "Title Already exists" : "",
@@ -248,25 +240,28 @@ function NewConsultancy() {
     setConfirmOpen(true);
   };
 
-  useEffect(()=>{
-    dispatch(Tab('new-consultancy'));
-    if(!loggedIn){
-        navigate("../")}
-    else if(!verify){
-      navigate("../verify")
-    }else if(isSuperAdmin){
-      navigate("../consultancy")
+  useEffect(() => {
+    dispatch(Tab("new-consultancy"));
+    if (!loggedIn) {
+      navigate("../");
+    } else if (!verify) {
+      navigate("../verify");
+    } else if (isSuperAdmin) {
+      navigate("../consultancy");
     }
-    if(titles.length==0){
-    service.get('api/consultancy/titles').then((res)=>{
-      // console.log('titles',res)
-      setTitles(res);
-      // console.log("inside",titles)
-    }).catch((error)=>{
-      console.log("ERROR",error)
-    })
-  }
-  },[])
+    if (titles.length == 0) {
+      service
+        .get("api/consultancy/titles")
+        .then((res) => {
+          // console.log('titles',res)
+          setTitles(res);
+          // console.log("inside",titles)
+        })
+        .catch((error) => {
+          console.log("ERROR", error);
+        });
+    }
+  }, []);
   return (
     <>
       <div
@@ -274,14 +269,22 @@ function NewConsultancy() {
           height: "88vh",
           width: "100wh",
           backgroundColor: "#c5d299",
+          paddingBottom: "150px",
+          display: "flex",
+          alignItems: "center",
         }}
       >
         <Container maxWidth="lg" sx={{ py: 4 }}>
-          <Card sx={{ borderRadius: 2,  }}>
-            <CardContent>
+          <Card sx={{ borderRadius: "15px" }}>
+            <CardContent sx={{ p: "0px !important" }}>
               <form id="insert-data" onSubmit={onSubmit}>
-                <Grid container spacing={4}>
-                  <Grid item xs={12} md={6}>
+                <Grid container>
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    sx={{ p: { xs: 2, md: 5 }, bgcolor: white }}
+                  >
                     <Typography
                       variant="h5"
                       component="h3"
@@ -299,35 +302,52 @@ function NewConsultancy() {
                       fullWidth
                       margin="normal"
                       value={body.title}
-                      onChange={(event) => handleFieldChange("title", event.target.value)}
+                      onChange={(event) =>
+                        handleFieldChange("title", event.target.value)
+                      }
                       error={!!validationErrors.title}
                       helperText={validationErrors.title}
                     />
 
                     <TextField
-                      label={ConsultancyKey.pi + '  (Add multiple authors seperated by ",")'}
+                      label={
+                        ConsultancyKey.pi +
+                        '  (Add multiple authors seperated by ",")'
+                      }
                       id="authors"
                       placeholder={ConsultancyKey.pi}
                       required
                       fullWidth
                       margin="normal"
                       value={body.pi}
-                      onChange={(event) => handleFieldChange("pi", event.target.value)}
+                      onChange={(event) =>
+                        handleFieldChange("pi", event.target.value)
+                      }
                     />
 
                     <TextField
-                      label={ConsultancyKey.co_pi+'  (Add multiple authors seperated by ",")'}
+                      label={
+                        ConsultancyKey.co_pi +
+                        '  (Add multiple authors seperated by ",")'
+                      }
                       id="co_authors"
                       placeholder={ConsultancyKey.co_pi}
                       required
                       fullWidth
                       margin="normal"
                       value={body.co_pi}
-                      onChange={(event) => handleFieldChange("co_pi", event.target.value)}
+                      onChange={(event) =>
+                        handleFieldChange("co_pi", event.target.value)
+                      }
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    sx={{ p: { xs: 2, md: 5 }, bgcolor: primaryColor }}
+                  >
                     <Grid container spacing={2} sx={{ mt: { xs: 0, md: 4 } }}>
                       <Grid item xs={12} md={6}>
                         <Autocomplete
@@ -335,12 +355,18 @@ function NewConsultancy() {
                           disableCloseOnSelect
                           options={Departments}
                           value={cjb}
-                          onChange={(_, value) => handleFieldChange("dept", value)}
+                          onChange={(_, value) =>
+                            handleFieldChange("dept", value)
+                          }
                           renderInput={(params) => (
                             <TextField
                               {...params}
                               label={ConsultancyKey.dept}
-                              placeholder={cjb.length === 0 ? "Select At least One" : "Type to search"}
+                              placeholder={
+                                cjb.length === 0
+                                  ? "Select At least One"
+                                  : "Type to search"
+                              }
                               error={!!validationErrors.dept}
                               helperText={validationErrors.dept}
                             />
@@ -349,21 +375,31 @@ function NewConsultancy() {
                       </Grid>
 
                       <Grid item xs={12} md={6}>
-                        <FormControl fullWidth required error={!!validationErrors.ngo}>
-                          <InputLabel id="ngo-label">{ConsultancyKey.ngo}</InputLabel>
+                        <FormControl
+                          fullWidth
+                          required
+                          error={!!validationErrors.ngo}
+                        >
+                          <InputLabel id="ngo-label">
+                            {ConsultancyKey.ngo}
+                          </InputLabel>
                           <MUISelect
                             labelId="ngo-label"
                             id="ngo"
                             label={ConsultancyKey.ngo}
                             value={ngo}
-                            onChange={(event) => handleFieldChange("ngo", event.target.value)}
+                            onChange={(event) =>
+                              handleFieldChange("ngo", event.target.value)
+                            }
                           >
                             <MenuItem value="Private">Private</MenuItem>
                             <MenuItem value="Public">Public</MenuItem>
                             <MenuItem value="NGO">NGO</MenuItem>
                           </MUISelect>
                           {validationErrors.ngo && (
-                            <FormHelperText>{validationErrors.ngo}</FormHelperText>
+                            <FormHelperText>
+                              {validationErrors.ngo}
+                            </FormHelperText>
                           )}
                         </FormControl>
                       </Grid>
@@ -377,7 +413,9 @@ function NewConsultancy() {
                       fullWidth
                       margin="normal"
                       value={body.industry}
-                      onChange={(event) => handleFieldChange("industry", event.target.value)}
+                      onChange={(event) =>
+                        handleFieldChange("industry", event.target.value)
+                      }
                     />
 
                     <TextField
@@ -388,20 +426,72 @@ function NewConsultancy() {
                       fullWidth
                       margin="normal"
                       value={body.amount}
-                      onChange={(event) => handleFieldChange("amount", event.target.value)}
+                      onChange={(event) =>
+                        handleFieldChange("amount", event.target.value)
+                      }
                     />
-
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      type="submit"
-                      form="insert-data"
-                      disabled={isSubmitting}
-                      sx={{ mt: 2 }}
+                    <Grid
+                      container
+                      spacing={2}
+                      alignItems="center"
+                      justifyContent={"center"}
+                      mt={2}
                     >
-                      {isEdit ? "Update" : "Submit"}
-                    </Button>
-                  </Grid>
+                      <Grid
+                        item
+                        xs={12}
+                        md={4}
+                        sx={{
+                          display: "flex",
+                          justifyContent: {
+                            md: "flex-start",
+                            xs: "center",
+                          },
+                        }}
+                      >
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          type="submit"
+                          form="insert-data"
+                          disabled={isSubmitting}
+                          sx={{ mt: 2, mr: { xs: 0, md: 2 } }}
+                        >
+                          {isEdit ? "Update" : "Submit"}
+                        </Button>
+                        </Grid>
+                        <Grid
+                          item
+                          xs={12}
+                          md={4}
+                          sx={{
+                            display: "flex",
+                            justifyContent: {
+                              md: "flex-end",
+                              xs: "center",
+                            },
+                          }}
+                        >
+                          <Button
+                            variant="outlined"
+                            sx={{
+                              mt: 2,
+                              color: "#ffffff",
+                              borderColor: "#ffffff",
+                              fontWeight: "bold",
+                              "&:hover": {
+                                backgroundColor: "#ffffff",
+                                color: "#6C9449",
+                                borderColor: "#ffffff",
+                              },
+                            }}
+                            onClick={() => navigate("/consultancy")}
+                          >
+                            Cancel
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    </Grid>
                 </Grid>
               </form>
             </CardContent>
