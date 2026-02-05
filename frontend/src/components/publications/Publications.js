@@ -294,8 +294,8 @@ function Publications() {
       <div
         className="p-3"
         style={{
-          height: state.data.length > 0 && state.data.length < 10 ? "90vh" : "100%",
-          width: "99vw",
+          height: "89vh",
+          width: "100vw",
           backgroundColor: "#c5d299",
         }}
       >

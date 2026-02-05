@@ -1,8 +1,10 @@
 import React, { useEffect } from "react";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import PortalToolbar  from "./PortalToolBar";
-// Removed unused PortalToolbar imports
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
 const CustomDataGrid = ({
   data,
@@ -13,14 +15,23 @@ const CustomDataGrid = ({
   pinnedLeft = [],
   addPath,
   loadingMessage = "Loading data...",
+  onGridApiReady, // <- new optional prop
 }) => {
-    const LoadingOverlay = () => (
-      <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 2 }}>
-        <CircularProgress size={32} />
-        <Typography variant="body2" color="text.secondary">{loadingMessage}</Typography>
-      </Box>
-    );
-  // const FREEZE_COUNT = 2;
+  const apiRef = useGridApiRef();
+
+  useEffect(() => {
+    if (onGridApiReady && apiRef.current) {
+      onGridApiReady(apiRef.current);
+    }
+  }, [onGridApiReady, apiRef]);
+
+  const LoadingOverlay = () => (
+    <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 2 }}>
+      <CircularProgress size={32} />
+      <Typography variant="body2" color="text.secondary">{loadingMessage}</Typography>
+    </Box>
+  );
+
   const pinnedSx = pinnedLeft.reduce((acc, col, index) => {
     const zCell = 100 + index;
     const zHeader = 200 + index;
@@ -62,11 +73,8 @@ const CustomDataGrid = ({
     return () => grid.removeEventListener("scroll", sync);
   }, []);
 
-  // FrozenHeader component removed (unused)
-
   return (
     <Box sx={{ height: "75vh", width: "100%" }}>
-      {/* <FrozenHeader columns={columns} /> */}
       <Box
         id="external-grid-toolbar"
         sx={{
@@ -80,6 +88,7 @@ const CustomDataGrid = ({
         }}
       />
       <DataGrid
+        apiRef={apiRef}
         rows={data}
         columns={columns}
         loading={loading}
@@ -92,8 +101,13 @@ const CustomDataGrid = ({
           },
         }}
         pageSizeOptions={[10, 25, 50, 100]}
-        slots={{ toolbar: PortalToolbar, loadingOverlay: LoadingOverlay }}
-        slotProps={{ toolbar: { addPath } }}
+        slots={{
+          toolbar: PortalToolbar,
+          loadingOverlay: LoadingOverlay,
+        }}
+        slotProps={{
+          toolbar: { addPath },
+        }}
         sx={{
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: "#f5f5f5",
@@ -121,7 +135,6 @@ const CustomDataGrid = ({
             px: 2,
             borderTop: "1px solid rgba(0,0,0,0.12)",
           },
-          // Fine-tune table pagination alignment
           "& .MuiTablePagination-root": {
             marginLeft: "auto",
             padding: 0,

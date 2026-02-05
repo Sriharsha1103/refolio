@@ -14,7 +14,7 @@ const FileUploadSection = ({ file, handleFileChange, error, onError }) => {
     };
 
     return (
-        <Box display="flex" alignItems="center" flexWrap="wrap" gap={2} sx={{ }}>
+        <Box display="flex" alignItems="center" flexDirection="row" flexWrap="wrap" gap={2} sx={{ }}>
             <Button 
                 variant="contained" 
                 component="label" 

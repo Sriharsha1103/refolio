@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Tooltip, Zoom } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import CustomDataGrid from "./CustomDataGrid";
 import {
   PatentsKey,
@@ -42,7 +43,30 @@ const CustomCell = ({ row, children, bg, color, background, textColor }) => (
   </div>
 );
 
+// simple header renderer that always shows the filter icon
+// and opens the filter panel instead of sorting
+const HeaderWithFilter = ({ colDef, api }) => {
+  const { headerName, field } = colDef;
 
+  const handleClick = (event) => {
+    // prevent header click from triggering default sort
+    event.preventDefault();
+    event.stopPropagation();
+    // open filter panel for this column
+    api.showFilterPanel(field);
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <span style={{ fontWeight: 'bold'}}>{headerName}</span>
+      <FilterAltIcon
+        fontSize="small"
+        style={{ opacity: 0.8, cursor: "pointer" }}
+        onClick={handleClick}
+      />
+    </div>
+  );
+};
 
 const EntityDataGrid = ({
   data,
@@ -62,6 +86,7 @@ const EntityDataGrid = ({
   loading,
 }) => {
   const [tableType, setTableType] = useState({});
+  const [gridApi, setGridApi] = useState(null);
 
   useEffect(() => {
     if (type === "Publication") setTableType(PublicationsKey);
@@ -111,12 +136,21 @@ const EntityDataGrid = ({
         valueFormatter = (p) => getCJBLabel(p.value);
       }
 
+      const headerTitle = tableType[cfg.field];
+
       return {
         field: cfg.field,
-        headerName: tableType[cfg.field],
+        headerName: headerTitle,
         width: cfg.width || 150,
         renderCell,
         filterable: true,
+        // show filter icon by default in header, wired to filter panel
+        renderHeader: (params) =>
+          gridApi ? (
+            <HeaderWithFilter colDef={params.colDef} api={gridApi} />
+          ) : (
+            <span>{headerTitle}</span>
+          ),
         ...(valueFormatter ? { valueFormatter } : {}),
       };
     });
@@ -149,7 +183,7 @@ const EntityDataGrid = ({
       ...generated,
       {
         field: "actions",
-        headerName: "Edit / Delete",
+        headerName: "Actions",
         width: 120,
         sortable: false,
         renderCell: (params) =>
@@ -162,6 +196,7 @@ const EntityDataGrid = ({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                gap: 8,
               }}
             >
               <Tooltip title="Edit" arrow TransitionComponent={Zoom}>
@@ -190,6 +225,7 @@ const EntityDataGrid = ({
     color,
     background,
     textColor,
+    gridApi,      
   ]);
 
   /** 🔒 Compute frozen columns correctly */
@@ -210,6 +246,8 @@ const EntityDataGrid = ({
       columns={columns}
       pageSize={perPage}
       pinnedLeft={pinnedLeft}
+      // capture grid api from CustomDataGrid via prop callback
+      onGridApiReady={setGridApi}
       addPath={
         type === "Publication"
           ? "/insertPublications"
