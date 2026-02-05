@@ -1,25 +1,24 @@
-import React, { useEffect, useState } from "react";
-
-// import Select from "@mui/material/Select";
-import { DateInput } from "@mantine/dates";
-
-import {
-  MDBContainer,
-  MDBRow,
-  MDBCol,
-  MDBCard,
-  MDBCardBody,
-} from "mdb-react-ui-kit";
+import React, { useEffect, useState, useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Button } from '@mui/material';
+import {
+  Button,
+  TextField,
+  Autocomplete,
+  Card,
+  CardContent,
+  Grid,
+  Container,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select as MUISelect,
+  MenuItem,
+} from "@mui/material";
 import Service from '../../Service/http';
 import { Departments, ConsultancyKey } from '../../Service/keyValueMap';
 import { useDispatch, useSelector } from 'react-redux';
-import { MultiSelect,TextInput, Textarea,Select, NumberInput } from "@mantine/core";
 import { Tab } from "../../store/Actions";
-// import { PatentsBulkUpload } from "./PatentsBulkUpload";
-// import { events } from "../../../backend/db/LoginSchema";
 
 
 function NewConsultancy() {
@@ -40,15 +39,12 @@ function NewConsultancy() {
   const isAdmin = useSelector((state)=>state.isAdmin);
   const service = new Service();
   const multiSelectRef = React.useRef(null);
-//   const designRef = React.useRef(null)
   const patentRef = React.useRef(null)
   const designRef = React.useRef(null)
   const dispatch=useDispatch()
-   // console.log("HERE", here)
-  // const username = query.get('')
   const formRef = React.useRef();
-  const [design,setDesign] = useState([])
-  const [body, setBody] = useState({
+
+  const bodyInitialState = {
     title : "",
     industry: "",
     ngo : "",
@@ -56,13 +52,32 @@ function NewConsultancy() {
     co_pi  : "",
     dept : [],
     amount : "",
-  });
+  };
+
+  const bodyReducer = (state, action) => {
+    switch (action.type) {
+      case 'SET_FIELD':
+        return {
+          ...state,
+          [action.field]: action.value,
+        };
+      case 'SET_MULTIPLE':
+        return {
+          ...state,
+          ...action.payload,
+        };
+      case 'RESET':
+        return bodyInitialState;
+      default:
+        return state;
+    }
+  };
+
+  const [body, dispatchBody] = useReducer(bodyReducer, bodyInitialState);
 
   const [cjb, setCjb] = useState([]);
   const [ngo, setNGO] = useState("");
   const [titles, setTitles] = useState([]);
-  const [send, setSend] = useState(0);
-  const [show, setShow] = useState(false);
 
   const navigate = useNavigate();
   
@@ -97,120 +112,66 @@ function NewConsultancy() {
     
     // console.log("EVENT",body)
   };
+
   const handleChange = (e) => {
-    console.log("EEEE", e)
-   if (e.currentTarget.id === "title") {
-      // body.title = e.target.value
-      setBody({        
-        title : e.currentTarget.value.replace(/\s+/g, ' '),
-        industry: body.industry,
-        ngo : body.ngo,
-        pi : body.pi,
-        co_pi  : body.co_pi,
-        dept : body.dept,
-        amount : body.amount,
+    const { id, value } = e.target;
+    if (id === "title") {
+      dispatchBody({
+        type: 'SET_FIELD',
+        field: 'title',
+        value: value.replace(/\s+/g, ' ')
       });
-    } else if (e.currentTarget.id === "authors") {
-      // body.username = e.target.value
-      setBody({
-        title : body.title,
-        industry: body.industry,
-        ngo : body.ngo,
-        pi : e.currentTarget.value,
-        co_pi  : body.co_pi,
-        dept : body.dept,
-        amount : body.amount,
-      });    } else if (e.currentTarget.id === "co_authors") {
-      // body.name_cjb = e.target.value
-      setBody({
-        title : body.title,
-        industry: body.industry,
-        ngo : body.ngo,
-        pi : body.pi,
-        co_pi  : e.currentTarget.value,
-        dept : body.dept,
-        amount : body.amount,
-      });
-    } else if (e.currentTarget.id === "amount") {
-      // body.vol = e.target.value
-      setBody({
-        title : body.title,
-        industry: body.industry,
-        ngo : body.ngo,
-        pi : body.pi,
-        co_pi  : body.co_pi,
-        dept : body.dept,
-        amount : e.currentTarget.value,
-      });
-    } else if(e.currentTarget.id==="ngo"){
-        setBody({
-            title : body.title,
-            industry: body.industry,
-            ngo : e.currentTarget.value,
-            pi : body.pi,
-            co_pi  : body.co_pi,
-            dept : body.dept,
-            amount : body.amount,
-          });
-    }else{
-        setBody({
-            title : body.title,
-            industry: e.currentTarget.value,
-            ngo : body.ngo,
-            pi : body.pi,
-            co_pi  : body.co_pi,
-            dept : body.dept,
-            amount : body.amount,
-        })
+    } else if (id === "authors") {
+      dispatchBody({ type: 'SET_FIELD', field: 'pi', value });
+    } else if (id === "co_authors") {
+      dispatchBody({ type: 'SET_FIELD', field: 'co_pi', value });
+    } else if (id === "amount") {
+      dispatchBody({ type: 'SET_FIELD', field: 'amount', value });
+    } else if (id === "ngo") {
+      dispatchBody({ type: 'SET_FIELD', field: 'ngo', value });
+    } else if (id === "industry") {
+      dispatchBody({ type: 'SET_FIELD', field: 'industry', value });
     }
-   
-    // console.log("IN HANDLE CHANGE", body)
   };
+
   const handleChangeDesign = (event) => {
-    setNGO(event)
-    setBody({
-      title : body.title,
-      industry: body.industry,
-      ngo : event,
-      pi : body.pi,
-      co_pi  : body.co_pi,
-      dept : body.dept,
-      amount : body.amount,
-        });
-  }
-  const handleChangeDept = (event) => {
-   
-    setCjb(event);
-    setBody({
-        title : body.title,
-        industry: body.industry,
-        ngo : body.ngo,
-        pi : body.pi,
-        co_pi  : body.co_pi,
-        dept : event,
-        amount : body.amount,
-          });
+    const value = event.target.value;
+    setNGO(value);
+    dispatchBody({
+      type: 'SET_FIELD',
+      field: 'ngo',
+      value,
+    });
   };
-  // const navigate = useNavigate();
-    useEffect(()=>{
-      dispatch(Tab('new-consultancy'));
-      if(!loggedIn){
-          navigate("../")}
-      else if(!verify){
-        navigate("../verify")
-      }else if(isSuperAdmin){
-        navigate("../consultancy")
-      }
-      if(titles.length==0){
-      service.get('api/consultancy/titles').then((res)=>{
-        // console.log('titles',res)
-        setTitles(res);
-        // console.log("inside",titles)
-      }).catch((error)=>{
-        console.log("ERROR",error)
-      })
+
+  const handleChangeDept = (event, value) => {
+    setCjb(value);
+    dispatchBody({
+      type: 'SET_FIELD',
+      field: 'dept',
+      value,
+    });
+  };
+
+  useEffect(()=>{
+    dispatch(Tab('new-consultancy'));
+    if(!loggedIn){
+        navigate("../")}
+    else if(!verify){
+      navigate("../verify")
+    }else if(isSuperAdmin){
+      navigate("../consultancy")
     }
-    },[])
+    if(titles.length==0){
+    service.get('api/consultancy/titles').then((res)=>{
+      // console.log('titles',res)
+      setTitles(res);
+      // console.log("inside",titles)
+    }).catch((error)=>{
+      console.log("ERROR",error)
+    })
+  }
+  },[])
   return (
     <>
       {/* <Modal show={show} onHide={handleClose} size="xl">
@@ -243,159 +204,147 @@ function NewConsultancy() {
         }}
       >
         {/* <br/> */}
-        <MDBContainer fluid className="h-custom">
-          <MDBRow className="h-100">
-            <MDBCol col="12" className="m-4">
-              <MDBCard
-                className="card-registration card-registration-2"
-                style={{ borderRadius: "15px" }}
-              >
-                <MDBCardBody className="p-0">
-                  <form id="insert-data" ref={formRef} onSubmit={onSubmit}>
-                    <MDBRow>
-                      <MDBCol md="6" className="p-5 bg-white">
-                        <h3
-                          className="fw-normal mb-5"
-                          style={{ color: "#6C9449" }}
-                        >
-                          Consultancy Project Information
-                        </h3>
-                        <TextInput
-                        styles={{"label": {"color": "#6C9449","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        ref={patentRef}
-                        label={ConsultancyKey.title}
-                        placeholder={ConsultancyKey.title}
-                        onChange={(event)=>{handleChange(event)}}
-                        id="title"
-                        withAsterisk
-                        required
-                        />
-                        <br />
-                        <TextInput
-                        styles={{"label": {"color": "#6C9449","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        label={ConsultancyKey.pi + '  (Add multiple authors seperated by ",")'}
-                        id="authors"
-                        placeholder={ConsultancyKey.pi}
-                        onChange={(event)=>{handleChange(event)}}
-                        withAsterisk
-                        required
-                        />
-                        <br />
-                        <TextInput
-                        styles={{"label": {"color": "#6C9449","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        label={ConsultancyKey.co_pi+'  (Add multiple authors seperated by ",")'}
-                        id="co_authors"
-                        placeholder={ConsultancyKey.co_pi}
-                        onChange={(event)=>{handleChange(event)}}
-                        withAsterisk
-                        required
-                        />
-                        {/* <TextInput
-                        styles={{"label": {"color": "#6C9449","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        label={ConsultancyKey.pat_no}
-                        placeholder={ConsultancyKey.pat_no}
-                        onChange={(event)=>{handleChange(event)}}
-                        id="pat_no"
-                        withAsterisk
-                        required
-                        /> */}
-                        <br />
-                      </MDBCol>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Card sx={{ borderRadius: 2 }}>
+            <CardContent>
+              <form id="insert-data" ref={formRef} onSubmit={onSubmit}>
+                <Grid container spacing={4}>
+                  <Grid item xs={12} md={6}>
+                    <Typography
+                      variant="h5"
+                      component="h3"
+                      gutterBottom
+                      sx={{ color: "#6C9449", fontWeight: 500 }}
+                    >
+                      Consultancy Project Information
+                    </Typography>
 
-                      <MDBCol md="6" className="bg-indigo p-5">
-                           <br/>
-                        <br />
-                        <MDBRow>
-                          <MDBCol md="6">
-                              <MultiSelect 
-                               ref={multiSelectRef}
-                              styles={{"label": {"color": "white","text-align":"left"}}}
-                              style={{"text-align":"left"}} 
-                              withAsterisk 
-                              placeholder={cjb.length==0?"Select At least One":"Type to search"}
-                              label={ConsultancyKey.dept} 
-                              searchable 
-                              id = "dept"
-                              data={Departments} 
-                              value={cjb} 
-                              onChange={(e)=>{handleChangeDept(e)}} />
-                                
-                            {/* </FormControl> */}
-                          </MDBCol>
+                    <TextField
+                      inputRef={patentRef}
+                      label={ConsultancyKey.title}
+                      placeholder={ConsultancyKey.title}
+                      id="title"
+                      required
+                      fullWidth
+                      margin="normal"
+                      value={body.title}
+                      onChange={handleChange}
+                    />
 
-                          <MDBCol md="6">
-                          <Select 
-                               ref={designRef}
-                              styles={{"label": {"color": "white","text-align":"left"}}}
-                              style={{"text-align":"left"}} 
-                              withAsterisk 
-                              placeholder="Select One"
-                              label={ConsultancyKey.ngo} 
-                              searchable 
-                              // maxValues={2}
-                              id = "ngo"
-                              data={["Private","Public","NGO"]} 
-                            //   value={cjb} 
-                              onChange={(e)=>{handleChangeDesign(e)}} />
-                          
-                          </MDBCol>
-                        </MDBRow>
-                        <br/>
-                        <TextInput
-                        styles={{"label": {"color": "white","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        label={ConsultancyKey.industry}
-                        placeholder="Enter Industry"
-                        onChange={(event)=>{handleChange(event)}}
-                        id="industry"
-                        withAsterisk
-                        required
+                    <TextField
+                      label={ConsultancyKey.pi + '  (Add multiple authors seperated by ",")'}
+                      id="authors"
+                      placeholder={ConsultancyKey.pi}
+                      required
+                      fullWidth
+                      margin="normal"
+                      value={body.pi}
+                      onChange={handleChange}
+                    />
+
+                    <TextField
+                      label={ConsultancyKey.co_pi+'  (Add multiple authors seperated by ",")'}
+                      id="co_authors"
+                      placeholder={ConsultancyKey.co_pi}
+                      required
+                      fullWidth
+                      margin="normal"
+                      value={body.co_pi}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Grid container spacing={2} sx={{ mt: { xs: 0, md: 4 } }}>
+                      <Grid item xs={12} md={6}>
+                        <Autocomplete
+                          multiple
+                          disableCloseOnSelect
+                          options={Departments}
+                          value={cjb}
+                          onChange={handleChangeDept}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label={ConsultancyKey.dept}
+                              placeholder={cjb.length === 0 ? "Select At least One" : "Type to search"}
+                              required
+                              inputRef={multiSelectRef}
+                            />
+                          )}
                         />
-                        
-                        <br/>
-                        <TextInput
-                        styles={{"label": {"color": "white","text-align":"left"}}}
-                        style={{"text-align":"left"}}
-                        label={ConsultancyKey.amount}
-                        placeholder="Enter Amount"
-                        onChange={(event)=>{handleChange(event)}}
-                        id="amount"
-                        withAsterisk
-                        required
-                        />
-                        <br/>
-                       
-                        <Button
-                          variant="contained"
-                          color="secondary"
-                          type="submit"
-                          form="insert-data"
-                          onClick={(event) => {
-                            // console.log("SUBMITTT",(designRef.current))
-                            patentRef.current.setCustomValidity(containsIgnoreCase(titles,body.title)?"Title Already exist":"")
-                            multiSelectRef.current.setCustomValidity(cjb.length===0?"Please Select a Value.":"")
-                            designRef.current.setCustomValidity((ngo==="")?"Please Select A Value.":"")
-                            formRef.current.reportValidity();
-                            // formRef.current.submit();
-                            setSend(send + 1);
-                          }}
-                        >
-                          Submit
-                        </Button>
-                        {/* </MDBCol> */}
-                        {/* </MDBRow> */}
-                      </MDBCol>
-                    </MDBRow>
-                  </form>
-                </MDBCardBody>
-              </MDBCard>
-            </MDBCol>
-          </MDBRow>
-        </MDBContainer>
+                      </Grid>
+
+                      <Grid item xs={12} md={6}>
+                        <FormControl fullWidth required>
+                          <InputLabel id="ngo-label">{ConsultancyKey.ngo}</InputLabel>
+                          <MUISelect
+                            labelId="ngo-label"
+                            id="ngo"
+                            label={ConsultancyKey.ngo}
+                            inputRef={designRef}
+                            value={ngo}
+                            onChange={handleChangeDesign}
+                          >
+                            <MenuItem value="Private">Private</MenuItem>
+                            <MenuItem value="Public">Public</MenuItem>
+                            <MenuItem value="NGO">NGO</MenuItem>
+                          </MUISelect>
+                        </FormControl>
+                      </Grid>
+                    </Grid>
+
+                    <TextField
+                      label={ConsultancyKey.industry}
+                      placeholder="Enter Industry"
+                      id="industry"
+                      required
+                      fullWidth
+                      margin="normal"
+                      value={body.industry}
+                      onChange={handleChange}
+                    />
+
+                    <TextField
+                      label={ConsultancyKey.amount}
+                      placeholder="Enter Amount"
+                      id="amount"
+                      required
+                      fullWidth
+                      margin="normal"
+                      value={body.amount}
+                      onChange={handleChange}
+                    />
+
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      type="submit"
+                      form="insert-data"
+                      sx={{ mt: 2 }}
+                      onClick={() => {
+                        patentRef.current?.setCustomValidity(
+                          containsIgnoreCase(titles, body.title)
+                            ? "Title Already exist"
+                            : ""
+                        );
+                        multiSelectRef.current?.setCustomValidity(
+                          cjb.length === 0 ? "Please Select a Value." : ""
+                        );
+                        designRef.current?.setCustomValidity(
+                          ngo === "" ? "Please Select A Value." : ""
+                        );
+                        formRef.current.reportValidity();
+                      }}
+                    >
+                      Submit
+                    </Button>
+                  </Grid>
+                </Grid>
+              </form>
+            </CardContent>
+          </Card>
+        </Container>
       </div>
     </>
   );
