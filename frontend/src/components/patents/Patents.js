@@ -1,11 +1,11 @@
-import { useEffect, useReducer, useMemo } from "react";
+import { useEffect, useReducer, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Service from "../../Service/http";
 import { Tab } from "../../store/Actions";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
-import Patent from "./Patent";
+import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 
 // --- Columns Config ---
 const fieldConfigs = [
@@ -44,9 +44,6 @@ const initialState = {
         endDate: null,
     },
     patentNumbers: [],
-    alert: false,
-    alertData: "",
-    alertType: "",
 };
 
 // --- Helpers ---
@@ -137,13 +134,6 @@ const reducer = (state, action) => {
             return { ...state, showModal: action.value };
         case "SET_REQUIRED":
             return { ...state, required: action.value };
-        case "SET_ALERT":
-            return {
-                ...state,
-                alert: action.payload.alert,
-                alertData: action.payload.alertData || state.alertData,
-                alertType: action.payload.alertType || state.alertType,
-            };
         default:
             return state;
     }
@@ -160,7 +150,10 @@ function Patents() {
     const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
 
     const [state, localDispatch] = useReducer(reducer, initialState);
-    const setAlert = (val) => localDispatch({ type: "SET_ALERT", payload: { alert: val } });
+    const [snack, setSnack] = useState({ open: false, status: 0, message: "" });
+
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
 
     const handleClose = () => localDispatch({ type: "SET_MODAL", value: false });
     const handleSearch = () => {
@@ -175,24 +168,38 @@ function Patents() {
     const onEndDate = (date) => localDispatch({ type: "SET_FILTER", field: "endDate", value: date });
 
     const handleDelete = (row) => {
-        if (window.confirm("This action will permenently delete " + row.title + " patent.")) {
-            service
-                .delete("api/patents/data/" + row._id)
-                .then(() => {
-                    localDispatch({
-                        type: "SET_ALERT",
-                        payload: { alert: true, alertData: "Successfully Deleted " + row.title + " Patent.", alertType: "success" },
-                    });
-                    setTimeout(() => window.location.reload(), 2000);
-                })
-                .catch((err) => {
-                    console.error("ERROR", err);
-                    localDispatch({
-                        type: "SET_ALERT",
-                        payload: { alert: true, alertData: "Error while deleting the patent", alertType: "error" },
-                    });
+        setDeleteTarget(row);
+        setConfirmOpen(true);
+    };
+
+    const handleConfirmClose = () => {
+        setConfirmOpen(false);
+        setDeleteTarget(null);
+    };
+
+    const handleConfirmDelete = () => {
+        if (!deleteTarget) return;
+
+        service
+            .delete("api/patents/data/" + deleteTarget._id)
+            .then(() => {
+                setSnack({
+                    open: true,
+                    status: 200,
+                    message: "Successfully Deleted " + deleteTarget.title + " Patent.",
                 });
-        }
+                handleConfirmClose();
+                setTimeout(() => window.location.reload(), 2000);
+            })
+            .catch((err) => {
+                console.error("ERROR", err);
+                setSnack({
+                    open: true,
+                    status: 500,
+                    message: "Error while deleting the patent",
+                });
+                handleConfirmClose();
+            });
     };
 
     useEffect(() => {
@@ -216,9 +223,10 @@ function Patents() {
                 localDispatch({ type: "SET_ALL_DATA", payload: { docs: normalized } });
             })
             .catch((error) => {
-                localDispatch({
-                    type: "SET_ALERT",
-                    payload: { alert: true, alertData: "Error while fetching patents.\n Please try again later.", alertType: "error" },
+                setSnack({
+                    open: true,
+                    status: 500,
+                    message: "Error while fetching patents.\n Please try again later.",
                 });
                 console.error(error);
             });
@@ -234,7 +242,23 @@ function Patents() {
 
     return (
         <>
-            <CustomSnackbar alert={state.alert} alertData={state.alertData} alertType={state.alertType} setAlert={setAlert} />
+            <CustomSnackbar
+                open={snack.open}
+                status={snack.status}
+                message={snack.message}
+                handleClose={() => setSnack((prev) => ({ ...prev, open: false }))}
+            />
+            <CustomConfirmDialog
+                open={confirmOpen}
+                handleClose={handleConfirmClose}
+                handleConfirm={handleConfirmDelete}
+                title="Confirm Delete"
+                content={
+                    deleteTarget
+                        ? "This action will permenently delete " + deleteTarget.title + " patent."
+                        : ""
+                }
+            />
             {/* <AdvancedSearch
                 show={state.showModal}
                 onHide={handleClose}

@@ -1,10 +1,11 @@
-import { useEffect, useReducer, useMemo } from "react";
+import { useEffect, useReducer, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import Service from "../../Service/http";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import { Tab } from "../../store/Actions";
+import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
 
 // --- Constants & Config ---
 
@@ -133,20 +134,35 @@ function Users() {
 
   const [state, localDispatch] = useReducer(reducer, initialState);
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   // --- Handlers ---
   const handleDelete = (data) => {
-    if (window.confirm("This action will permenently delete " + data.Name + " User.")) {
-      service
-        .delete("api/users/record/" + data._id)
-        .then(() => {
-          window.alert("Successfully Deleted " + data.Name + " User.");
-          window.location.reload();
-        })
-        .catch((err) => {
-          console.error("ERROR", err);
-          window.alert("Error while deleting the User");
-        });
-    }
+    setDeleteTarget(data);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmClose = () => {
+    setConfirmOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+
+    service
+      .delete("api/users/record/" + deleteTarget._id)
+      .then(() => {
+        handleConfirmClose();
+        window.alert("Successfully Deleted " + deleteTarget.Name + " User.");
+        window.location.reload();
+      })
+      .catch((err) => {
+        console.error("ERROR", err);
+        handleConfirmClose();
+        window.alert("Error while deleting the User");
+      });
   };
 
   useEffect(() => {
@@ -171,6 +187,17 @@ function Users() {
 
   return (
     <>
+      <CustomConfirmDialog
+        open={confirmOpen}
+        handleClose={handleConfirmClose}
+        handleConfirm={handleConfirmDelete}
+        title="Confirm Delete"
+        content={
+          deleteTarget
+            ? "This action will permenently delete " + deleteTarget.Name + " User."
+            : ""
+        }
+      />
       <div
         className="p-3"
         style={{
