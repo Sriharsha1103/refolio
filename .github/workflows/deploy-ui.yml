@@ -3,7 +3,7 @@ name: Deploy Refolio UI to GoDaddy
 on:
   push:
     branches:
-      - ui-deploy
+      - prod_new
 
 jobs:
   deploy:
