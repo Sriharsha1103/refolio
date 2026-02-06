@@ -32,6 +32,9 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # Copy all build artifacts
           source: "refolio/frontend/build/*"
           target: "/var/www/html/refolio"
-          strip_components: 3
+          # strip_components is not a supported option for appleboy/scp-action.
+          # Remove it or replace with 'rm' and 'tar' logic if you need path rewriting.
+          # strip_components: 3
