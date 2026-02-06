@@ -51,7 +51,7 @@ function HomeNavbar() {
         if(loggedIn){
             localStorage.clear()
             dispatch(Signout())
-            navigate("/login");
+            navigate("/refolio/login");
           }
     };
 
