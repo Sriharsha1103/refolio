@@ -188,7 +188,6 @@ const EntityDataGrid = ({
         width: 120,
         sortable: false,
         renderCell: (params) =>
-          isAdmin || isSuperAdmin ? (
             <div
               style={{
                 background: "#8CAB3D",
@@ -207,7 +206,10 @@ const EntityDataGrid = ({
                   disabled={!params.row.fileName}
                 />
               </Tooltip>}
-              <Tooltip title="Edit" arrow TransitionComponent={Zoom}>
+              { (isAdmin || isSuperAdmin) &&
+                <>
+                
+                <Tooltip title="Edit" arrow TransitionComponent={Zoom}>
                 <EditIcon
                   style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "#1976D2" , "&:hover":{color:'#1565C0'} }}
                   onClick={() => handleEdit(params.row)}
@@ -219,8 +221,9 @@ const EntityDataGrid = ({
                   onClick={() => handleDelete(params.row)}
                 />
               </Tooltip>
+              </>}
             </div>
-          ) : null,
+          
       },
     ];
   }, [

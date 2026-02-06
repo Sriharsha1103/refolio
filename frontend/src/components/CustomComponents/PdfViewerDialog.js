@@ -21,7 +21,7 @@ import {
 
 const PdfViewerDialog = ({ open, onClose, title, fileUrl }) => {
   const hasFile = Boolean(fileUrl);
-
+  console.log('FileUrl', fileUrl, hasFile);
   return (
     <Dialog
       open={open}
@@ -50,6 +50,17 @@ const PdfViewerDialog = ({ open, onClose, title, fileUrl }) => {
               width="100%"
               height="100%"
               style={{ border: "none" }}
+              onError={(e) => {
+                e.target.style.display = "none";
+                const parent = e.target.parentNode;
+                if (parent) {
+                  const errorMessage = document.createElement("div");
+                  errorMessage.style.textAlign = "center";
+                  errorMessage.style.color = "gray";
+                  errorMessage.textContent = "No document Uploaded";
+                  parent.appendChild(errorMessage);
+                }
+              }}
             />
           </Box>
         ) : (

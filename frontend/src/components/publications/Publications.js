@@ -253,7 +253,7 @@ function Publications() {
   };
 
   const handleView = (row) => {
-    console.log('Row',row)
+    // console.log('Row',row)
     if (!row || !row.fileName) {
       setSnackbar({
         open: true,

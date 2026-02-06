@@ -39,6 +39,7 @@ app.use('/api/users',usersRouter)
 app.use('/api/patents',patentsRouter)
 app.use('/api/research',researchRouter)
 app.use('/api/consultancy',consultancyRouter)
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use(express.static(path.join(__dirname, '..','frontend','build')));
 
