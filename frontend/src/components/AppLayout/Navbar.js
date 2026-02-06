@@ -51,7 +51,7 @@ function HomeNavbar() {
         if(loggedIn){
             localStorage.clear()
             dispatch(Signout())
-            navigate("/refolio/login");
+            navigate("/login");
           }
     };
 
@@ -180,13 +180,13 @@ function HomeNavbar() {
                         <MenuItem component={RouterLink} to="/refolio/changepassword" onClick={handleCloseUserMenu}>
                             <Typography textAlign="center">Change Password</Typography>
                         </MenuItem>
-                        <MenuItem component={RouterLink} to="/refolio/login" onClick={() => { handleCloseUserMenu(); logOut(); }}>
+                        <MenuItem component={RouterLink} to="/login" onClick={() => { handleCloseUserMenu(); logOut(); }}>
                             <Typography textAlign="center">Logout</Typography>
                         </MenuItem>
                     </Menu>
                 </>
             ) : (
-                <Link component={RouterLink} to="/refolio/login" sx={navLinkStyle('login')}>Login</Link>
+                <Link component={RouterLink} to="/login" sx={navLinkStyle('login')}>Login</Link>
             )}
           </Box>
         </Toolbar>
