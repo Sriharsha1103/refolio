@@ -16,7 +16,7 @@ import { Signout } from '../../store/Actions';
 import { lightGreen } from '@mui/material/colors';
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { NAV_LINKS } from '../../utils/constants';
+import { NAV_LINKS_DEV } from '../../utils/constants';
 
 function HomeNavbar() {
     // const clientId = 'client-ID';
@@ -65,7 +65,7 @@ function HomeNavbar() {
     });
 
     // Compute visible NEW links once, honoring visibility rules
-    const visibleNewLinks = NAV_LINKS.filter(link => {
+    const visibleNewLinks = NAV_LINKS_DEV.filter(link => {
         const isNewItem = link.tab && link.tab.startsWith('new-');
         if (!isNewItem) return false;
         if (link.alwaysVisible) return true;
