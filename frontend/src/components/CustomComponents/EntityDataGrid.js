@@ -58,13 +58,13 @@ const HeaderWithFilter = ({ colDef, api }) => {
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <span style={{ fontWeight: 'bold'}}>{headerName}</span>
-      <FilterAltIcon
+    <div style={{ display: "flex", alignItems: "center", width: "auto" }} >
+      <span style={{ fontWeight: 'bold', marginRight: "20px"}}>{headerName}</span>
+      { <FilterAltIcon
         fontSize="small"
         style={{ opacity: 0.8, cursor: "pointer" }}
         onClick={handleClick}
-      />
+      />}
     </div>
   );
 };
@@ -144,14 +144,13 @@ const EntityDataGrid = ({
         field: cfg.field,
         headerName: headerTitle,
         width: cfg.width || 150,
-        renderCell,
         filterable: true,
         // show filter icon by default in header, wired to filter panel
         renderHeader: (params) =>
-          gridApi ? (
+          gridApi && (isAdmin || isSuperAdmin) ? (
             <HeaderWithFilter colDef={params.colDef} api={gridApi} />
           ) : (
-            <span>{headerTitle}</span>
+            <span style={{ fontWeight: 'bold', marginRight: "20px"}}>{headerTitle}</span>
           ),
         ...(valueFormatter ? { valueFormatter } : {}),
       };

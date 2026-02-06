@@ -92,7 +92,12 @@ const filterData = (data, filters) => {
     }
 
     return true;
-  });
+  }).map((item) => ({
+    ...item,
+    is_affilated: item.is_affilated ? "Yes" : "No",
+    is_proceeding: item.is_proceeding ? "Yes" : "No",
+    is_published: item.is_published ? "Yes" : "No",
+  }));
 };
 
 const paginateData = (data, pageNo, perPage) => {
@@ -105,11 +110,11 @@ const reducer = (state, action) => {
   switch (action.type) {
     case "SET_ALL_DATA": {
       const allDocs = action.payload.docs;
-      
+      const filtered = filterData(allDocs, state.filters);
       return {
         ...state,
-        allData: allDocs,
-        filteredData: allDocs,
+        allData: allDocs,        
+        filteredData: filtered,
         data: paginateData(allDocs, 1, state.perPage),
         pageData: Math.ceil(allDocs.length / state.perPage),
       };
