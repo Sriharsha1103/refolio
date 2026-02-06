@@ -90,7 +90,7 @@ function HomeNavbar() {
           </Box>
 
           <Box sx={{ flexGrow: 1, display: 'flex' }}>
-            {NAV_LINKS.map(link => {
+            {NAV_LINKS_DEV.map(link => {
                 // Determine visibility
                 if (link.alwaysVisible) {
                     // Always show
