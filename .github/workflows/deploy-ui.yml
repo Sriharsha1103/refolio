@@ -19,9 +19,11 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
+        working-directory: refolio/frontend
         run: npm ci
 
       - name: Build UI
+        working-directory: refolio/frontend
         run: npm run build
 
       - name: Upload build to /refolio
@@ -30,6 +32,6 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "build/*"
+          source: "refolio/frontend/build/*"
           target: "/var/www/html/refolio"
-          strip_components: 1
+          strip_components: 3
