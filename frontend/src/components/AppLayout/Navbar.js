@@ -180,7 +180,7 @@ function HomeNavbar() {
                         <MenuItem component={RouterLink} to="/refolio/changepassword" onClick={handleCloseUserMenu}>
                             <Typography textAlign="center">Change Password</Typography>
                         </MenuItem>
-                        <MenuItem component={RouterLink} to="/login" onClick={() => { handleCloseUserMenu(); logOut(); }}>
+                        <MenuItem component={RouterLink} onClick={() => { handleCloseUserMenu(); logOut(); }}>
                             <Typography textAlign="center">Logout</Typography>
                         </MenuItem>
                     </Menu>
