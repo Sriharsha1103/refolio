@@ -19,11 +19,11 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        working-directory: refolio/frontend
+        working-directory: frontend
         run: npm ci
 
       - name: Build UI
-        working-directory: refolio/frontend
+        working-directory: frontend
         run: npm run build
 
       - name: Upload build to /refolio
