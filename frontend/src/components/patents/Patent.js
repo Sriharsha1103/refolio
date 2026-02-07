@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useReducer } from "react";
 import TextField from "@mui/material/TextField";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
@@ -19,16 +19,67 @@ import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import { primary, primaryColor, primaryHover, white } from "../../utils/colors";
 import { BulkUpload } from "./BulkUpload";
 
+const formatDateForInput = (d) => {
+  if (!d) return "";
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return "";
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const initialState = {
+  body: {
+    authors: "",
+    dept: [],
+    pat_no: "",
+    title: "",
+    filed: "",
+    abstract: "",
+    design_utility: "",
+    published: "",
+    year: "",
+    country: "",
+  },
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "INIT": {
+      const edit = action.value;
+      const normalizedDept = Array.isArray(edit.dept)
+        ? edit.dept
+        : typeof edit.dept === "string"
+        ? edit.dept
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+
+      return {
+        ...state,
+        body: {
+          ...state.body,
+          ...edit,
+          dept: normalizedDept,
+          filed: formatDateForInput(edit.filed),
+          published: formatDateForInput(edit.published),
+          year: formatDateForInput(edit.year),
+        },
+      };
+    }
+    case "SET_BODY_FIELD":
+      return {
+        ...state,
+        body: { ...state.body, [action.field]: action.value },
+      };
+    default:
+      return state;
+  }
+}
+
 function Patent() {
-  const formatDateForInput = (d) => {
-    if (!d) return "";
-    const date = new Date(d);
-    if (isNaN(date.getTime())) return "";
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  };
   const dispatch = useDispatch();
   const loggedIn = useSelector((state) => state.logged);
   const verify = useSelector((state) => state.verify);
@@ -38,40 +89,13 @@ function Patent() {
 
   const formRef = React.useRef();
   const location = useLocation();
-  const editData = location.state?.edit || null;
-  const isEdit = !!editData;
 
-  const [body, setBody] = useState(() => {
-    if (editData) {
-      const normalizedDept = Array.isArray(editData.dept)
-        ? editData.dept
-        : typeof editData.dept === "string"
-        ? editData.dept
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [];
-      return {
-        ...editData,
-        dept: normalizedDept,
-        filed: formatDateForInput(editData.filed),
-        published: formatDateForInput(editData.published),
-        year: formatDateForInput(editData.year),
-      };
-    }
-    return {
-      authors: "",
-      dept: [],
-      pat_no: "",
-      title: "",
-      filed: "",
-      abstract: "",
-      design_utility: "",
-      published: "",
-      year: "",
-      country: "",
-    };
-  });
+  const isEditMode = !!location.state?.edit;
+  const editData = location.state?.patentData || location.state?.edit || null;
+
+  const [state, dispatchReducer] = useReducer(reducer, initialState);
+  const { body } = state;
+
   const [originalPatNo, setOriginalPatNo] = useState(() =>
     editData ? parseInt(editData.pat_no, 10) : null
   );
@@ -87,6 +111,13 @@ function Patent() {
   });
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isEditMode && editData) {
+      dispatchReducer({ type: "INIT", value: editData });
+      setOriginalPatNo(parseInt(editData.pat_no, 10));
+    }
+  }, [isEditMode, editData]);
 
   const showSnackbar = (status, message) => {
     setSnackbar({ open: true, status, message });
@@ -104,32 +135,33 @@ function Patent() {
 
   const handleConfirmSubmit = () => {
     setConfirmDialogOpen(false);
-    if (isEdit) {
+
+    if (isEditMode) {
       service
         .post("api/patents/update", body)
         .then(() => {
-          showSnackbar(200, "Updated " + body.title + " Patent.");
+          showSnackbar(200, `Updated ${body.title} Patent.`);
           setTimeout(() => navigate("/patents"), 1000);
         })
         .catch((error) => {
           console.log(error);
           showSnackbar(
             500,
-            "Error while updating " + body.title + ". Please try again later."
+            `Error while updating ${body.title}. Please try again later.`
           );
         });
     } else {
       service
         .post("api/patents/data", body)
         .then(() => {
-          showSnackbar(200, "Successfully Added " + body.title);
+          showSnackbar(200, `Successfully Added ${body.title}`);
           setTimeout(() => navigate("/patents"), 1000);
         })
         .catch((error) => {
           console.log(error);
           showSnackbar(
             500,
-            "Error while adding " + body.title + ". Please try again later."
+            `Error while adding ${body.title}. Please try again later.`
           );
         });
     }
@@ -140,12 +172,26 @@ function Patent() {
     const key = name || id;
     let value = e.target.value;
 
-    // Clear error for this field
     if (errors[key]) {
       setErrors((prev) => ({ ...prev, [key]: false }));
     }
 
-    setBody((prev) => ({ ...prev, [key]: value }));
+    if (key === "dept") {
+      const normalized =
+        typeof value === "string" ? value.split(",").map((v) => v.trim()) : value;
+      dispatchReducer({
+        type: "SET_BODY_FIELD",
+        field: "dept",
+        value: normalized,
+      });
+      return;
+    }
+
+    dispatchReducer({
+      type: "SET_BODY_FIELD",
+      field: key,
+      value,
+    });
   };
 
   const onSubmit = (event) => {
@@ -177,12 +223,11 @@ function Patent() {
       }
     });
 
-    // Duplicate patent number check
     const patNoNum = body.pat_no !== "" ? parseInt(body.pat_no, 10) : NaN;
     const isDuplicate =
       patNoNum &&
       titles.includes(patNoNum) &&
-      (!isEdit || patNoNum !== originalPatNo);
+      (!isEditMode || patNoNum !== originalPatNo);
     if (isDuplicate) {
       newErrors["pat_no"] = true;
       showSnackbar(409, "Patent Number already exists");
@@ -201,32 +246,15 @@ function Patent() {
   };
 
   useEffect(() => {
-    if (isEdit && editData) {
-      const normalizedDept = Array.isArray(editData.dept)
-        ? editData.dept
-        : typeof editData.dept === "string"
-        ? editData.dept
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [];
-      setBody({
-        ...editData,
-        dept: normalizedDept,
-        filed: formatDateForInput(editData.filed),
-        published: formatDateForInput(editData.published),
-        year: formatDateForInput(editData.year),
-      });
-      setOriginalPatNo(parseInt(editData.pat_no, 10));
-    }
-    dispatch(Tab("new-patent"));
+    dispatch(Tab(isEditMode ? "edit-patent" : "new-patent"));
     if (!loggedIn) {
       navigate("../");
     } else if (!verify) {
       navigate("../verify");
-    } else if (isSuperAdmin) {
+    } else if (isSuperAdmin && !isEditMode) {
       navigate("../publications");
     }
+
     if (titles.length === 0) {
       service
         .get("api/patents/number")
@@ -236,13 +264,12 @@ function Patent() {
   }, [
     dispatch,
     isSuperAdmin,
+    isEditMode,
     loggedIn,
     navigate,
     service,
     titles.length,
     verify,
-    isEdit,
-    editData,
   ]);
 
   return (
@@ -260,7 +287,7 @@ function Patent() {
         <Container maxWidth="lg" sx={{ py: 4 }}>
           <Grid container justifyContent="center" alignItems="center">
             <Grid item xs={12} sx={{ m: 4 }}>
-              {isAdmin ? (
+              {isAdmin && !isEditMode ? (
                 <Grid container justifyContent="flex-end" sx={{ mb: 4 }}>
                   <Grid item xs={12} md={4}>
                     <BulkUpload titles={titles} />
@@ -283,7 +310,9 @@ function Patent() {
                           variant="h4"
                           sx={{ mb: 4, color: primaryColor }}
                         >
-                          Patent Information
+                          {isEditMode
+                            ? "Edit Patent Information"
+                            : "Patent Information"}
                         </Typography>
                         <TextField
                           required
@@ -342,22 +371,8 @@ function Patent() {
                                 id="dept"
                                 name="dept"
                                 multiple
-                                value={body.dept}
-                                onChange={(e) => {
-                                  const { value } = e.target;
-                                  setBody((prev) => ({
-                                    ...prev,
-                                    dept:
-                                      typeof value === "string"
-                                        ? value.split(",")
-                                        : value,
-                                  }));
-                                  if (errors.dept)
-                                    setErrors((prev) => ({
-                                      ...prev,
-                                      dept: false,
-                                    }));
-                                }}
+                                value={body.dept || []}
+                                onChange={handleFieldChange}
                                 label={PatentsKey.dept}
                                 renderValue={(selected) =>
                                   Array.isArray(selected)
@@ -481,7 +496,13 @@ function Patent() {
                           value={body.country || ""}
                           error={!!errors.country}
                         />
-                        <Grid container spacing={2} alignItems="center" justifyContent={"center"} mt={2}>
+                        <Grid
+                          container
+                          spacing={2}
+                          alignItems="center"
+                          justifyContent={"center"}
+                          mt={2}
+                        >
                           <Grid
                             item
                             xs={12}
@@ -512,7 +533,7 @@ function Patent() {
                                 setSend(send + 1);
                               }}
                             >
-                              {isEdit ? "Update" : "Submit"}
+                              {isEditMode ? "Update" : "Submit"}
                             </Button>
                           </Grid>
                           <Grid
@@ -563,8 +584,12 @@ function Patent() {
           open={confirmDialogOpen}
           handleClose={handleCloseConfirmDialog}
           handleConfirm={handleConfirmSubmit}
-          title="Confirm Submission"
-          content="This action will add the data into the Database"
+          title={isEditMode ? "Confirm Update" : "Confirm Submission"}
+          content={
+            isEditMode
+              ? "This action will update the data in the Database"
+              : "This action will add the data into the Database"
+          }
         />
       </div>
     </>
