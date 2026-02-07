@@ -32,7 +32,7 @@ jobs:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          tar -czf build.tar.gz -C refolio/frontend/build .
+          tar -czf build.tar.gz -C frontend/build .
           ssh -i <(echo "$SSH_PRIVATE_KEY") -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "mkdir -p /var/www/html/refolio"
           scp -i <(echo "$SSH_PRIVATE_KEY") -o StrictHostKeyChecking=no build.tar.gz $SERVER_USER@$SERVER_HOST:/var/www/html/refolio
           ssh -i <(echo "$SSH_PRIVATE_KEY") -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "tar -xzf /var/www/html/refolio/build.tar.gz -C /var/www/html/refolio && rm /var/www/html/refolio/build.tar.gz"
