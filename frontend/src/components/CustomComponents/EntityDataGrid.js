@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Tooltip, Zoom } from "@mui/material";
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import CustomDataGrid from "./CustomDataGrid";
 import {
@@ -58,13 +58,17 @@ const HeaderWithFilter = ({ colDef, api }) => {
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", width: "auto" }} >
-      <span style={{ fontWeight: 'bold', marginRight: "20px"}}>{headerName}</span>
-      { <FilterAltIcon
-        fontSize="small"
-        style={{ opacity: 0.8, cursor: "pointer" }}
-        onClick={handleClick}
-      />}
+    <div style={{ display: "flex", alignItems: "center", width: "auto" }}>
+      <span style={{ fontWeight: "bold", marginRight: "20px" }}>
+        {headerName}
+      </span>
+      {
+        <FilterAltIcon
+          fontSize="small"
+          style={{ opacity: 0.8, cursor: "pointer" }}
+          onClick={handleClick}
+        />
+      }
     </div>
   );
 };
@@ -75,7 +79,7 @@ const EntityDataGrid = ({
   perPage,
   handleDelete,
   handleEdit,
-  handleView, 
+  handleView,
   isAdmin,
   isSuperAdmin,
   color,
@@ -150,7 +154,9 @@ const EntityDataGrid = ({
           gridApi && (isAdmin || isSuperAdmin) ? (
             <HeaderWithFilter colDef={params.colDef} api={gridApi} />
           ) : (
-            <span style={{ fontWeight: 'bold', marginRight: "20px"}}>{headerTitle}</span>
+            <span style={{ fontWeight: "bold", marginRight: "20px" }}>
+              {headerTitle}
+            </span>
           ),
         ...(valueFormatter ? { valueFormatter } : {}),
       };
@@ -187,43 +193,63 @@ const EntityDataGrid = ({
         headerName: "Actions",
         width: 120,
         sortable: false,
-        renderCell: (params) =>
-            <div
-              style={{
-                background: "#8CAB3D",
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-              }}
-            >
-              {<Tooltip title="View Details" arrow TransitionComponent={Zoom}>
-                <VisibilityIcon 
-                  style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "#616161", "&:hover":{color:'#424242'} }}
+        renderCell: (params) => (
+          <div
+            style={{
+              background: "#8CAB3D",
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            {
+              <Tooltip title="View Details" arrow TransitionComponent={Zoom}>
+                <VisibilityIcon
+                  style={{
+                    fontSize: 22,
+                    cursor: "pointer",
+                    marginLeft: 8,
+                    color: "#616161",
+                    "&:hover": { color: "#424242" },
+                  }}
                   onClick={() => handleView(params.row)}
                   disabled={!params.row.fileName}
                 />
-              </Tooltip>}
-              { (isAdmin || isSuperAdmin) &&
-                <>
-                
-                <Tooltip title="Edit" arrow TransitionComponent={Zoom}>
+              </Tooltip>
+            }
+            <>
+              <Tooltip title="Edit" arrow TransitionComponent={Zoom}>
                 <EditIcon
-                  style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "#1976D2" , "&:hover":{color:'#1565C0'} }}
+                  style={{
+                    fontSize: 22,
+                    cursor: "pointer",
+                    marginLeft: 8,
+                    color: "#1976D2",
+                    "&:hover": { color: "#1565C0" },
+                  }}
                   onClick={() => handleEdit(params.row)}
                 />
               </Tooltip>
-              <Tooltip title="Delete" arrow TransitionComponent={Zoom}>
-                <DeleteIcon
-                  style={{ fontSize: 22, cursor: "pointer", marginLeft: 8, color: "#D32F2F" , "&:hover":{color:'#B71C1C'} }}
-                  onClick={() => handleDelete(params.row)}
-                />
-              </Tooltip>
-              </>}
-            </div>
-          
+              {(isAdmin || isSuperAdmin) && (
+                <Tooltip title="Delete" arrow TransitionComponent={Zoom}>
+                  <DeleteIcon
+                    style={{
+                      fontSize: 22,
+                      cursor: "pointer",
+                      marginLeft: 8,
+                      color: "#D32F2F",
+                      "&:hover": { color: "#B71C1C" },
+                    }}
+                    onClick={() => handleDelete(params.row)}
+                  />
+                </Tooltip>
+              )}
+            </>
+          </div>
+        ),
       },
     ];
   }, [
@@ -236,7 +262,7 @@ const EntityDataGrid = ({
     color,
     background,
     textColor,
-    gridApi,      
+    gridApi,
   ]);
 
   /** 🔒 Compute frozen columns correctly */
@@ -271,7 +297,7 @@ const EntityDataGrid = ({
           : undefined
       }
       loading={loading}
-      loadingMessage={`Loading ${type || 'data'}...`}
+      loadingMessage={`Loading ${type || "data"}...`}
     />
   );
 };

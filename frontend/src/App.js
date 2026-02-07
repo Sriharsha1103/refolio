@@ -19,6 +19,9 @@ import ErrorPage from "./pages/ErrorPage";
 import Publications from "./components/publications/Publications";
 import Patent from "./components/patents/Patent";
 import Publication from "./components/publications/Publication";
+import AuthLogin from "./pages/AuthLogin";
+import AuthRegister from "./pages/AuthRegister";
+import AuthForgot from "./pages/AuthForgot";
 
 const theme = createTheme();
 
@@ -30,10 +33,12 @@ function App() {
         <BrowserRouter basename="/refolio">
             <Routes>
               <Route element={<AppLayout />}>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<AuthLogin />} />
                 <Route path="/home" element={<Home />} />
 
-                <Route path="/login" element={<Dashboard />} />
+                <Route path="/login" element={<AuthLogin />} />
+                <Route path="/register" element={<AuthRegister />} />
+                <Route path="/forgot" element={<AuthForgot />} />
                 <Route path="/changepassword" element={<ChangePassword />} />
                
                 <Route path="/verifyemail/:id" element={<VerifiedEmail />} />
