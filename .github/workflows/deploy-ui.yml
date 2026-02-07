@@ -27,14 +27,15 @@ jobs:
         run: CI=false npm run build
 
       - name: Upload build to /refolio
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # Copy all build artifacts
-          source: "refolio/frontend/build/*"
-          target: "/var/www/html/refolio"
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          tar -czf build.tar.gz -C refolio/frontend/build .
+          ssh -i <(echo "$SSH_PRIVATE_KEY") -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "mkdir -p /var/www/html/refolio"
+          scp -i <(echo "$SSH_PRIVATE_KEY") -o StrictHostKeyChecking=no build.tar.gz $SERVER_USER@$SERVER_HOST:/var/www/html/refolio
+          ssh -i <(echo "$SSH_PRIVATE_KEY") -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "tar -xzf /var/www/html/refolio/build.tar.gz -C /var/www/html/refolio && rm /var/www/html/refolio/build.tar.gz"
           # strip_components is not a supported option for appleboy/scp-action.
           # Remove it or replace with 'rm' and 'tar' logic if you need path rewriting.
           # strip_components: 3
