@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - prod_new
+    paths:
+      - 'frontend/**'
 
 jobs:
   deploy:
