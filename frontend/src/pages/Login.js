@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Signin, Register, Forgot } from "../store/Actions";
+import { Signin } from "../store/Actions";
 import { useNavigate } from 'react-router-dom'
 import { sha512 } from "js-sha512";
 import { Button, TextField, InputAdornment, Typography, Box, Container, Backdrop, CircularProgress } from "@mui/material"; 
@@ -173,7 +173,7 @@ function Login() {
                         variant="body2" 
                         color="primary" 
                         sx={{ cursor: 'pointer', textDecoration: 'underline' }}
-                        onClick={() => dispatch(Register())}
+                        onClick={() => navigate('/register')}
                     >
                         Register
                     </Typography>
@@ -181,7 +181,7 @@ function Login() {
                         variant="body2" 
                         color="primary" 
                         sx={{ cursor: 'pointer', textDecoration: 'underline' }}
-                        onClick={() => dispatch(Forgot())}
+                        onClick={() => navigate('/forgot')}
                     >
                         Forgot Password?
                     </Typography>

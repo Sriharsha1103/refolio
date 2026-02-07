@@ -1,12 +1,12 @@
 import React, { useReducer } from "react";
 import { useDispatch } from "react-redux";
-import { Login } from "../store/Actions";
 import { useState, useEffect } from "react";
 import { sha512 } from 'js-sha512'
 import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Box, Typography, InputAdornment } from "@mui/material";
 import Service from "../Service/http";
 import { BRANCH_OPTIONS } from "../utils/constants";
 import CustomSnackbar from "../components/CustomComponents/CustomSnackbar";
+import { useNavigate } from "react-router-dom";
 
 const initialState = {
     Name: '',
@@ -44,6 +44,7 @@ function reducer(state, action) {
 
 function Register() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const service = new Service();
     
     const [state, localDispatch] = useReducer(reducer, initialState);
@@ -120,7 +121,7 @@ function Register() {
             .then((res) => {
                 showSnackbar('Successful Registration. Redirecting to login page', 'success');
                 setTimeout(() => {
-                    dispatch(Login());
+                    navigate('/login');
                 }, 2000);
             })
             .catch((e) => {
@@ -218,7 +219,7 @@ function Register() {
                 <Typography
                     variant="body2"
                     sx={{ color: 'primary.main', cursor: 'pointer', textDecoration: 'underline' }}
-                    onClick={() => dispatch(Login())}
+                    onClick={() => navigate('/login')}
                 >
                     Login
                 </Typography>
