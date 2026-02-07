@@ -32,10 +32,12 @@ jobs:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
           tar -czf build.tar.gz -C frontend/build .
-          ssh -i <(echo "$SSH_PRIVATE_KEY") -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "mkdir -p /var/www/html/refolio"
-          scp -i <(echo "$SSH_PRIVATE_KEY") -o StrictHostKeyChecking=no build.tar.gz $SERVER_USER@$SERVER_HOST:/var/www/html/refolio
-          ssh -i <(echo "$SSH_PRIVATE_KEY") -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "tar -xzf /var/www/html/refolio/build.tar.gz -C /var/www/html/refolio && rm /var/www/html/refolio/build.tar.gz"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "mkdir -p /var/www/html/refolio"
+          scp -i private_key.pem -o StrictHostKeyChecking=no build.tar.gz $SERVER_USER@$SERVER_HOST:/var/www/html/refolio
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "tar -xzf /var/www/html/refolio/build.tar.gz -C /var/www/html/refolio && rm /var/www/html/refolio/build.tar.gz"
           # strip_components is not a supported option for appleboy/scp-action.
           # Remove it or replace with 'rm' and 'tar' logic if you need path rewriting.
           # strip_components: 3
