@@ -6,31 +6,87 @@ const dataModal = require("../db/ProfileSchema");
 ===================================================== */
 module.exports.postData = async function (req, res) {
   try {
-    const myobj = req.body;
-    const fileInfo = req.file; // optional
+    let myobj = { ...req.body };
 
-    /* ===== if direct upload ===== */
-    if (fileInfo && fileInfo.filename) {
-      myobj.fileName = fileInfo.filename;
+    /* ======================================
+       1️⃣ PARSE ARRAYS (VERY IMPORTANT)
+    ====================================== */
+
+    if (typeof myobj.Education_Qualifications === "string") {
+      myobj.Education_Qualifications = JSON.parse(
+        myobj.Education_Qualifications
+      );
     }
 
-    dataModal.create(myobj, function (err, result) {
-      if (err) throw err;
+    if (typeof myobj.Experience === "string") {
+      myobj.Experience = JSON.parse(myobj.Experience);
+    }
 
-      return res.status(200).json({
-        message: "Profile created successfully",
-        profile: result,
-        file: fileInfo ? fileInfo.filename : null,
+    /* ======================================
+       2️⃣ MAP UPLOADED FILES
+    ====================================== */
+
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+
+        // MAIN FILES
+        if (file.fieldname === "Aadhaar_File") {
+          myobj.Aadhaar_File = file.filename;
+        }
+
+        if (file.fieldname === "PAN_File") {
+          myobj.PAN_File = file.filename;
+        }
+
+        if (file.fieldname === "Profile_Photo") {
+          myobj.Profile_Photo = file.filename;
+        }
+
+        // QUALIFICATION FILES
+        if (file.fieldname.startsWith("qual_")) {
+          const index = parseInt(file.fieldname.split("_")[1]);
+
+          if (
+            myobj.Education_Qualifications &&
+            myobj.Education_Qualifications[index]
+          ) {
+            myobj.Education_Qualifications[index].certificateFile =
+              file.filename;
+          }
+        }
+
+        // EXPERIENCE FILES
+        if (file.fieldname.startsWith("exp_")) {
+          const index = parseInt(file.fieldname.split("_")[1]);
+
+          if (myobj.Experience && myobj.Experience[index]) {
+            myobj.Experience[index].experienceFile = file.filename;
+          }
+        }
       });
+    }
+
+    /* ======================================
+       3️⃣ SAVE TO DB
+    ====================================== */
+
+    const result = await dataModal.create(myobj);
+
+    return res.status(200).json({
+      message: "Profile created successfully",
+      profile: result,
     });
+
   } catch (error) {
     console.error("Profile upload error:", error);
+
     return res.status(500).json({
       message: "Server Error",
       error: error.message,
     });
   }
 };
+
 
 /* =====================================================
    UPDATE PROFILE (PUT)
