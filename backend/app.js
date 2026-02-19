@@ -7,7 +7,7 @@ var usersRouter = require('./router/usersRouter');
 var patentsRouter = require('./router/patentsRouter');
 var researchRouter = require('./router/ResearchRouter');
 var consultancyRouter = require('./router/ConsultancyRouter');
-
+var profileRouter = require('./router/ProfileRouter');
 
 const bodyParser= require('body-parser')
 const jsonParser=bodyParser.json()
@@ -39,6 +39,8 @@ app.use('/api/users',usersRouter)
 app.use('/api/patents',patentsRouter)
 app.use('/api/research',researchRouter)
 app.use('/api/consultancy',consultancyRouter)
+app.use('/api/profile',profileRouter)
+
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use(express.static(path.join(__dirname, '..','frontend','build')));

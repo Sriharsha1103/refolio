@@ -57,7 +57,7 @@ function Home() {
                 }}
               >
                 <Typography variant="h4" sx={{ color: '#6C9449', fontSize: 35 }}>
-                  Research Publications Portfolio
+                  Research Publications & Faculty Portfolio
                 </Typography>
               </Box>
             </Grid>

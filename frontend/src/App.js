@@ -22,6 +22,8 @@ import Publication from "./components/publications/Publication";
 import AuthLogin from "./pages/AuthLogin";
 import AuthRegister from "./pages/AuthRegister";
 import AuthForgot from "./pages/AuthForgot";
+import Profile from "./components/profile/Profile";
+import Profiles from "./components/profile/Profiles";
 
 const theme = createTheme();
 
@@ -49,7 +51,8 @@ function App() {
                 <Route path="/patents" element={<Patents />} />
                 <Route path="/research" element={<Research />} />
                 <Route path="/consultancy" element={<Consultancy />} />
-
+                <Route path="/profiles" element={<Profiles />} />
+                <Route path="/insertProfile" element={<Profile />} />
                 <Route path="/insertPublications" element={<Publication />} />
                 <Route path="/insertPatents" element={<Patent />} />
                 <Route path="/insertResearch" element={<NewResearch />} />

@@ -66,4 +66,22 @@ export let ConsultancyKey = {
     amount : "Amount",
 
 }
-export let Departments = ["IT","CSE","ECE","EEE","AI/ML","BS&H"]
+export let ProfileKey = {
+    Name: "Name",
+    Designation: "Designation",
+    College_ID: "College ID",
+    JNTUH_ID: "JNTUH ID", 
+    Fields_of_Specialization: "Specialization",
+    Ratification_status: "Rat status",
+    Teaching_Experience: "Teaching",
+    Research_Experience: "Research",
+    Industry_Experience: "Industry",
+    Scopus_ID: "Scopus ID",
+    Vidwan_ID: "Vidwan ID",
+    Invited_Talks: "Invited Talks",
+  };
+  
+
+
+
+export let Departments = ["IT","CSE","ECE","EEE","AI/ML","BS&H","Admin","Others"]

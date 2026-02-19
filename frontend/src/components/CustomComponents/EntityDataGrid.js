@@ -11,6 +11,7 @@ import {
   ResearchKey,
   UsersKey,
   ConsultancyKey,
+  ProfileKey,
 } from "../../Service/keyValueMap";
 import { getCJBLabel, getMonthName } from "../../utils/helper";
 import { tableBgColors } from "../../utils/colors";
@@ -100,6 +101,8 @@ const EntityDataGrid = ({
     if (type === "PatentsKey") setTableType(PatentsKey);
     if (type === "ResearchKey") setTableType(ResearchKey);
     if (type === "ConsultancyKey") setTableType(ConsultancyKey);
+    if (type === "ProfileKey") setTableType(ProfileKey);
+    
   }, [type]);
 
   const columns = useMemo(() => {
@@ -294,6 +297,8 @@ const EntityDataGrid = ({
           ? "/insertResearch"
           : type === "ConsultancyKey"
           ? "/insertConsultancy"
+          : type === "ProfileKey"
+          ? "/insertProfile"
           : undefined
       }
       loading={loading}
