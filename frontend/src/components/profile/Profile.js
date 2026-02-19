@@ -244,7 +244,7 @@ function Profile() {
 
                 <Grid container spacing={2}>
                   {basicFields.map(f=>(
-                    <Grid item xs={12} sm={6} md={4} key={f}>
+                    <Grid item xs={12} sm={6}  key={f}>
                       <TextField
                         fullWidth
                         variant="standard"

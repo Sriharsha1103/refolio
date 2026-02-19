@@ -11,7 +11,7 @@ module.exports.postData = async function (req, res) {
     /* ======================================
        1️⃣ PARSE ARRAYS (VERY IMPORTANT)
     ====================================== */
-
+    
     if (typeof myobj.Education_Qualifications === "string") {
       myobj.Education_Qualifications = JSON.parse(
         myobj.Education_Qualifications
@@ -91,62 +91,96 @@ module.exports.postData = async function (req, res) {
 /* =====================================================
    UPDATE PROFILE (PUT)
 ===================================================== */
-module.exports.putData = async function(req,res){
+module.exports.putData = async function (req, res) {
+  try {
+    const id = req.params.id;
+    let incoming = { ...req.body };
 
-  try{
+    /* ======================================
+       1️⃣ PARSE ARRAYS (VERY IMPORTANT)
+    ====================================== */
 
-    const incoming = req.body;
-
-    // ===== PARSE ARRAYS (MOST IMPORTANT FIX) =====
-    if(incoming.Education_Qualifications){
-      incoming.Education_Qualifications =
-        JSON.parse(incoming.Education_Qualifications);
+    if (typeof incoming.Education_Qualifications === "string") {
+      incoming.Education_Qualifications = JSON.parse(
+        incoming.Education_Qualifications
+      );
     }
 
-    if(incoming.Experience){
-      incoming.Experience =
-        JSON.parse(incoming.Experience);
+    if (typeof incoming.Experience === "string") {
+      incoming.Experience = JSON.parse(incoming.Experience);
     }
 
-    // ===== FILE MAPPING =====
-    if(req.files){
-      req.files.forEach(file=>{
-        if (file.fieldname === "Aadhaar_File")
-          myobj.Aadhaar_File = file.filename;
+    /* ======================================
+       2️⃣ MAP NEWLY UPLOADED FILES
+    ====================================== */
 
-        if (file.fieldname === "PAN_File")
-          myobj.PAN_File = file.filename;
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
 
-        if (file.fieldname === "Profile_Photo")
-          myobj.Profile_Photo = file.filename;
-
-        if(file.fieldname.startsWith("qual_")){
-          const i=parseInt(file.fieldname.split("_")[1]);
-          incoming.Education_Qualifications[i]
-            .certificateFile = file.filename;
+        // MAIN FILES
+        if (file.fieldname === "Aadhaar_File") {
+          incoming.Aadhaar_File = file.filename;
         }
 
-        if(file.fieldname.startsWith("exp_")){
-          const i=parseInt(file.fieldname.split("_")[1]);
-          incoming.Experience[i]
-            .experienceFile = file.filename;
+        if (file.fieldname === "PAN_File") {
+          incoming.PAN_File = file.filename;
         }
 
+        if (file.fieldname === "Profile_Photo") {
+          incoming.Profile_Photo = file.filename;
+        }
+
+        // QUAL FILES
+        if (file.fieldname.startsWith("qual_")) {
+          const index = parseInt(file.fieldname.split("_")[1]);
+
+          if (
+            incoming.Education_Qualifications &&
+            incoming.Education_Qualifications[index]
+          ) {
+            incoming.Education_Qualifications[index].certificateFile =
+              file.filename;
+          }
+        }
+
+        // EXP FILES
+        if (file.fieldname.startsWith("exp_")) {
+          const index = parseInt(file.fieldname.split("_")[1]);
+
+          if (incoming.Experience && incoming.Experience[index]) {
+            incoming.Experience[index].experienceFile =
+              file.filename;
+          }
+        }
       });
     }
 
-    const result =
-      await dataModal.findByIdAndUpdate(
-        req.params.id,
-        { $set: incoming },
-        { new:true }
-      );
+    /* ======================================
+       3️⃣ UPDATE DATABASE
+    ====================================== */
 
-    return res.status(200).json(result);
+    const updated = await dataModal.findByIdAndUpdate(
+      id,
+      incoming,
+      { new: true, runValidators: true }
+    );
 
-  }catch(err){
-    console.log("Update Error:",err);
-    return res.status(500).json(err);
+    if (!updated) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      profile: updated,
+    });
+
+  } catch (error) {
+    console.error("Update Error:", error);
+
+    return res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
   }
 };
 

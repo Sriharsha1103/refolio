@@ -49,7 +49,8 @@ const FileUploadSection = ({ file, handleFileChange, error, onError, branch }) =
         Upload File
         <input
           type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
+          accept=".pdf,.jpg,.jpeg,.png" 
+          
           hidden
           onChange={onFileChange}
         />
