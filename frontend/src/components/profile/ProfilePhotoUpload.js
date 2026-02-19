@@ -3,7 +3,7 @@ import { Box, Avatar } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import FileUploadSection from "../CustomComponents/FileUploadSection";
 
-function ProfilePhotoUpload({ file, branch, handleFileChange, error = false }) {
+function ProfilePhotoUpload({ file, branch, handleFileChange, onFileError, error = false }) {
   const backendURL = process.env.REACT_APP_BACKEND_URL;
   const safeBranch = branch || "common";
 
@@ -36,6 +36,7 @@ function ProfilePhotoUpload({ file, branch, handleFileChange, error = false }) {
         file={file}
         branch={branch}
         handleFileChange={handleFileChange}
+        onError={onFileError}
         error={error}
         accept="image/*"
         buttonAriaLabel="Upload profile photo"

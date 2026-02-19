@@ -13,7 +13,33 @@ function ExperienceSection({
   getFieldLabel,
   designationOptions,
   handleFileChange,
+  onFileError,
 }) {
+
+  const toDateInputValue = (value) => {
+    if (!value) return "";
+
+    if (value instanceof Date) {
+      const t = value.getTime();
+      if (Number.isNaN(t)) return "";
+      return value.toISOString().slice(0, 10);
+    }
+
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+      if (trimmed.length >= 10 && /^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+        return trimmed.slice(0, 10);
+      }
+
+      const parsed = new Date(trimmed);
+      if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+      return "";
+    }
+
+    return "";
+  };
+
   return (
     <Box sx={rightGroupSx}>
       <Box
@@ -119,7 +145,7 @@ function ExperienceSection({
                     required
                     error={!!errors?.exp?.[i]?.[f]}
                     helperText={errors?.exp?.[i]?.[f] ? "Required" : ""}
-                    value={ex[f]}
+                    value={f.includes("Date") ? toDateInputValue(ex[f]) : (ex[f] || "")}
                     onChange={(e) =>
                       dispatchReducer({
                         type: "UPDATE_EXP",
@@ -142,6 +168,7 @@ function ExperienceSection({
               handleFileChange={(e) =>
                 handleFileChange(e.target.files[0], "experienceFile", "exp", i)
               }
+              onError={onFileError}
             />
           </Grid>
         </Grid>

@@ -1,4 +1,4 @@
-import { useReducer, useMemo, useEffect, useState } from "react";
+import { useReducer, useMemo, useEffect, useRef, useState } from "react";
 import {
   Container,
   Grid,
@@ -16,7 +16,8 @@ import IdFileUploadRow from "./IdFileUploadRow";
 import ExperienceSection from "./ExperienceSection";
 import EducationQualificationsSection from "./EducationQualificationsSection";
 import PanelButton from "../CustomComponents/PanelButton";
-import { primaryColor, white } from "../../utils/colors";
+import CustomSnackbar from "../CustomComponents/CustomSnackbar";
+import { primary, primaryColor, white } from "../../utils/colors";
 import { branchOptions, degreeOptions, designationOptions, fieldLabelMap, requiredMainFields } from "../../utils/constants";
 import ResearchProfileSection from "./ResearchProfileSection";
 import AcademicServiceSection from "./AcademicServiceSection";
@@ -147,9 +148,19 @@ function reducer(state, action) {
 function Profile() {
   const [state, dispatchReducer] = useReducer(reducer, initialState);
   const [errors, setErrors] = useState({ main: {}, qual: [], exp: [] });
+  const [snackbar, setSnackbar] = useState({ open: false, status: 0, message: "" });
+  const navigateTimeoutRef = useRef(null);
   const service = useMemo(() => new Service(), []);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const showSnackbar = (status, message) => {
+    setSnackbar({ open: true, status, message });
+  };
+
+  const hideSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
 
   const omitKey = (obj, key) => {
     const { [key]: _omitted, ...rest } = obj || {};
@@ -233,6 +244,14 @@ function Profile() {
     }
   }, [isEditMode, location]);
 
+  useEffect(() => {
+    return () => {
+      if (navigateTimeoutRef.current) {
+        clearTimeout(navigateTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleFileChange = (file, field, type, index = null) => {
     if (type === "main")
       dispatch({ type: "SET_FIELD", field, value: file });
@@ -252,6 +271,17 @@ function Profile() {
         field,
         value: file,
       });
+  };
+
+  const handleFileChangeWithSnackbar = (file, field, type, index = null) => {
+    handleFileChange(file, field, type, index);
+    if (file instanceof File) {
+      showSnackbar(200, `Selected file: ${file.name}`);
+    }
+  };
+
+  const handleUploadError = (message) => {
+    showSnackbar(400, message || "File upload error");
   };
 
   const isBlank = (value) => {
@@ -314,7 +344,10 @@ function Profile() {
 
   const handleSubmit = async () => {
     const isValid = validateAll();
-    if (!isValid) return;
+    if (!isValid) {
+      showSnackbar(400, "Please fill all required fields.");
+      return;
+    }
 
     const form = new FormData();
 
@@ -351,13 +384,23 @@ function Profile() {
     form.append("Education_Qualifications", JSON.stringify(cleanQual));
     form.append("Experience", JSON.stringify(cleanExp));
 
-    if (isEditMode) {
-      await service.put("api/profile/data/" + body._id, form);
-    } else {
-      await service.post("api/profile/data", form);
-    }
+    try {
+      if (isEditMode) {
+        await service.put("api/profile/data/" + body._id, form);
+        showSnackbar(200, "Profile updated successfully.");
+      } else {
+        await service.post("api/profile/data", form);
+        showSnackbar(200, "Profile submitted successfully.");
+      }
 
-    navigate("/profiles");
+      if (navigateTimeoutRef.current) clearTimeout(navigateTimeoutRef.current);
+      navigateTimeoutRef.current = setTimeout(() => {
+        navigate("/profiles");
+      }, 3000);
+    } catch (err) {
+      console.log("ERROR", err);
+      showSnackbar(500, "Failed to save profile. Please try again.");
+    }
   };
 
  
@@ -371,7 +414,7 @@ function Profile() {
   };
 
   const rightGroupSx = {
-    border: `1px solid ${white}`,
+    border: `1px solid ${primary}`,
     borderRadius: 2,
     p: 2,
     mb: 2,
@@ -495,6 +538,7 @@ function Profile() {
                     branch={body.branch}
                     errors={errors}
                     getFieldLabel={getFieldLabel}
+                    onFileError={handleUploadError}
                     onNumberChange={(e) =>
                       dispatch({
                         type: "SET_FIELD",
@@ -503,7 +547,7 @@ function Profile() {
                       })
                     }
                     onFileChange={(e) =>
-                      handleFileChange(e.target.files[0], "Aadhaar_File", "main")
+                      handleFileChangeWithSnackbar(e.target.files[0], "Aadhaar_File", "main")
                     }
                   />
 
@@ -515,6 +559,7 @@ function Profile() {
                     branch={body.branch}
                     errors={errors}
                     getFieldLabel={getFieldLabel}
+                    onFileError={handleUploadError}
                     onNumberChange={(e) =>
                       dispatch({
                         type: "SET_FIELD",
@@ -523,7 +568,7 @@ function Profile() {
                       })
                     }
                     onFileChange={(e) =>
-                      handleFileChange(e.target.files[0], "PAN_File", "main")
+                      handleFileChangeWithSnackbar(e.target.files[0], "PAN_File", "main")
                     }
                   />
                 </Box>
@@ -562,8 +607,9 @@ function Profile() {
                     file={body.Profile_Photo}
                     branch={body.branch}
                     error={!!errors.main?.Profile_Photo}
+                    onFileError={handleUploadError}
                     handleFileChange={(e) =>
-                      handleFileChange(
+                      handleFileChangeWithSnackbar(
                         e.target.files[0],
                         "Profile_Photo",
                         "main",
@@ -578,7 +624,8 @@ function Profile() {
                   rightGroupSx={rightGroupSx}
                   getFieldLabel={getFieldLabel}
                   designationOptions={designationOptions}
-                  handleFileChange={handleFileChange}
+                  handleFileChange={handleFileChangeWithSnackbar}
+                  onFileError={handleUploadError}
                 />
 
                 <EducationQualificationsSection
@@ -588,7 +635,8 @@ function Profile() {
                   rightGroupSx={rightGroupSx}
                   getFieldLabel={getFieldLabel}
                   degreeOptions={degreeOptions}
-                  handleFileChange={handleFileChange}
+                  handleFileChange={handleFileChangeWithSnackbar}
+                  onFileError={handleUploadError}
                 />
 
                 <Box sx={rightGroupSx}>
@@ -625,6 +673,13 @@ function Profile() {
             </Grid>
           </CardContent>
         </Card>
+
+        <CustomSnackbar
+          open={snackbar.open}
+          handleClose={hideSnackbar}
+          status={snackbar.status}
+          message={snackbar.message}
+        />
       </Container>
     </div>
   );

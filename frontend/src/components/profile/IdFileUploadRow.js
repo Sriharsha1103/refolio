@@ -11,6 +11,7 @@ function IdFileUploadRow({
   getFieldLabel,
   onNumberChange,
   onFileChange,
+  onFileError,
 }) {
   return (
     <>
@@ -45,6 +46,10 @@ function IdFileUploadRow({
           branch={branch}
           error={!!errors?.main?.[fileField]}
           handleFileChange={onFileChange}
+          onError={onFileError}
+          justifyContent="flex-start"
+          containerSx={{ mt: 0 }}
+          buttonSx={{ whiteSpace: "nowrap", px: 2 }}
         />
       </Box>
     </>

@@ -13,6 +13,7 @@ function EducationQualificationsSection({
   getFieldLabel,
   degreeOptions,
   handleFileChange,
+  onFileError,
 }) {
   return (
     <Box sx={rightGroupSx}>
@@ -119,6 +120,7 @@ function EducationQualificationsSection({
               handleFileChange={(e) =>
                 handleFileChange(e.target.files[0], "certificateFile", "qual", i)
               }
+              onError={onFileError}
             />
           </Grid>
         </Grid>

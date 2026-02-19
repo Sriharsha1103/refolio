@@ -23,8 +23,10 @@ const FileUploadSection = ({
   const onFileChange = (e) => {
     const selectedFile = e.target.files[0];
 
-    if (selectedFile && selectedFile.size > 1024 * 1024) {
-      if (onError) onError("File size must be less than 200MB");
+    const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1MB
+
+    if (selectedFile && selectedFile.size > MAX_FILE_SIZE_BYTES) {
+      if (onError) onError("File size must be less than 1MB");
       e.target.value = null;
       return;
     }
