@@ -1,8 +1,24 @@
 import React from "react";
-import { Button, Box, Typography, FormHelperText } from "@mui/material";
+import { Button, Box, Typography, FormHelperText, Tooltip } from "@mui/material";
 import { primary, primaryColor, primaryHover, white } from "../../utils/colors";
 
-const FileUploadSection = ({ file, handleFileChange, error, onError, branch }) => {
+const FileUploadSection = ({
+  file,
+  handleFileChange,
+  error,
+  onError,
+  branch,
+  accept = ".pdf,.jpg,.jpeg,.png",
+  buttonText = "Upload File",
+  buttonAriaLabel,
+  buttonSx,
+  containerSx,
+  direction = "row",
+  alignItems = "center",
+  justifyContent = "space-evenly",
+  showFileName = true,
+  children,
+}) => {
 
   const onFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -17,6 +33,7 @@ const FileUploadSection = ({ file, handleFileChange, error, onError, branch }) =
   };
 
   const backendURL = process.env.REACT_APP_BACKEND_URL;
+  const safeBranch = branch || "common";
 
   const getFileName = () => {
     if (!file) return null;
@@ -28,14 +45,50 @@ const FileUploadSection = ({ file, handleFileChange, error, onError, branch }) =
   };
 
   const fileName = getFileName();
+  const isRemoteFile = typeof file === "string";
+
+  const maxDisplayChars = 10;
+  const shouldTruncate = !!fileName && fileName.length > maxDisplayChars;
+  const truncatedFileName =
+    shouldTruncate ? `${fileName.slice(0, maxDisplayChars - 3)}...` : fileName;
+
+  const fileNameSx = {
+    display: "inline-block",
+    maxWidth: "15ch",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    verticalAlign: "bottom",
+    "& .full": {
+      display: "none",
+    },
+    "&:hover .truncated": {
+      display: "none",
+    },
+    "&:hover .full": {
+      display: "inline-block",
+      animation: shouldTruncate ? "fileNameMarquee 6s linear infinite" : "none",
+    },
+    "@keyframes fileNameMarquee": {
+      "0%": { transform: "translateX(0%)" },
+      "100%": { transform: "translateX(-100%)" },
+    },
+  };
 
   return (
-    <Box display="flex" flexDirection="column" gap={1}>
+    <Box
+      display="flex"
+      flexDirection={direction}
+      gap={1}
+      sx={{ mt: 2, ...containerSx }}
+      alignItems={alignItems}
+      justifyContent={justifyContent}
+    >
 
       <Button
         variant="contained"
         component="label"
         color={error ? "error" : "secondary"}
+        aria-label={buttonAriaLabel}
         sx={{
           backgroundColor: primary,
           color: primaryColor,
@@ -44,29 +97,43 @@ const FileUploadSection = ({ file, handleFileChange, error, onError, branch }) =
             backgroundColor: primaryHover,
             color: white,
           },
+          ...buttonSx,
+          
         }}
       >
-        Upload File
+        {children || buttonText}
         <input
           type="file"
-          accept=".pdf,.jpg,.jpeg,.png" 
+          accept={accept}
           
           hidden
           onChange={onFileChange}
         />
       </Button>
 
-      {fileName && (
+      {showFileName && fileName && (
         <Typography variant="body2">
           File:{" "}
-          <a
-            href={`${backendURL}/uploads/${branch}/${fileName}`}
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#1976d2" }}
-          >
-            {fileName}
-          </a>
+          <Tooltip title={fileName} disableHoverListener={!shouldTruncate}>
+            <Box component="span" sx={fileNameSx}>
+              {isRemoteFile ? (
+                <a
+                  href={`${backendURL}/uploads/${safeBranch}/${fileName}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "#1976d2", textDecoration: "none" }}
+                >
+                  <span className="truncated">{truncatedFileName}</span>
+                  <span className="full">{fileName}</span>
+                </a>
+              ) : (
+                <>
+                  <span className="truncated">{truncatedFileName}</span>
+                  <span className="full">{fileName}</span>
+                </>
+              )}
+            </Box>
+          </Tooltip>
         </Typography>
       )}
 
