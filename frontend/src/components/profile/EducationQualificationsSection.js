@@ -3,7 +3,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import FileUploadSection from "../CustomComponents/FileUploadSection";
 import { PanelIconButton } from "../CustomComponents/PanelButton";
-import { white } from "../../utils/colors";
+import { errorColor, white } from "../../utils/colors";
 
 function EducationQualificationsSection({
   body,
@@ -15,6 +15,25 @@ function EducationQualificationsSection({
   handleFileChange,
   onFileError,
 }) {
+
+  const customSx = {
+    "& .MuiInputBase-input": { color: white },
+    "& .MuiInputLabel-root": { color: "rgba(255,255,255,0.85)" },
+    "& .MuiInputLabel-root.Mui-focused": { color: white },
+    "& .MuiFormHelperText-root": { color: white },
+    "& .MuiInput-underline:before": {
+      borderBottomColor: "rgba(255,255,255,0.25)",
+    },
+    "& .MuiInput-underline:hover:before": {
+      borderBottomColor: "rgba(255,255,255,0.45) !important",
+    },
+    "& .MuiInput-underline:after": {
+      borderBottomColor: "rgba(255,255,255,0.7)",
+    },
+    "& .MuiFormLabel-root.Mui-error": { color: errorColor },
+    "& .MuiInputBase-root.Mui-error:after": { borderBottomColor: errorColor },
+    "& .MuiFormHelperText-root.Mui-error": { color: errorColor },
+  };
   return (
     <Box sx={rightGroupSx}>
       <Box
@@ -73,6 +92,7 @@ function EducationQualificationsSection({
                     required
                     error={!!errors?.qual?.[i]?.degree}
                     helperText={errors?.qual?.[i]?.degree ? "Required" : ""}
+                    sx={{ ...customSx }}
                     value={q[f] || ""}
                     onChange={(e) =>
                       dispatchReducer({
@@ -97,6 +117,7 @@ function EducationQualificationsSection({
                     required
                     error={!!errors?.qual?.[i]?.[f]}
                     helperText={errors?.qual?.[i]?.[f] ? "Required" : ""}
+                    sx={{ ...customSx }}
                     value={q[f]}
                     onChange={(e) =>
                       dispatchReducer({

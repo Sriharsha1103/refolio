@@ -2,9 +2,6 @@ import React, { useEffect } from "react";
 import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import PortalToolbar  from "./PortalToolBar";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
 const CustomDataGrid = ({
   data,

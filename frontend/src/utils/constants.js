@@ -242,6 +242,12 @@ export const degreeOptions = [
   { value: "PhD", label: "PhD" },
 ];
 
+export const typeOptions = [
+      { value: "Industry", label: "Industry" },
+      { value: "Academics", label: "Academics" },
+      { value: "Others", label: "Others" },
+    ];
+
 export const branchOptions = [
   { value: "CSE", label: "Computer Science & Engineering" },
   { value: "AIML", label: "Artificial Intelligence & Machine Learning" },
@@ -274,3 +280,12 @@ export const requiredMainFields = [
       "Editor_for_Journals",
       "Reviewer_for_Journals",
     ];
+
+export const designationOptionsIT = [
+  {value: "Junior Developer", label: "Junior Developer"},
+  {value: "Senior Developer", label: "Senior Developer"},
+  {value: "Team Lead", label: "Team Lead"},
+  {value: "Project Manager", label: "Project Manager"},
+  {value: "CTO", label: "Chief Technology Officer"},
+  
+]

@@ -1,6 +1,9 @@
 import React from "react";
 import { Button, Box, Typography, FormHelperText, Tooltip } from "@mui/material";
 import { primary, primaryColor, primaryHover, white } from "../../utils/colors";
+import { IconButton } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
 
 const FileUploadSection = ({
   file,
@@ -9,7 +12,6 @@ const FileUploadSection = ({
   onError,
   branch,
   accept = ".pdf,.jpg,.jpeg,.png",
-  buttonText = "Upload File",
   buttonAriaLabel,
   buttonSx,
   containerSx,
@@ -18,6 +20,8 @@ const FileUploadSection = ({
   justifyContent = "space-evenly",
   showFileName = true,
   children,
+  showPreviewIcon = true,
+  previewAriaLabel = "View file",
 }) => {
 
   const onFileChange = (e) => {
@@ -30,7 +34,6 @@ const FileUploadSection = ({
       e.target.value = null;
       return;
     }
-
     handleFileChange(e);
   };
 
@@ -46,17 +49,32 @@ const FileUploadSection = ({
     return null;
   };
 
+  const openFile = () => {
+    if (!file) return;
+
+    if (typeof file === "string") {
+      window.open(`${backendURL}/uploads/${safeBranch}/${file}`, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (file instanceof File) {
+      const url = URL.createObjectURL(file);
+      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  };
+
   const fileName = getFileName();
   const isRemoteFile = typeof file === "string";
 
-  const maxDisplayChars = 10;
+  const maxDisplayChars = 30;
   const shouldTruncate = !!fileName && fileName.length > maxDisplayChars;
   const truncatedFileName =
     shouldTruncate ? `${fileName.slice(0, maxDisplayChars - 3)}...` : fileName;
 
   const fileNameSx = {
     display: "inline-block",
-    maxWidth: "15ch",
+    maxWidth: "25ch",
     overflow: "hidden",
     whiteSpace: "nowrap",
     verticalAlign: "bottom",
@@ -76,6 +94,10 @@ const FileUploadSection = ({
     },
   };
 
+  const hasFile = !!fileName;
+  const isLocalSelectedFile = file instanceof File;
+  const showSelectedFileText = showFileName && isLocalSelectedFile && hasFile;
+
   return (
     <Box
       display="flex"
@@ -85,7 +107,6 @@ const FileUploadSection = ({
       alignItems={alignItems}
       justifyContent={justifyContent}
     >
-
       <Button
         variant="contained"
         component="label"
@@ -100,51 +121,48 @@ const FileUploadSection = ({
             color: white,
           },
           ...buttonSx,
-          
         }}
       >
-        {children || buttonText}
-        <input
-          type="file"
-          accept={accept}
-          
-          hidden
-          onChange={onFileChange}
-        />
+        {children || <FileUploadIcon />}
+        <input type="file" accept={accept} hidden onChange={onFileChange} />
       </Button>
+      {showSelectedFileText ? (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          {/* <Typography variant="body2">File: </Typography> */}
 
-      {showFileName && fileName && (
-        <Typography variant="body2">
-          File:{" "}
-          <Tooltip title={fileName} disableHoverListener={!shouldTruncate}>
-            <Box component="span" sx={fileNameSx}>
-              {isRemoteFile ? (
-                <a
-                  href={`${backendURL}/uploads/${safeBranch}/${fileName}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ color: "#1976d2", textDecoration: "none" }}
-                >
-                  <span className="truncated">{truncatedFileName}</span>
-                  <span className="full">{fileName}</span>
-                </a>
-              ) : (
-                <>
-                  <span className="truncated">{truncatedFileName}</span>
-                  <span className="full">{fileName}</span>
-                </>
-              )}
-            </Box>
-          </Tooltip>
-        </Typography>
-      )}
+          {showPreviewIcon && hasFile ? (
+            // <Tooltip title="View" arrow>
+            <Tooltip title={fileName} disableHoverListener={!shouldTruncate}>
+              <IconButton
+                size="small"
+                aria-label={previewAriaLabel}
+                onClick={openFile}
+                sx={{ color: "#1976d2" }}
+              >
+                <VisibilityIcon fontSize="inherit" />
+              </IconButton>
+              {/* <Box component="span" sx={fileNameSx}>
+                <span className="truncated">{truncatedFileName}</span>
+                <span className="full">{fileName}</span>
+              </Box> */}
+            </Tooltip>
+          ) : // </Tooltip>
+          null}
+        </Box>
+      ) : showPreviewIcon && hasFile ? (
+        <Tooltip title="View" arrow>
+          <IconButton
+            size="small"
+            aria-label={previewAriaLabel}
+            onClick={openFile}
+            sx={{ color: "#1976d2" }}
+          >
+            <VisibilityIcon fontSize="inherit" />
+          </IconButton>
+        </Tooltip>
+      ) : null}
 
-      {error && (
-        <FormHelperText error>
-          File is required
-        </FormHelperText>
-      )}
-
+      {error && <FormHelperText error>File is required</FormHelperText>}
     </Box>
   );
 };

@@ -11,7 +11,7 @@ function ResearchProfileSection({ leftGroupSx, renderField }) {
         {["Scopus_ID", "WoS_ID", "Google_Scholar_ID", "Vidwan_ID", "ORCID_ID"].map(
           (f) => (
             <Grid item xs={12} sm={6} key={f}>
-              {renderField(f)}
+              {renderField(f, { fullWidth: true }, "left")}
             </Grid>
           ),
         )}

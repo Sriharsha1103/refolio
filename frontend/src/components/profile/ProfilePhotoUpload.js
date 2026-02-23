@@ -51,6 +51,7 @@ function ProfilePhotoUpload({ file, branch, handleFileChange, onFileError, error
           overflow: "hidden",
         }}
         showFileName = {false}
+        showPreviewIcon={false}
       >
         <Avatar
           src={imageSrc || undefined}

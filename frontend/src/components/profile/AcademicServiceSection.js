@@ -1,5 +1,5 @@
 import { Box, Grid, TextField, Typography } from "@mui/material";
-import { white } from "../../utils/colors";
+import { errorColor, white } from "../../utils/colors";
 
 function AcademicServiceSection({ body, dispatchReducer, errors, rightGroupSx, getFieldLabel }) {
   return (
@@ -29,6 +29,26 @@ function AcademicServiceSection({ body, dispatchReducer, errors, rightGroupSx, g
                 required
                 error={!!errors?.main?.[f]}
                 helperText={errors?.main?.[f] ? "Required" : ""}
+                sx={{
+                  "& .MuiInputBase-input": { color: white },
+                  "& .MuiInputLabel-root": { color: "rgba(255,255,255,0.85)" },
+                  "& .MuiInputLabel-root.Mui-focused": { color: white },
+                  "& .MuiFormHelperText-root": { color: white },
+                  "& .MuiInput-underline:before": {
+                    borderBottomColor: "rgba(255,255,255,0.25)",
+                  },
+                  "& .MuiInput-underline:hover:before": {
+                    borderBottomColor: "rgba(255,255,255,0.45) !important",
+                  },
+                  "& .MuiInput-underline:after": {
+                    borderBottomColor: "rgba(255,255,255,0.7)",
+                  },
+                  "& .MuiFormLabel-root.Mui-error": { color: errorColor },
+                  "& .MuiInputBase-root.Mui-error:after": {
+                    borderBottomColor: errorColor,
+                  },
+                  "& .MuiFormHelperText-root.Mui-error": { color: errorColor },
+                }}
                 value={body[f] || ""}
                 onChange={(e) =>
                   dispatchReducer({

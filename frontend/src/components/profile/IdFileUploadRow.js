@@ -28,6 +28,7 @@ function IdFileUploadRow({
           border: "1px solid",
           borderColor: "divider",
           borderRadius: 2,
+          flexDirection: { xs: "column", sm: "row", md: "row" },
           p: 2,
         }}
       >

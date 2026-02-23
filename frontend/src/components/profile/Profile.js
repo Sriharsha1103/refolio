@@ -17,8 +17,14 @@ import ExperienceSection from "./ExperienceSection";
 import EducationQualificationsSection from "./EducationQualificationsSection";
 import PanelButton from "../CustomComponents/PanelButton";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
-import { primary, primaryColor, white } from "../../utils/colors";
-import { branchOptions, degreeOptions, designationOptions, fieldLabelMap, requiredMainFields } from "../../utils/constants";
+import { errorColor, primary, primaryColor, white } from "../../utils/colors";
+import {
+  branchOptions,
+  degreeOptions,
+  designationOptions,
+  fieldLabelMap,
+  requiredMainFields,
+} from "../../utils/constants";
 import ResearchProfileSection from "./ResearchProfileSection";
 import AcademicServiceSection from "./AcademicServiceSection";
 
@@ -102,7 +108,7 @@ function reducer(state, action) {
 
     case "REMOVE_QUAL": {
       const q = state.body.Education_Qualifications.filter(
-        (_, idx) => idx !== action.index,
+        (_, idx) => idx !== action.index
       );
       return { ...state, body: { ...state.body, Education_Qualifications: q } };
     }
@@ -148,7 +154,11 @@ function reducer(state, action) {
 function Profile() {
   const [state, dispatchReducer] = useReducer(reducer, initialState);
   const [errors, setErrors] = useState({ main: {}, qual: [], exp: [] });
-  const [snackbar, setSnackbar] = useState({ open: false, status: 0, message: "" });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    status: 0,
+    message: "",
+  });
   const navigateTimeoutRef = useRef(null);
   const service = useMemo(() => new Service(), []);
   const navigate = useNavigate();
@@ -189,7 +199,11 @@ function Profile() {
           };
 
         case "UPDATE_QUAL": {
-          if (action.index === undefined || action.index === null || !action.field)
+          if (
+            action.index === undefined ||
+            action.index === null ||
+            !action.field
+          )
             return prev;
           const qual = Array.isArray(prev.qual) ? [...prev.qual] : [];
           if (!qual[action.index]) qual[action.index] = {};
@@ -211,7 +225,11 @@ function Profile() {
           };
 
         case "UPDATE_EXP": {
-          if (action.index === undefined || action.index === null || !action.field)
+          if (
+            action.index === undefined ||
+            action.index === null ||
+            !action.field
+          )
             return prev;
           const exp = Array.isArray(prev.exp) ? [...prev.exp] : [];
           if (!exp[action.index]) exp[action.index] = {};
@@ -253,8 +271,7 @@ function Profile() {
   }, []);
 
   const handleFileChange = (file, field, type, index = null) => {
-    if (type === "main")
-      dispatch({ type: "SET_FIELD", field, value: file });
+    if (type === "main") dispatch({ type: "SET_FIELD", field, value: file });
 
     if (type === "qual")
       dispatch({
@@ -291,8 +308,6 @@ function Profile() {
   };
 
   const validateAll = () => {
-    
-
     const mainErrors = requiredMainFields.reduce((acc, key) => {
       if (isBlank(body[key])) acc[key] = true;
       return acc;
@@ -403,14 +418,13 @@ function Profile() {
     }
   };
 
- 
-
   const leftGroupSx = {
     border: "1px solid",
     borderColor: "divider",
     borderRadius: 2,
     p: 2,
     mb: 2,
+    color: primaryColor,
   };
 
   const rightGroupSx = {
@@ -418,12 +432,12 @@ function Profile() {
     borderRadius: 2,
     p: 2,
     mb: 2,
+    color: white,
   };
-  
 
   const getFieldLabel = (key) => fieldLabelMap[key] || key;
 
-  const renderField = (field, width) => {
+  const renderField = (field, width, type) => {
     if (field === "Designation") {
       return (
         <TextField
@@ -432,6 +446,9 @@ function Profile() {
           variant="standard"
           label="Designation"
           required
+          sx={{
+            color: type === "left" ? primaryColor : white,
+          }}
           error={!!errors.main?.Designation}
           helperText={errors.main?.Designation ? "Required" : ""}
           value={body.Designation || ""}
@@ -482,6 +499,7 @@ function Profile() {
 
     return (
       <TextField
+        fullWidth
         variant="standard"
         label={getFieldLabel(field)}
         required
@@ -508,12 +526,12 @@ function Profile() {
         alignItems: "center",
       }}
     >
-      <Container maxWidth="lg">
-        <Card sx={{ borderRadius: "15px" }}>
+      <Container maxWidth="100vw">
+        <Card sx={{ borderRadius: "15px", margin: 2 }}>
           <CardContent sx={{ p: 0 }}>
             <Grid container>
               {/* ===== LEFT WHITE ===== */}
-              <Grid item xs={12} md={6} sx={{ p: 4, bgcolor: white }}>
+              <Grid item xs={12} md={5} sx={{ p: 4, bgcolor: white }}>
                 <Typography variant="h4" sx={{ mb: 3, color: primaryColor }}>
                   {isEditMode ? "Edit Profile" : "Profile Information"}
                 </Typography>
@@ -522,13 +540,39 @@ function Profile() {
                   <Typography variant="h6" sx={{ color: primaryColor, mb: 1 }}>
                     Basic Info
                   </Typography>
-                  <Grid container spacing={2}>
-                    {["Name", "Designation"].map((f) => (
-                      <Grid item xs={12} sm={6} key={f}>
+                  <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-start",
+                    mb: 2,
+                  }}
+                >
+                  <ProfilePhotoUpload
+                    file={body.Profile_Photo}
+                    branch={body.branch}
+                    error={!!errors.main?.Profile_Photo}
+                    onFileError={handleUploadError}
+                    handleFileChange={(e) =>
+                      handleFileChangeWithSnackbar(
+                        e.target.files[0],
+                        "Profile_Photo",
+                        "main"
+                      )
+                    }
+                  />
+                  <Grid container spacing={2}
+                  sx={{
+                    flex: 1,
+                    paddingLeft: 2,
+                    alignContent: "center",
+                  }}>
+                    {["Name", "Designation","branch"].map((f) => (
+                      <Grid item xs={12} sm={12} key={f}>
                         {renderField(f)}
                       </Grid>
                     ))}
                   </Grid>
+                </Box>
 
                   <IdFileUploadRow
                     label="Aadhaar"
@@ -547,7 +591,11 @@ function Profile() {
                       })
                     }
                     onFileChange={(e) =>
-                      handleFileChangeWithSnackbar(e.target.files[0], "Aadhaar_File", "main")
+                      handleFileChangeWithSnackbar(
+                        e.target.files[0],
+                        "Aadhaar_File",
+                        "main"
+                      )
                     }
                   />
 
@@ -568,7 +616,11 @@ function Profile() {
                       })
                     }
                     onFileChange={(e) =>
-                      handleFileChangeWithSnackbar(e.target.files[0], "PAN_File", "main")
+                      handleFileChangeWithSnackbar(
+                        e.target.files[0],
+                        "PAN_File",
+                        "main"
+                      )
                     }
                   />
                 </Box>
@@ -579,51 +631,33 @@ function Profile() {
                   </Typography>
                   <Grid container spacing={2}>
                     {[
+                      // "Designation",
+                      // "branch",
                       "AICTE_ID",
                       "JNTUH_ID",
                       "College_ID",
-                      "branch",
                       "Ratification_status",
                     ].map((f) => (
                       <Grid item xs={12} sm={6} key={f}>
-                        {renderField(f)}
+                        {renderField(f, "100%", "left")}
                       </Grid>
                     ))}
                   </Grid>
                 </Box>
-                <ResearchProfileSection leftGroupSx={leftGroupSx} renderField={renderField} />
+                <ResearchProfileSection
+                  leftGroupSx={leftGroupSx}
+                  renderField={renderField}
+                />
               </Grid>
 
               {/* ===== RIGHT GREEN ===== */}
-              <Grid item xs={12} md={6} sx={{ p: 4, bgcolor: primaryColor }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    mb: 2,
-                  }}
-                >
-                  <ProfilePhotoUpload
-                    file={body.Profile_Photo}
-                    branch={body.branch}
-                    error={!!errors.main?.Profile_Photo}
-                    onFileError={handleUploadError}
-                    handleFileChange={(e) =>
-                      handleFileChangeWithSnackbar(
-                        e.target.files[0],
-                        "Profile_Photo",
-                        "main",
-                      )
-                    }
-                  />
-                </Box>
+              <Grid item xs={12} md={7} sx={{ p: 4, bgcolor: primaryColor }}>
                 <ExperienceSection
                   body={body}
                   dispatchReducer={dispatch}
                   errors={errors}
                   rightGroupSx={rightGroupSx}
                   getFieldLabel={getFieldLabel}
-                  designationOptions={designationOptions}
                   handleFileChange={handleFileChangeWithSnackbar}
                   onFileError={handleUploadError}
                 />
@@ -649,7 +683,33 @@ function Profile() {
                     label={getFieldLabel("Professional_Memberships")}
                     required
                     error={!!errors.main?.Professional_Memberships}
-                    helperText={errors.main?.Professional_Memberships ? "Required" : ""}
+                    helperText={
+                      errors.main?.Professional_Memberships ? "Required" : ""
+                    }
+                    sx={{
+                      "& .MuiInputBase-input": { color: white },
+                      "& .MuiInputLabel-root": {
+                        color: "rgba(255,255,255,0.85)",
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": { color: white },
+                      "& .MuiFormHelperText-root": { color: white },
+                      "& .MuiInput-underline:before": {
+                        borderBottomColor: "rgba(255,255,255,0.25)",
+                      },
+                      "& .MuiInput-underline:hover:before": {
+                        borderBottomColor: "rgba(255,255,255,0.45) !important",
+                      },
+                      "& .MuiInput-underline:after": {
+                        borderBottomColor: "rgba(255,255,255,0.7)",
+                      },
+                      "& .MuiFormLabel-root.Mui-error": { color: errorColor },
+                      "& .MuiInputBase-root.Mui-error:after": {
+                        borderBottomColor: errorColor,
+                      },
+                      "& .MuiFormHelperText-root.Mui-error": {
+                        color: errorColor,
+                      },
+                    }}
                     value={body.Professional_Memberships || ""}
                     onChange={(e) =>
                       dispatch({
@@ -660,7 +720,13 @@ function Profile() {
                     }
                   />
                 </Box>
-                <AcademicServiceSection body={body} dispatchReducer={dispatch} errors={errors} rightGroupSx={rightGroupSx} getFieldLabel={getFieldLabel} />
+                <AcademicServiceSection
+                  body={body}
+                  dispatchReducer={dispatch}
+                  errors={errors}
+                  rightGroupSx={rightGroupSx}
+                  getFieldLabel={getFieldLabel}
+                />
 
                 <PanelButton
                   panel="green"
