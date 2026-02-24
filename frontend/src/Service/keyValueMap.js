@@ -78,9 +78,11 @@ export let ProfileKey = {
     Industry_Experience: "Industry",
     Scopus_ID: "Scopus ID",
     Vidwan_ID: "Vidwan ID",
+    Branch:" Branch",
     Invited_Talks: "Invited Talks",
   };
   
+
 
 
 

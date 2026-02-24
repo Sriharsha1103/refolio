@@ -84,10 +84,13 @@ function EducationQualificationsSection({
 
   const onDone = () => {
     if (mode === "add" && draftQual) {
+      // console.log("Draft Qual", draftQual);
       dispatchReducer({ type: "ADD_QUAL", value: draftQual });
     }
     closeQualModal();
   };
+
+  // console.log("Qualifications", qualifications);
 
   return (
     <Box sx={rightGroupSx}>
@@ -116,7 +119,9 @@ function EducationQualificationsSection({
         </Tooltip>
       </Box>
 
+
       {(qualifications || []).map((q, i) => (
+        
         <Box
           key={i}
           sx={{

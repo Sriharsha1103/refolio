@@ -8,6 +8,8 @@ import {
   CardContent,
   Box,
   MenuItem,
+  IconButton,
+  Button,
 } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import Service from "../../Service/http";
@@ -27,6 +29,7 @@ import {
 } from "../../utils/constants";
 import ResearchProfileSection from "./ResearchProfileSection";
 import AcademicServiceSection from "./AcademicServiceSection";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack"; 
 
 /* ================= INITIAL STATE ================= */
 
@@ -80,25 +83,28 @@ function reducer(state, action) {
         body: { ...state.body, [action.field]: action.value },
       };
 
-    case "ADD_QUAL":
+    case "ADD_QUAL": {
+      const next = action.value ?? {
+        level: "",
+        degree: "",
+        specialization: "",
+        university: "",
+        yearOfPassing: "",
+        percentageOrCGPA: "",
+        certificateFile: null,
+      };
+
       return {
         ...state,
         body: {
           ...state.body,
           Education_Qualifications: [
-            ...state.body.Education_Qualifications,
-            {
-              level: "",
-              degree: "",
-              specialization: "",
-              university: "",
-              yearOfPassing: "",
-              percentageOrCGPA: "",
-              certificateFile: "",
-            },
+            ...(state.body.Education_Qualifications || []),
+            next,
           ],
         },
       };
+    }
 
     case "UPDATE_QUAL": {
       const q = [...state.body.Education_Qualifications];
@@ -177,25 +183,32 @@ function Profile() {
     return rest;
   };
 
+  const handleGoBack = () =>{
+    navigate(-1)
+  }
+
   const dispatch = (action) => {
     dispatchReducer(action);
 
+    // console.log("dispatching", action);
     setErrors((prev) => {
-      if (!prev) return prev;
+      const safePrev = prev ?? { main: {}, qual: [], exp: [] };
 
+      // console.log("dispatching", safePrev, action);
       switch (action?.type) {
         case "INIT":
           return { main: {}, qual: [], exp: [] };
 
         case "SET_FIELD": {
-          if (!action.field) return prev;
-          return { ...prev, main: omitKey(prev.main, action.field) };
+          if (!action.field) return safePrev;
+          return { ...safePrev, main: omitKey(safePrev.main, action.field) };
         }
 
         case "ADD_QUAL":
+          console.log("first", safePrev.qual);
           return {
-            ...prev,
-            qual: [...(Array.isArray(prev.qual) ? prev.qual : []), {}],
+            ...safePrev,
+            qual: [...(Array.isArray(safePrev.qual) ? safePrev.qual : []), {}],
           };
 
         case "UPDATE_QUAL": {
@@ -204,24 +217,24 @@ function Profile() {
             action.index === null ||
             !action.field
           )
-            return prev;
-          const qual = Array.isArray(prev.qual) ? [...prev.qual] : [];
+            return safePrev;
+          const qual = Array.isArray(safePrev.qual) ? [...safePrev.qual] : [];
           if (!qual[action.index]) qual[action.index] = {};
           qual[action.index] = omitKey(qual[action.index], action.field);
-          return { ...prev, qual };
+          return { ...safePrev, qual };
         }
 
         case "REMOVE_QUAL": {
-          if (action.index === undefined || action.index === null) return prev;
-          const qual = Array.isArray(prev.qual) ? [...prev.qual] : [];
+          if (action.index === undefined || action.index === null) return safePrev;
+          const qual = Array.isArray(safePrev.qual) ? [...safePrev.qual] : [];
           qual.splice(action.index, 1);
-          return { ...prev, qual };
+          return { ...safePrev, qual };
         }
 
         case "ADD_EXP":
           return {
-            ...prev,
-            exp: [...(Array.isArray(prev.exp) ? prev.exp : []), {}],
+            ...safePrev,
+            exp: [...(Array.isArray(safePrev.exp) ? safePrev.exp : []), {}],
           };
 
         case "UPDATE_EXP": {
@@ -230,22 +243,30 @@ function Profile() {
             action.index === null ||
             !action.field
           )
-            return prev;
-          const exp = Array.isArray(prev.exp) ? [...prev.exp] : [];
+            return safePrev;
+          const exp = Array.isArray(safePrev.exp) ? [...safePrev.exp] : [];
           if (!exp[action.index]) exp[action.index] = {};
           exp[action.index] = omitKey(exp[action.index], action.field);
-          return { ...prev, exp };
+          return { ...safePrev, exp };
         }
 
         case "REMOVE_EXP": {
-          if (action.index === undefined || action.index === null) return prev;
-          const exp = Array.isArray(prev.exp) ? [...prev.exp] : [];
+          if (action.index === undefined || action.index === null) return safePrev;
+          const exp = Array.isArray(safePrev.exp) ? [...safePrev.exp] : [];
           exp.splice(action.index, 1);
-          return { ...prev, exp };
+          return { ...safePrev, exp };
         }
 
+        // case "ADD_QUAL": {
+        //   const next = action.value ?? {}; // draft coming from modal
+        //   const prevList = state.Education_Qualifications || [];
+        //   return {
+        //     ...state,
+        //     Education_Qualifications: [...prevList, next],
+        //   };
+        // }
         default:
-          return prev;
+          return safePrev;
       }
     });
   };
@@ -528,51 +549,68 @@ function Profile() {
     >
       <Container maxWidth="100vw">
         <Card sx={{ borderRadius: "15px", margin: 2 }}>
-          <CardContent sx={{ p: 0 }}>
+          <CardContent sx={{ p: '0px !important' }}>
             <Grid container>
               {/* ===== LEFT WHITE ===== */}
               <Grid item xs={12} md={5} sx={{ p: 4, bgcolor: white }}>
-                <Typography variant="h4" sx={{ mb: 3, color: primaryColor }}>
-                  {isEditMode ? "Edit Profile" : "Profile Information"}
-                </Typography>
+                <Box
+                  sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}
+                >
+                  {
+                    <IconButton
+                      onClick={handleGoBack}
+                      size="small"
+                      sx={{ color: primaryColor}}
+                    >
+                      <ArrowBackIcon />
+                    </IconButton>
+                  }
+
+                  <Typography variant="h4" sx={{  color: primaryColor, fontWeight: 600, alignItems:'center' }}>
+                    {isEditMode ? "Edit Profile" : "Profile Information"}
+                  </Typography>
+                </Box>
 
                 <Box sx={leftGroupSx}>
                   <Typography variant="h6" sx={{ color: primaryColor, mb: 1 }}>
                     Basic Info
                   </Typography>
                   <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    mb: 2,
-                  }}
-                >
-                  <ProfilePhotoUpload
-                    file={body.Profile_Photo}
-                    branch={body.branch}
-                    error={!!errors.main?.Profile_Photo}
-                    onFileError={handleUploadError}
-                    handleFileChange={(e) =>
-                      handleFileChangeWithSnackbar(
-                        e.target.files[0],
-                        "Profile_Photo",
-                        "main"
-                      )
-                    }
-                  />
-                  <Grid container spacing={2}
-                  sx={{
-                    flex: 1,
-                    paddingLeft: 2,
-                    alignContent: "center",
-                  }}>
-                    {["Name", "Designation","branch"].map((f) => (
-                      <Grid item xs={12} sm={12} key={f}>
-                        {renderField(f)}
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Box>
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-start",
+                      mb: 2,
+                    }}
+                  >
+                    <ProfilePhotoUpload
+                      file={body.Profile_Photo}
+                      branch={body.branch}
+                      error={!!errors.main?.Profile_Photo}
+                      onFileError={handleUploadError}
+                      handleFileChange={(e) =>
+                        handleFileChangeWithSnackbar(
+                          e.target.files[0],
+                          "Profile_Photo",
+                          "main"
+                        )
+                      }
+                    />
+                    <Grid
+                      container
+                      spacing={2}
+                      sx={{
+                        flex: 1,
+                        paddingLeft: 2,
+                        alignContent: "center",
+                      }}
+                    >
+                      {["Name", "Designation", "branch"].map((f) => (
+                        <Grid item xs={12} sm={12} key={f}>
+                          {renderField(f)}
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
 
                   <IdFileUploadRow
                     label="Aadhaar"
@@ -651,7 +689,7 @@ function Profile() {
               </Grid>
 
               {/* ===== RIGHT GREEN ===== */}
-              <Grid item xs={12} md={7} sx={{ p: 4, bgcolor: primaryColor }}>
+              <Grid item xs={12} md={7} sx={{ p: {xs:2, md:5}, bgcolor: primaryColor }}>
                 <ExperienceSection
                   body={body}
                   dispatchReducer={dispatch}
@@ -727,14 +765,34 @@ function Profile() {
                   rightGroupSx={rightGroupSx}
                   getFieldLabel={getFieldLabel}
                 />
-
-                <PanelButton
-                  panel="green"
-                  variant="contained"
-                  onClick={handleSubmit}
+                <Box
+                  sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}
                 >
-                  {isEditMode ? "Update" : "Submit"}
-                </PanelButton>
+                  {(
+                    <Button
+                      variant="flat"
+                      onClick={handleGoBack}
+                      sx={{
+                        color: white,
+                        borderColor: white,
+                        "&:hover": {
+                          backgroundColor: "rgba(255,255,255,0.1)",
+                          borderColor: white,
+                        },
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+
+                  <PanelButton
+                    panel="green"
+                    variant="contained"
+                    onClick={handleSubmit}
+                  >
+                    {isEditMode ? "Update" : "Submit"}
+                  </PanelButton>
+                </Box>
               </Grid>
             </Grid>
           </CardContent>

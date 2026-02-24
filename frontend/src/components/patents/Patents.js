@@ -205,7 +205,7 @@ function Patents() {
     };
 
     const handleView = (row) => {
-    console.log('Row',row)
+    // console.log('Row',row)
     if (!row || !row.fileName) {
       setSnack({
         open: true,

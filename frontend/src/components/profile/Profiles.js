@@ -12,15 +12,16 @@ import PdfViewerDialog from "../CustomComponents/PdfViewerDialog";
 const fieldConfigs = [
     { field: "Name", width: 150 },
     { field: "Designation", width: 100 },
-    { field: "College_ID", width: 100 },
-    { field: "JNTUH_ID", width: 100 },
-    { field: "Fields_of_Specialization", width: 250 },
-    { field: "Ratification_status", width: 100 },
+    {field: "Branch", width: 150},
+    // { field: "College_ID", width: 100 },
+    // { field: "JNTUH_ID", width: 100 },
+    // { field: "Fields_of_Specialization", width: 250 },
+    // { field: "Ratification_status", width: 100 },
     { field: "Teaching_Experience", width: 100 },
     { field: "Research_Experience", width: 100 },
     { field: "Industry_Experience", width: 100 },
-    { field: "Scopus_ID", width: 100 },
-    { field: "Vidwan_ID", width: 100 },
+    // { field: "Scopus_ID", width: 100 },
+    // { field: "Vidwan_ID", width: 100 },
     { field: "Invited_Talks", width: 100 },
     
 ];
@@ -54,6 +55,7 @@ const filterData = (data, filters) => {
         const includes = (val, f) => (!f ? true : String(val || "").toLowerCase().includes(f.toLowerCase()));
 
         if (!includes(item.Name, filters.title)) return false;
+        if(!includes(item.Branch, filters.branch)) return false;
         if (!includes(item.Designation, filters.designation)) return false;
         if (!includes(item.College_ID, filters.collegeid)) return false;
         if (!includes(item.JNTUH_ID, filters.JNTUHID)) return false;
@@ -294,8 +296,6 @@ function Profiles() {
                 }
             />
          
-
-            {/* <HomeNavbar /> */}
             <div
                 className="p-3"
                 style={{
