@@ -1,10 +1,23 @@
-import { Box, Grid, MenuItem, TextField, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  Grid,
+  MenuItem,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import FileUploadSection from "../CustomComponents/FileUploadSection";
 import { PanelIconButton } from "../CustomComponents/PanelButton";
 import { black, errorColor, primaryColor, white } from "../../utils/colors";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/material";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+} from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import {
   Paper,
@@ -17,7 +30,11 @@ import {
 } from "@mui/material";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import { Stack, Chip } from "@mui/material";
-import { typeOptions, designationOptions, designationOptionsIT } from "../../utils/constants";
+import {
+  typeOptions,
+  designationOptions,
+  designationOptionsIT,
+} from "../../utils/constants";
 
 function ExperienceSection({
   body,
@@ -45,17 +62,15 @@ function ExperienceSection({
       }
 
       const parsed = new Date(trimmed);
-      if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+      if (!Number.isNaN(parsed.getTime()))
+        return parsed.toISOString().slice(0, 10);
       return "";
     }
 
     return "";
   };
 
-  const TYPE_OPTIONS = useMemo(
-    () => typeOptions,
-    [],
-  );
+  const TYPE_OPTIONS = useMemo(() => typeOptions, []);
 
   const emptyDraft = useMemo(
     () => ({
@@ -67,7 +82,7 @@ function ExperienceSection({
       toDate: "",
       experienceFile: null,
     }),
-    [],
+    []
   );
 
   const backendURL = process.env.REACT_APP_BACKEND_URL;
@@ -92,7 +107,8 @@ function ExperienceSection({
       const next = {};
       Object.keys(prev || {}).forEach((k) => {
         const idx = Number(k);
-        if (!Number.isNaN(idx) && idx < (body.Experience || []).length) next[idx] = true;
+        if (!Number.isNaN(idx) && idx < (body.Experience || []).length)
+          next[idx] = true;
       });
       return next;
     });
@@ -194,8 +210,7 @@ function ExperienceSection({
   };
 
   const renderFileChip = (file) => {
-    const label =
-      file instanceof File ? file.name : file ? "Uploaded" : "—";
+    const label = file instanceof File ? file.name : file ? "Uploaded" : "—";
     return (
       <Chip
         size="small"
@@ -217,16 +232,20 @@ function ExperienceSection({
         onClick={() => {
           if (!file) return;
 
-    if (typeof file === "string") {
-      window.open(`${backendURL}/uploads/${safeBranch}/${file}`, "_blank", "noopener,noreferrer");
-      return;
-    }
+          if (typeof file === "string") {
+            window.open(
+              `${backendURL}/uploads/${safeBranch}/${file}`,
+              "_blank",
+              "noopener,noreferrer"
+            );
+            return;
+          }
 
-    if (file instanceof File) {
-      const url = URL.createObjectURL(file);
-      window.open(url, "_blank", "noopener,noreferrer");
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
+          if (file instanceof File) {
+            const url = URL.createObjectURL(file);
+            window.open(url, "_blank", "noopener,noreferrer");
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
         }}
       />
     );
@@ -261,94 +280,115 @@ function ExperienceSection({
         </Tooltip>
       </Box>
 
-      <Dialog open={isAddModalOpen} onClose={handleAddModalClose} disableEscapeKeyDown fullWidth maxWidth="sm" PaperProps={{ sx: { backgroundColor: white, color: primaryColor, padding: 4, borderRadius: 3 } }} 
-       BackdropProps={{ sx: { backgroundColor: "rgba(0,0,0,0.3)" } }}
-       
-       >
-        <DialogTitle sx={{ fontWeight: 'bold'}}>Add Experience</DialogTitle>
+      <Dialog
+        open={isAddModalOpen}
+        onClose={handleAddModalClose}
+        disableEscapeKeyDown
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            backgroundColor: white,
+            color: primaryColor,
+            padding: 4,
+            borderRadius: 3,
+          },
+        }}
+        BackdropProps={{ sx: { backgroundColor: "rgba(0,0,0,0.3)" } }}
+      >
+        <DialogTitle sx={{ fontWeight: "bold" }}>Add Experience</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <Grid container spacing={2} sx={{ mt: 0 }}>
-            {["type", "organisation", "designation", "fromDate", "toDate"].map((f) => (
-              <Grid item xs={12} sm={6} key={f}>
-                {f === "type" ? (
-                  <>
+            {["type", "organisation", "designation", "fromDate", "toDate"].map(
+              (f) => (
+                <Grid item xs={12} sm={6} key={f}>
+                  {f === "type" ? (
+                    <>
+                      <TextField
+                        fullWidth
+                        select
+                        variant="standard"
+                        label={getFieldLabel("type")}
+                        required
+                        value={draftExp.type || ""}
+                        onChange={(e) => {
+                          const next = e.target.value;
+                          setDraftExp((p) => ({
+                            ...p,
+                            type: next,
+                            typeOther: next === "Others" ? p.typeOther : "",
+                          }));
+                        }}
+                      >
+                        {TYPE_OPTIONS.map((opt) => (
+                          <MenuItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+
+                      {draftExp.type === "Others" ? (
+                        <TextField
+                          fullWidth
+                          variant="standard"
+                          label="Other type"
+                          required
+                          value={draftExp.typeOther || ""}
+                          onChange={(e) =>
+                            setDraftExp((p) => ({
+                              ...p,
+                              typeOther: e.target.value,
+                            }))
+                          }
+                          sx={{ mt: 1 }}
+                        />
+                      ) : null}
+                    </>
+                  ) : f === "designation" ? (
                     <TextField
                       fullWidth
                       select
                       variant="standard"
-                      label={getFieldLabel("type")}
+                      label={getFieldLabel(f)}
                       required
-                      value={draftExp.type || ""}
+                      value={draftExp[f] || ""}
                       onChange={(e) => {
-                        const next = e.target.value;
                         setDraftExp((p) => ({
                           ...p,
-                          type: next,
-                          typeOther: next === "Others" ? p.typeOther : "",
+                          [f]: e.target.value,
                         }));
                       }}
                     >
-                      {TYPE_OPTIONS.map((opt) => (
+                      {getDesignationOptionsByType(draftExp.type).map((opt) => (
                         <MenuItem key={opt.value} value={opt.value}>
                           {opt.label}
                         </MenuItem>
                       ))}
                     </TextField>
-
-                    {draftExp.type === "Others" ? (
-                      <TextField
-                        fullWidth
-                        variant="standard"
-                        label="Other type"
-                        required
-                        value={draftExp.typeOther || ""}
-                        onChange={(e) =>
-                          setDraftExp((p) => ({ ...p, typeOther: e.target.value }))
-                        }
-                        sx={{ mt: 1 }}
-                      />
-                    ) : null}
-                  </>
-                ) : f === "designation" ? (
-                  <TextField
-                    fullWidth
-                    select
-                    variant="standard"
-                    label={getFieldLabel(f)}
-                    required
-                    value={draftExp[f] || ""}
-                    onChange={(e) => {
-                      setDraftExp((p) => ({
-                        ...p,
-                        [f]: e.target.value,
-                      }));
-                    }}
-                  >
-                    {getDesignationOptionsByType(draftExp.type).map((opt) => (
-                      <MenuItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                ) : (
-                  <TextField
-                    fullWidth
-                    variant="standard"
-                    type={f.includes("Date") ? "date" : "text"}
-                    InputLabelProps={{ shrink: true }}
-                    label={getFieldLabel(f)}
-                    required
-                    value={f.includes("Date") ? toDateInputValue(draftExp[f]) : (draftExp[f] || "")}
-                    onChange={(e) =>
-                      setDraftExp((p) => ({
-                        ...p,
-                        [f]: e.target.value,
-                      }))
-                    }
-                  />
-                )}
-              </Grid>
-            ))}
+                  ) : (
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      type={f.includes("Date") ? "date" : "text"}
+                      InputLabelProps={{ shrink: true }}
+                      label={getFieldLabel(f)}
+                      required
+                      value={
+                        f.includes("Date")
+                          ? toDateInputValue(draftExp[f])
+                          : draftExp[f] || ""
+                      }
+                      onChange={(e) =>
+                        setDraftExp((p) => ({
+                          ...p,
+                          [f]: e.target.value,
+                        }))
+                      }
+                    />
+                  )}
+                </Grid>
+              )
+            )}
 
             <Grid item xs={12}>
               <FileUploadSection
@@ -356,10 +396,15 @@ function ExperienceSection({
                 branch={body.branch}
                 error={false}
                 handleFileChange={(e) => {
-                  setDraftExp((p) => (
-                    { ...p, experienceFile: e.target.files[0] }
-                  ));
-                  handleFileChange(e.target.files[0], "experienceFile", body.branch);
+                  setDraftExp((p) => ({
+                    ...p,
+                    experienceFile: e.target.files[0],
+                  }));
+                  handleFileChange(
+                    e.target.files[0],
+                    "experienceFile",
+                    body.branch
+                  );
                 }}
                 onError={onFileError}
               />
@@ -377,46 +422,50 @@ function ExperienceSection({
       </Dialog>
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        {["Teaching_Experience", "Research_Experience", "Industry_Experience"].map(
-          (f) => (
-            <Grid item xs={4} sm={3} key={f}>
-              <TextField
-                fullWidth
-                variant="standard"
-                label={getFieldLabel(f)}
-                required
-                error={!!errors?.main?.[f]}
-                helperText={errors?.main?.[f] ? "Required" : ""}
-                value={body[f] || ""}
-                onChange={(e) =>
-                  dispatchReducer({
-                    type: "SET_FIELD",
-                    field: f,
-                    value: e.target.value,
-                  })
-                }
-                sx={{
-                  "& .MuiInputBase-input": { color: white },
-                  "& .MuiInputLabel-root": { color: "rgba(255,255,255,0.85)" },
-                  "& .MuiInputLabel-root.Mui-focused": { color: white },
-                  "& .MuiFormHelperText-root": { color: white },
-                  "& .MuiInput-underline:before": {
-                    borderBottomColor: "rgba(255,255,255,0.25)",
-                  },
-                  "& .MuiInput-underline:hover:before": {
-                    borderBottomColor: "rgba(255,255,255,0.45) !important",
-                  },
-                  "& .MuiInput-underline:after": {
-                    borderBottomColor: "rgba(255,255,255,0.7)",
-                  },
-                  "& .MuiFormLabel-root.Mui-error": { color: errorColor },
-                  "& .MuiInputBase-root.Mui-error:after": { borderBottomColor: errorColor },
-                  "& .MuiFormHelperText-root.Mui-error": { color: errorColor },
-                }}
-              />
-            </Grid>
-          ),
-        )}
+        {[
+          "Teaching_Experience",
+          "Research_Experience",
+          "Industry_Experience",
+        ].map((f) => (
+          <Grid item xs={4} sm={3} key={f}>
+            <TextField
+              fullWidth
+              variant="standard"
+              label={getFieldLabel(f)}
+              required
+              error={!!errors?.main?.[f]}
+              helperText={errors?.main?.[f] ? "Required" : ""}
+              value={body[f] || ""}
+              onChange={(e) =>
+                dispatchReducer({
+                  type: "SET_FIELD",
+                  field: f,
+                  value: e.target.value,
+                })
+              }
+              sx={{
+                "& .MuiInputBase-input": { color: white },
+                "& .MuiInputLabel-root": { color: "rgba(255,255,255,0.85)" },
+                "& .MuiInputLabel-root.Mui-focused": { color: white },
+                "& .MuiFormHelperText-root": { color: white },
+                "& .MuiInput-underline:before": {
+                  borderBottomColor: "rgba(255,255,255,0.25)",
+                },
+                "& .MuiInput-underline:hover:before": {
+                  borderBottomColor: "rgba(255,255,255,0.45) !important",
+                },
+                "& .MuiInput-underline:after": {
+                  borderBottomColor: "rgba(255,255,255,0.7)",
+                },
+                "& .MuiFormLabel-root.Mui-error": { color: errorColor },
+                "& .MuiInputBase-root.Mui-error:after": {
+                  borderBottomColor: errorColor,
+                },
+                "& .MuiFormHelperText-root.Mui-error": { color: errorColor },
+              }}
+            />
+          </Grid>
+        ))}
       </Grid>
 
       {body.Experience.length > 0 && (
@@ -432,11 +481,21 @@ function ExperienceSection({
           <Table stickyHeader size="small" sx={tableSx}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ width: 140 }}>{getFieldLabel("type")}</TableCell>
-                <TableCell sx={{ width: 180 }}>{getFieldLabel("organisation")}</TableCell>
-                <TableCell sx={{ width: 170 }}>{getFieldLabel("designation")}</TableCell>
-                <TableCell sx={{ width: 140 }}>{getFieldLabel("fromDate")}</TableCell>
-                <TableCell sx={{ width: 140 }}>{getFieldLabel("toDate")}</TableCell>
+                <TableCell sx={{ width: 140 }}>
+                  {getFieldLabel("type")}
+                </TableCell>
+                <TableCell sx={{ width: 180 }}>
+                  {getFieldLabel("organisation")}
+                </TableCell>
+                <TableCell sx={{ width: 170 }}>
+                  {getFieldLabel("designation")}
+                </TableCell>
+                <TableCell sx={{ width: 140 }}>
+                  {getFieldLabel("fromDate")}
+                </TableCell>
+                <TableCell sx={{ width: 140 }}>
+                  {getFieldLabel("toDate")}
+                </TableCell>
                 <TableCell sx={{ width: 220 }}>File</TableCell>
                 <TableCell sx={{ width: 96 }} align="right">
                   Actions
@@ -446,10 +505,17 @@ function ExperienceSection({
 
             <TableBody>
               {(body.Experience || []).map((ex, i) => {
-                const isPresetType = TYPE_OPTIONS.some((o) => o.value === ex.type);
-                const typeSelectValue = isPresetType ? ex.type : (ex.type ? "Others" : "");
-                const typeOtherValue = !isPresetType ? (ex.type || "") : "";
-                const designationOpts = getDesignationOptionsByType(typeSelectValue);
+                const isPresetType = TYPE_OPTIONS.some(
+                  (o) => o.value === ex.type
+                );
+                const typeSelectValue = isPresetType
+                  ? ex.type
+                  : ex.type
+                  ? "Others"
+                  : "";
+                const typeOtherValue = !isPresetType ? ex.type || "" : "";
+                const designationOpts =
+                  getDesignationOptionsByType(typeSelectValue);
 
                 return (
                   <TableRow key={`exp-row-${i}`} hover>
