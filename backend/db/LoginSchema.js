@@ -35,6 +35,11 @@ const LoginSchema=new Schema({
         type: Date,
         default: Date.now,
       },
+    profileId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Profile',
+        default: null
+    }
 })
 LoginSchema.plugin(mongoosePaginate);
 const Login=mongoose.model('Login',LoginSchema,'LoginData')

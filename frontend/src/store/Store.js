@@ -1,8 +1,8 @@
 import React from 'react'
 
-export const LoginReducer=(state={Email:'',Name:'',logged:false,isAdmin:null,isSuperAdmin:null,verify:null,Page:'Login',tab:'home'},action)=>{
+export const LoginReducer=(state={Email:'',Name:'',logged:false,isAdmin:null,isSuperAdmin:null,verify:null,profileId:null,Page:'Login',tab:'home'},action)=>{
     // console.log("STORE",state);
-    Object.freeze(state)
+    // Object.freeze(state)
     switch(action.type)
     {
         case 'Login':
@@ -12,9 +12,9 @@ export const LoginReducer=(state={Email:'',Name:'',logged:false,isAdmin:null,isS
         case 'Forgot':
             return {...state,Page:'Forgot',tab:'login'}
         case 'Signin' :
-            return {...state,Email:action.email,Name:action.user,logged:true,isAdmin:action.isAdmin,isSuperAdmin:action.isSuperAdmin,verify:action.verify}
+            return {...state,Email:action.email,Name:action.user,logged:true,isAdmin:action.isAdmin,isSuperAdmin:action.isSuperAdmin,verify:action.verify, profileId: action.profileId}
         case 'Signout':
-            return {...state,Email:'',Name:'',logged:false,isAdmin:null,isSuperAdmin:null,verify:null,Page:'Login',tab:'login'}
+            return {...state,Email:'',Name:'',logged:false,isAdmin:null,isSuperAdmin:null,verify:null, profileId: null, Page:'Login',tab:'login'}
         case 'tab':
             return {...state,tab:action.page}
         default:

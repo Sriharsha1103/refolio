@@ -14,7 +14,7 @@ module.exports.Adduser=async function(req,res,next){
 
 module.exports.Checkuser=async function(req,res){
     try{
-        console.log(req.body)
+        // console.log(req.body)
         const user=await LoginSchema.findOne({Email:req.body.Email}).select('-_id -__v')
         if(user==null)
         {

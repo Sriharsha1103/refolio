@@ -57,7 +57,8 @@ function Login() {
                 tempLoginData.Name, 
                 tempLoginData.role === "admin", 
                 tempLoginData.role === "super-admin", 
-                tempLoginData.verified
+                tempLoginData.verified,
+                tempLoginData.profileId
             ));
             setTempLoginData(null); 
         }

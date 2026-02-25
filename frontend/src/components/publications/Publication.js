@@ -117,6 +117,7 @@ const initialState = {
   author_no: [],
   date: "",
   yearInput: "",
+  userId: ''
 };
 
 function reducer(state, action) {
@@ -233,6 +234,7 @@ function Publication() {
   const isAdmin = useSelector((state) => state.isAdmin);
   const username = useSelector((state) => state.Name);
   const service = React.useMemo(() => new Service(), []);
+  const profileId = useSelector((state) => state.profileId);
   const yearpre = new Date();
   const dispatch = useDispatch();
   const formRef = React.useRef();
@@ -302,9 +304,14 @@ function Publication() {
 
   const handleConfirmSubmit = () => {
     setConfirmDialogOpen(false);
+
+    const payload = {
+      ...body,
+      userId: profileId,
+    }
     const formData = new FormData();
     Object.keys(body).forEach((key) => {
-      formData.append(key, body[key]);
+      formData.append(key, payload[key]);
     });
     if (file) {
       const timestamp = new Date();

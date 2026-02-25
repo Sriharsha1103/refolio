@@ -13,9 +13,7 @@ const bodyParser= require('body-parser')
 const jsonParser=bodyParser.json()
 const Login=require('./lib/LoginController')
 const Verify=require('./lib/VerificationController');
-const Email=require('./lib/EmailController')
 const Register=require('./lib/RegisterController')
-const JSONTransport = require('nodemailer/lib/json-transport');
 const path = require('path');
 dbConnect.connect(true)
 var app = express();

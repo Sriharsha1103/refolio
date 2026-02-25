@@ -194,6 +194,9 @@ function Publications() {
   const loggedIn = useSelector((state) => state.logged);
   const isAdmin = useSelector((state) => state.isAdmin);
   const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
+  const profileId = useSelector((state) => state.profileId);
+
+  console.log("ProfileId", profileId)
 
   const [state, localDispatch] = useReducer(reducer, initialState);
   const [isLoading, setIsLoading] = useState(true);
