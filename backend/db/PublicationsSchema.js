@@ -30,8 +30,9 @@ var PublicationsSchema = new mongoose.Schema({
     ending_page                       : { type: Number, default: 0},
     cite                              : { type: String, default: null},
     fileName                          : { type: String, default: null},
-    userId                            : { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', required: true }
-})
+    userId                            : { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', required: true, index: true }
+}, { timestamps: true });
+
 PublicationsSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model("Publications", PublicationsSchema,"PublicationsData");

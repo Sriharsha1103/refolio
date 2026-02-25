@@ -1,41 +1,45 @@
 const { json } = require('express');
-const dataModal = require('../db/PublicationsSchema')
+const dataModal = require('../db/PublicationsSchema');
+const mongoose = require("mongoose");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-
-module.exports.postData = async function(req, res) {
+module.exports.postData = async function (req, res) {
     try {
-    
-        const myobj = req.body;
-        const fileInfo = req.file;
+        const payload = { ...req.body };
 
-        if (myobj.year) {
-            myobj.year = new Date(myobj.year);
+        // Accept userId from either route param or body (support both UI patterns)
+        const userId = req.params.userId || payload.userId || payload.profileId;
+
+        if (!userId) {
+            return res.status(400).json({ message: "userId is required" });
+        }
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid userId" });
         }
 
-        // If author_no comes as comma-separated string, keep it as-is
-        // or adjust here if you want to store as array
+        payload.userId = userId; // satisfies PublicationsSchema required validator
 
-        dataModal.create(myobj, function(err, result) {  
-            if (err) throw err;
-            console.log("success");
-            
-            return res.status(200).json({
-                message: 'Publication and file uploaded successfully',
-                publication: myobj,
-                file: fileInfo ? fileInfo.filename : null,
-                result: result
-            });
+        const fileInfo = req.file;
+
+        if (payload.year) {
+            payload.year = new Date(payload.year);
+        }
+
+        const created = await dataModal.create(payload);
+
+        return res.status(200).json({
+            message: "Publication created successfully",
+            publication: created,
+            file: fileInfo ? fileInfo.filename : null,
         });
     } catch (error) {
-        console.error('Upload error:', error);
-        return res.status(500).json({ message: 'Server error', error: error.message });
+        console.error("Publication create error:", error);
+        return res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
 
-// New: update by id (PUT /data/:id)
 module.exports.putData = async function(req, res) {
     try {
         const id = req.params.id;

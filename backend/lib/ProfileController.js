@@ -1,5 +1,7 @@
 const { json } = require("express");
 const dataModal = require("../db/ProfileSchema");
+const mongoose = require("mongoose");
+const PublicationsModal = require("../db/PublicationsSchema");
 
 /* =====================================================
    CREATE PROFILE
@@ -242,6 +244,7 @@ module.exports.deleteData = async function (req, res) {
    PAGINATED USERS
 ===================================================== */
 module.exports.allUsers = async function (req, res) {
+  console.log("Test")
   try {
     let page = parseInt(req.query.page) || 1;
     let limit = parseInt(req.query.limit) || 10;
@@ -272,5 +275,39 @@ module.exports.allUsers = async function (req, res) {
   } catch (error) {
     console.log(error);
     return res.status(500).json(error);
+  }
+};
+
+module.exports.getProfileById = async function(req, res){
+  const { id } = req.params;
+
+  console.log("Test", id);
+  try {
+    if (!id) {
+      return res.status(400).json({ message: "Profile id is required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid profile id" });
+    }
+
+    const profile = await dataModal.findById(id);
+    if (!profile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    const publications = await PublicationsModal.find({ userId: id }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      message: "Profile fetched successfully",
+      profile,
+      publications,
+    });
+  } catch (error) {
+    console.error("getProfileById error:", error);
+    return res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
   }
 };

@@ -238,6 +238,7 @@ function Publication() {
   const formRef = React.useRef();
   const [month] = useState(MONTH_OPTIONS);
 
+  
   const navigate = useNavigate();
   const location = useLocation();
 
