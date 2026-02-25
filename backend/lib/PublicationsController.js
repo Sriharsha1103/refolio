@@ -1,5 +1,5 @@
 const { json } = require('express');
-const dataModal = require('../db/testData')
+const dataModal = require('../db/PublicationsSchema')
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');

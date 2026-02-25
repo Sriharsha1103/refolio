@@ -5,7 +5,7 @@ var mongoosePaginate = require('mongoose-paginate');
 
 
 // const Schema = mongoose.Schema;
-var dataSchema = new mongoose.Schema({
+var PublicationsSchema = new mongoose.Schema({
     username                          : { type: String, required: true},
     cjb                               : { type: String, required: true, enum: ['C', 'J', 'B', 'BC']},
     title                             : { type: String, required: true},
@@ -30,7 +30,8 @@ var dataSchema = new mongoose.Schema({
     ending_page                       : { type: Number, default: 0},
     cite                              : { type: String, default: null},
     fileName                          : { type: String, default: null},
+    userId                            : { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', required: true }
 })
-dataSchema.plugin(mongoosePaginate);
+PublicationsSchema.plugin(mongoosePaginate);
 
-module.exports = mongoose.model("Testdata", dataSchema);
+module.exports = mongoose.model("Publications", PublicationsSchema,"PublicationsData");
