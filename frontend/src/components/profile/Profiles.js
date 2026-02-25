@@ -6,7 +6,9 @@ import { Tab } from "../../store/Actions";
 import EntityDataGrid from "../CustomComponents/EntityDataGrid";
 import CustomSnackbar from "../CustomComponents/CustomSnackbar";
 import CustomConfirmDialog from "../CustomComponents/CustomConfirmDialog";
-import PdfViewerDialog from "../CustomComponents/PdfViewerDialog";
+import { Dialog, DialogContent, IconButton, Box } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import FacultyProfileDocument from "./FacultyProfileDocument";
 
 // --- Columns Config ---
 const fieldConfigs = [
@@ -159,6 +161,8 @@ function Profiles() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [pdfViewer, setPdfViewer] = useState({ open: false, url: "", title: "" });
 
+    const [printModal, setPrintModal] = useState({ open: false, profileData: null });
+
     const handleClose = () => localDispatch({ type: "SET_MODAL", value: false });
     const handleSearch = () => {
         if (state.filters.startDate && state.filters.endDate) {
@@ -207,30 +211,13 @@ function Profiles() {
     };
 
     const handleView = (row) => {
-    console.log('Row',row)
-    if (!row || !row.fileName) {
-      setSnack({
-        open: true,
-        message: "No document Uploaded",
-        status: 400,
-      });
-      return;
-    }
+        console.log("Row", row)
+        setPrintModal({ open: true, profileData: row || null });
+    };
 
-    const backendBase = process.env.REACT_APP_BACKEND_URL || "";
-    const branch = row.branch || "";
-    const fileUrl = `${backendBase}/uploads/${branch}/${row.fileName}`;
-
-    setPdfViewer({
-      open: true,
-      url: fileUrl,
-      title: row.title || "Profiles",
-    });
-  };
-
-  const handlePdfClose = () => {
-    setPdfViewer((prev) => ({ ...prev, open: false }));
-  };
+    const handlePrintModalClose = () => {
+        setPrintModal({ open: false, profileData: null });
+    };
 
     useEffect(() => {
         dispatchRedux(Tab("profiles"));
@@ -278,12 +265,12 @@ function Profiles() {
                 message={snack.message}
                 handleClose={() => setSnack((prev) => ({ ...prev, open: false }))}
             />
-            <PdfViewerDialog
+            {/* <PdfViewerDialog
                     open={pdfViewer.open}
                     onClose={handlePdfClose}
                     title={pdfViewer.title}
                     fileUrl={pdfViewer.url}
-                  />
+                  /> */}
             <CustomConfirmDialog
                 open={confirmOpen}
                 handleClose={handleConfirmClose}
@@ -296,6 +283,46 @@ function Profiles() {
                 }
             />
          
+            <Dialog
+				open={printModal.open}
+				onClose={handlePrintModalClose}
+				fullWidth
+				maxWidth="md"
+				scroll="paper"
+				PaperProps={{
+					sx: {
+						"@media print": {
+							boxShadow: "none",
+						},
+					},
+				}}
+			>
+				<Box
+					className="no-print"
+					sx={{
+						position: "sticky",
+						top: 0,
+						zIndex: 1,
+						display: "flex",
+						justifyContent: "flex-end",
+						p: 1,
+						bgcolor: "background.paper",
+						borderBottom: "1px solid",
+						borderColor: "divider",
+						"@media print": { display: "none" },
+					}}
+				>
+					<IconButton aria-label="Close" onClick={handlePrintModalClose} size="small">
+						<CloseIcon />
+					</IconButton>
+				</Box>
+
+				<DialogContent sx={{ p: 0 }}>
+					{/* <FacultyProfilePrint profileData={printModal?.profileData || {}} /> */}
+                    <FacultyProfileDocument profileData={printModal?.profileData || {}} />  
+				</DialogContent>
+			</Dialog>
+
             <div
                 className="p-3"
                 style={{
