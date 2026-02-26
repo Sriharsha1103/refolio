@@ -295,9 +295,14 @@ module.exports.getProfileById = async function(req, res){
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
     }
+    // console.log("Profile", profile)
+    const userObjectId = new mongoose.Types.ObjectId(id);
 
-    const publications = await PublicationsModal.find({ userId: id }).sort({ createdAt: -1 });
-
+    const publications = await PublicationsModal
+      .find({ userId: userObjectId })
+      .sort({ createdAt: -1 })
+      .lean();
+    
     return res.status(200).json({
       message: "Profile fetched successfully",
       profile,

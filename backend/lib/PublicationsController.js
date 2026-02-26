@@ -10,7 +10,11 @@ module.exports.postData = async function (req, res) {
         const payload = { ...req.body };
 
         // Accept userId from either route param or body (support both UI patterns)
+        
         const userId = req.params.userId || payload.userId || payload.profileId;
+        console.log(
+            "Received userId:", userId,payload
+        )
 
         if (!userId) {
             return res.status(400).json({ message: "userId is required" });

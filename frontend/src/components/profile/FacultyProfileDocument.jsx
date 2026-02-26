@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import PrintIcon from "@mui/icons-material/Print";
 import { grey } from "@mui/material/colors";
+import { set } from "lodash";
 
 /* ================= HELPER COMPONENT ================= */
 
@@ -47,18 +48,33 @@ function EmptyRow({ colSpan }) {
 /* ================= MAIN COMPONENT ================= */
 
 export default function FacultyProfileDocument({ profileData = {} }) {
-  const p = profileData || {};
+//   const profile = profileData || {};
+  const [profile, setProfile] = React.useState(profileData);
+  const [publications,setPublications] = React.useState(profileData.Publications || []);    
 
-  const educationList = p.Education_Qualifications ?? [];
-  const experienceList = p.Experience ?? [];
+  const educationList = profile.Education_Qualifications ?? [];
+  const experienceList = profile.Experience ?? [];
 
   const memberships =
-    typeof p.Professional_Memberships === "string"
-      ? p.Professional_Memberships.split(",").map((s) => s.trim())
-      : p.Professional_Memberships ?? [];
+    typeof profile.Professional_Memberships === "string"
+      ? profile.Professional_Memberships.split(",").map((s) => s.trim())
+      : profile.Professional_Memberships ?? [];
 
   const onPrint = () => window.print();
 
+  
+  React.useEffect(() => {
+    //   console.log("profileData", profileData);
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/profile/data/${profileData._id}`).then((res) => res.json()).then((data) => {
+            console.log("Fetched profile data:", data);
+            setProfile(data.profile);
+            setPublications(data.publications || []);
+            }).catch((err) => {
+                console.error("Error fetching profile data:", err);
+            });
+  }, []);
+
+  console.log("ProfileData", publications)
   return (
     <Box
       sx={{
@@ -105,10 +121,10 @@ export default function FacultyProfileDocument({ profileData = {} }) {
       </Box>
 
       {/* PROFILE PHOTO */}
-      {p.Profile_Photo && (
+      {profileData.Profile_Photo && (
         <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
           <img
-            src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${p.branch}/${p.Profile_Photo}`}
+            src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${profileData.branch}/${profileData.Profile_Photo}`}
             alt="Profile"
             style={{ width: 130, height: 150, border: "1px solid black", objectFit: "cover" }}
           />
@@ -122,27 +138,27 @@ export default function FacultyProfileDocument({ profileData = {} }) {
           <TableBody>
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-              <TableCell>{p.Name}</TableCell>
+              <TableCell>{profile.Name}</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>Designation</TableCell>
-              <TableCell>{p.Designation}</TableCell>
+              <TableCell>{profile.Designation}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>Department</TableCell>
-              <TableCell>{p.branch}</TableCell>
+              <TableCell>{profile.branch}</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>AICTE ID</TableCell>
-              <TableCell>{p.AICTE_ID}</TableCell>
+              <TableCell>{profile.AICTE_ID}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>JNTUH ID</TableCell>
-              <TableCell>{p.JNTUH_ID}</TableCell>
+              <TableCell>{profile.JNTUH_ID}</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>Ratification Status</TableCell>
-              <TableCell>{p.Ratification_status}</TableCell>
+              <TableCell>{profile.Ratification_status}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>Aadhaar Number</TableCell>
-              <TableCell>{p.Aadhaar_Number}</TableCell>
+              <TableCell>{profile.Aadhaar_Number}</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>PAN Number</TableCell>
-              <TableCell>{p.PAN_Number}</TableCell>
+              <TableCell>{profile.PAN_Number}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
@@ -155,13 +171,13 @@ export default function FacultyProfileDocument({ profileData = {} }) {
           <TableBody>
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>Teaching Experience</TableCell>
-              <TableCell>{p.Teaching_Experience} Years</TableCell>
+              <TableCell>{profile.Teaching_Experience} Years</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>Research Experience</TableCell>
-              <TableCell>{p.Research_Experience} Years</TableCell>
+              <TableCell>{profile.Research_Experience} Years</TableCell>
             </TableRow>
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>Industry Experience</TableCell>
-              <TableCell>{p.Industry_Experience} Years</TableCell>
+              <TableCell>{profile.Industry_Experience} Years</TableCell>
               <TableCell />
               <TableCell />
             </TableRow>
@@ -229,22 +245,47 @@ export default function FacultyProfileDocument({ profileData = {} }) {
 
       {/* RESEARCH IDENTIFIERS */}
       <SectionTitle>5. Research Identifiers</SectionTitle>
-      <Typography>Scopus ID: {p.Scopus_ID || "—"}</Typography>
-      <Typography>ORCID ID: {p.ORCID_ID || "—"}</Typography>
-      <Typography>Google Scholar: {p.Google_Scholar_ID || "—"}</Typography>
-      <Typography>Vidwan ID: {p.Vidwan_ID || "—"}</Typography>
+      <Typography>Scopus ID: {profile.Scopus_ID || "—"}</Typography>
+      <Typography>ORCID ID: {profile.ORCID_ID || "—"}</Typography>
+      <Typography>Google Scholar: {profile.Google_Scholar_ID || "—"}</Typography>
+      <Typography>Vidwan ID: {profile.Vidwan_ID || "—"}</Typography>
 
       {/* SPECIALIZATION */}
       <SectionTitle>6. Fields of Specialization</SectionTitle>
-      <Typography>{p.Fields_of_Specialization || "—"}</Typography>
+      <Typography>{profile.Fields_of_Specialization || "—"}</Typography>
 
       {/* PUBLICATIONS */}
       <SectionTitle>7. Publications</SectionTitle>
-      <TextList items={p.Publications ?? []} />
+      {publications && publications.length > 0 ? (
+        <TableContainer component={Paper} variant="outlined" sx={{ mt: 1 }}>
+            <Table size="small">
+                <TableHead sx={{ bgcolor: grey[100] }}>
+                    <TableRow>
+                        <TableCell sx={{ fontWeight: 700 }}>Title</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Year</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Citation</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {publications.map((pub, i) => (
+                        <TableRow key={i}>
+                            <TableCell>{pub.title}</TableCell>
+                            <TableCell>{pub.type}</TableCell>
+                            <TableCell>{pub.year}</TableCell>
+                            <TableCell>{pub.citation}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </TableContainer>
+        ) : (   
+      <TextList items={profile.Publications ?? []} />
 
+        )}
       {/* PATENTS */}
       <SectionTitle>8. Patents</SectionTitle>
-      <TextList items={p.Patents ?? []} />
+      <TextList items={profile.Patents ?? []} />
 
       {/* MEMBERSHIPS */}
       <SectionTitle>9. Professional Memberships</SectionTitle>
@@ -252,7 +293,7 @@ export default function FacultyProfileDocument({ profileData = {} }) {
 
       {/* RESPONSIBILITIES */}
       <SectionTitle>10. Academic Responsibilities</SectionTitle>
-      <TextList items={p.Academic_Responsibilities ?? []} />
+      <TextList items={profile.Academic_Responsibilities ?? []} />
 
       {/* SIGNATURE */}
       <Box sx={{ mt: 8, display: "flex", justifyContent: "space-between" }}>

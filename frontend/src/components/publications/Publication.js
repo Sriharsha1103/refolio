@@ -309,8 +309,10 @@ function Publication() {
       ...body,
       userId: profileId,
     }
+
+    // console.log("payload", payload)
     const formData = new FormData();
-    Object.keys(body).forEach((key) => {
+    Object.keys(payload).forEach((key) => {
       formData.append(key, payload[key]);
     });
     if (file) {
