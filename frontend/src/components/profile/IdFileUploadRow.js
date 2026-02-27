@@ -15,7 +15,7 @@ function IdFileUploadRow({
 }) {
   return (
     <>
-      <Typography sx={{ mt: 2, mb: 1 }}>{label}</Typography>
+      {/* <Typography sx={{ mt: 2, mb: 1 }}>{label}</Typography> */}
       <Box
         sx={{
           display: "flex",
@@ -28,8 +28,9 @@ function IdFileUploadRow({
           border: "1px solid",
           borderColor: "divider",
           borderRadius: 2,
-          flexDirection: { xs: "column", sm: "row", md: "row" },
+          flexDirection: { xs: "column", sm: "row", md: "column" },
           p: 2,
+          width:"auto"
         }}
       >
         <TextField

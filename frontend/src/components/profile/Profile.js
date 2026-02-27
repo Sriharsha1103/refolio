@@ -551,7 +551,7 @@ function Profile() {
     >
       <Container maxWidth="100vw">
         <Card sx={{ borderRadius: "15px", margin: 2 }}>
-          <CardContent sx={{ p: '0px !important' }}>
+          <CardContent sx={{ p: "0px !important" }}>
             <Grid container>
               {/* ===== LEFT WHITE ===== */}
               <Grid item xs={12} md={5} sx={{ p: 4, bgcolor: white }}>
@@ -562,13 +562,20 @@ function Profile() {
                     <IconButton
                       onClick={handleGoBack}
                       size="small"
-                      sx={{ color: primaryColor}}
+                      sx={{ color: primaryColor }}
                     >
                       <ArrowBackIcon />
                     </IconButton>
                   }
 
-                  <Typography variant="h4" sx={{  color: primaryColor, fontWeight: 600, alignItems:'center' }}>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      color: primaryColor,
+                      fontWeight: 600,
+                      alignItems: "center",
+                    }}
+                  >
                     {isEditMode ? "Edit Profile" : "Profile Information"}
                   </Typography>
                 </Box>
@@ -614,55 +621,57 @@ function Profile() {
                     </Grid>
                   </Box>
 
-                  <IdFileUploadRow
-                    label="Aadhaar"
-                    numberField="Aadhaar_Number"
-                    fileField="Aadhaar_File"
-                    body={body}
-                    branch={body.branch}
-                    errors={errors}
-                    getFieldLabel={getFieldLabel}
-                    onFileError={handleUploadError}
-                    onNumberChange={(e) =>
-                      dispatch({
-                        type: "SET_FIELD",
-                        field: "Aadhaar_Number",
-                        value: e.target.value,
-                      })
-                    }
-                    onFileChange={(e) =>
-                      handleFileChangeWithSnackbar(
-                        e.target.files[0],
-                        "Aadhaar_File",
-                        "main"
-                      )
-                    }
-                  />
+                  <Box sx={{ display: "flex", flexDirection: "row", gap: 2,  }}>
+                    <IdFileUploadRow
+                      label="Aadhaar"
+                      numberField="Aadhaar_Number"
+                      fileField="Aadhaar_File"
+                      body={body}
+                      branch={body.branch}
+                      errors={errors}
+                      getFieldLabel={getFieldLabel}
+                      onFileError={handleUploadError}
+                      onNumberChange={(e) =>
+                        dispatch({
+                          type: "SET_FIELD",
+                          field: "Aadhaar_Number",
+                          value: e.target.value,
+                        })
+                      }
+                      onFileChange={(e) =>
+                        handleFileChangeWithSnackbar(
+                          e.target.files[0],
+                          "Aadhaar_File",
+                          "main"
+                        )
+                      }
+                    />
 
-                  <IdFileUploadRow
-                    label="PAN"
-                    numberField="PAN_Number"
-                    fileField="PAN_File"
-                    body={body}
-                    branch={body.branch}
-                    errors={errors}
-                    getFieldLabel={getFieldLabel}
-                    onFileError={handleUploadError}
-                    onNumberChange={(e) =>
-                      dispatch({
-                        type: "SET_FIELD",
-                        field: "PAN_Number",
-                        value: e.target.value,
-                      })
-                    }
-                    onFileChange={(e) =>
-                      handleFileChangeWithSnackbar(
-                        e.target.files[0],
-                        "PAN_File",
-                        "main"
-                      )
-                    }
-                  />
+                    <IdFileUploadRow
+                      label="PAN"
+                      numberField="PAN_Number"
+                      fileField="PAN_File"
+                      body={body}
+                      branch={body.branch}
+                      errors={errors}
+                      getFieldLabel={getFieldLabel}
+                      onFileError={handleUploadError}
+                      onNumberChange={(e) =>
+                        dispatch({
+                          type: "SET_FIELD",
+                          field: "PAN_Number",
+                          value: e.target.value,
+                        })
+                      }
+                      onFileChange={(e) =>
+                        handleFileChangeWithSnackbar(
+                          e.target.files[0],
+                          "PAN_File",
+                          "main"
+                        )
+                      }
+                    />
+                  </Box>
                 </Box>
 
                 <Box sx={leftGroupSx}>
@@ -691,7 +700,12 @@ function Profile() {
               </Grid>
 
               {/* ===== RIGHT GREEN ===== */}
-              <Grid item xs={12} md={7} sx={{ p: {xs:2, md:5}, bgcolor: primaryColor }}>
+              <Grid
+                item
+                xs={12}
+                md={7}
+                sx={{ p: { xs: 2, md: 5 }, bgcolor: primaryColor }}
+              >
                 <ExperienceSection
                   body={body}
                   dispatchReducer={dispatch}
@@ -770,7 +784,7 @@ function Profile() {
                 <Box
                   sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}
                 >
-                  {(
+                  {
                     <Button
                       variant="flat"
                       onClick={handleGoBack}
@@ -785,7 +799,7 @@ function Profile() {
                     >
                       Cancel
                     </Button>
-                  )}
+                  }
 
                   <PanelButton
                     panel="green"

@@ -14,6 +14,7 @@ import {
 import PrintIcon from "@mui/icons-material/Print";
 import { grey } from "@mui/material/colors";
 import { printPublications } from "../../utils/helper";
+import { toDateInputValue } from "../../utils/dateUtils";
 
 /* ================= HELPER COMPONENT ================= */
 
@@ -75,7 +76,7 @@ export default function FacultyProfileDocument({ profileData = {} }) {
             });
   }, []);
 
-  console.log("Data", publications, patents)
+  // console.log("Data", publications, patents)
   return (
     <Box
       sx={{
@@ -109,61 +110,84 @@ export default function FacultyProfileDocument({ profileData = {} }) {
       </Box>
 
       {/* HEADER */}
-      <Box sx={{ textAlign: "center", borderBottom: "3px double black", pb: 2, mb: 3 }}>
+      <Box
+        sx={{
+          textAlign: "center",
+          borderBottom: "3px double black",
+          pb: 2,
+          mb: 3,
+        }}
+      >
         <Typography variant="h5" sx={{ fontWeight: 900 }}>
           BVRIT HYDERABAD COLLEGE OF ENGINEERING FOR WOMEN
         </Typography>
         <Typography variant="body2">
           (UGC Autonomous | Approved by AICTE | Affiliated to JNTUH)
         </Typography>
-        <Typography variant="h6" sx={{ mt: 2, fontWeight: 800, textDecoration: "underline" }}>
+        <Typography
+          variant="h6"
+          sx={{ mt: 2, fontWeight: 800, textDecoration: "underline" }}
+        >
           FACULTY PROFILE
         </Typography>
       </Box>
 
-      {/* PROFILE PHOTO */}
-      {profileData.Profile_Photo && (
+      <Box sx={{ display: "flex", justifyContent: "flex-start",  alignItems:'center', gap: 2 }}>
+        <Box sx={{flexDirection: 'column'}}>
+          <SectionTitle>1. Personal Details</SectionTitle>
+          <TableContainer component={Paper} variant="outlined" sx={{ mt: 1 }}>
+            <Table size="small">
+              <TableBody>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+                  <TableCell>{profile.Name}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Designation</TableCell>
+                  <TableCell>{profile.Designation}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Department</TableCell>
+                  <TableCell>{profile.branch}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>AICTE ID</TableCell>
+                  <TableCell>{profile.AICTE_ID}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>JNTUH ID</TableCell>
+                  <TableCell>{profile.JNTUH_ID}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    Ratification Status
+                  </TableCell>
+                  <TableCell>{profile.Ratification_status}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Aadhaar Number</TableCell>
+                  <TableCell>{profile.Aadhaar_Number}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>PAN Number</TableCell>
+                  <TableCell>{profile.PAN_Number}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+
+        {/* PROFILE PHOTO */}
+        {/* {profileData.Profile_Photo && ( */}
         <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
           <img
             src={`${process.env.REACT_APP_BACKEND_URL}/uploads/${profileData.branch}/${profileData.Profile_Photo}`}
             alt="Profile"
-            style={{ width: 130, height: 150, border: "1px solid black", objectFit: "cover" }}
+            style={{
+              width: 130,
+              height: 150,
+              border: "1px solid black",
+              objectFit: "cover",
+              borderRadius: 4,
+            }}
           />
         </Box>
-      )}
+      </Box>
+      {/* )} */}
 
       {/* PERSONAL DETAILS */}
-      <SectionTitle>1. Personal Details</SectionTitle>
-      <TableContainer component={Paper} variant="outlined" sx={{ mt: 1 }}>
-        <Table size="small">
-          <TableBody>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-              <TableCell>{profile.Name}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Designation</TableCell>
-              <TableCell>{profile.Designation}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>Department</TableCell>
-              <TableCell>{profile.branch}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>AICTE ID</TableCell>
-              <TableCell>{profile.AICTE_ID}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>JNTUH ID</TableCell>
-              <TableCell>{profile.JNTUH_ID}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Ratification Status</TableCell>
-              <TableCell>{profile.Ratification_status}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>Aadhaar Number</TableCell>
-              <TableCell>{profile.Aadhaar_Number}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>PAN Number</TableCell>
-              <TableCell>{profile.PAN_Number}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
 
       {/* PROFESSIONAL SUMMARY */}
       <SectionTitle>2. Experience Summary</SectionTitle>
@@ -171,13 +195,19 @@ export default function FacultyProfileDocument({ profileData = {} }) {
         <Table size="small">
           <TableBody>
             <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>Teaching Experience</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>
+                Teaching Experience
+              </TableCell>
               <TableCell>{profile.Teaching_Experience} Years</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Research Experience</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>
+                Research Experience
+              </TableCell>
               <TableCell>{profile.Research_Experience} Years</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>Industry Experience</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>
+                Industry Experience
+              </TableCell>
               <TableCell>{profile.Industry_Experience} Years</TableCell>
               <TableCell />
               <TableCell />
@@ -200,17 +230,31 @@ export default function FacultyProfileDocument({ profileData = {} }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {educationList.length > 0
-              ? educationList.map((edu, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{edu.degree}</TableCell>
-                    <TableCell>{edu.specialization}</TableCell>
-                    <TableCell>{edu.university}</TableCell>
-                    <TableCell>{edu.yearOfPassing}</TableCell>
-                    <TableCell>{edu.percentageOrCGPA}</TableCell>
-                  </TableRow>
-                ))
-              : <EmptyRow colSpan={5} />}
+            {educationList.length > 0 ? (
+              educationList.sort((a, b) => {
+                const ay = Number.parseInt(a?.yearOfPassing, 10);
+                const by = Number.parseInt(b?.yearOfPassing, 10);
+      
+                // Put invalid/empty years at the end, otherwise sort latest first.
+                const aInvalid = Number.isNaN(ay);
+                const bInvalid = Number.isNaN(by);
+                if (aInvalid && bInvalid) return 0;
+                if (aInvalid) return 1;
+                if (bInvalid) return -1;
+      
+                return by - ay;
+              }).map((edu, i) => (
+                <TableRow key={i}>
+                  <TableCell>{edu.degree}</TableCell>
+                  <TableCell>{edu.specialization}</TableCell>
+                  <TableCell>{edu.university}</TableCell>
+                  <TableCell>{edu.yearOfPassing}</TableCell>
+                  <TableCell>{edu.percentageOrCGPA}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <EmptyRow colSpan={5} />
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -229,17 +273,34 @@ export default function FacultyProfileDocument({ profileData = {} }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {experienceList.length > 0
-              ? experienceList.map((exp, i) => (
+            {experienceList.length > 0 ? (
+              experienceList
+                .sort((x,y)=>{
+                    const ay = Number.parseInt(x.fromDate)
+                    const by = Number.parseInt(y.fromDate)
+                    const aInvalid = Number.isNaN(ay);
+                    const bInvalid = Number.isNaN(by);
+                    if (aInvalid && bInvalid) return 0;
+                    if (aInvalid) return 1;
+                    if (bInvalid) return -1;
+                    return by - ay;
+                }).sort((a, b) => {
+                  return String(a?.type ?? "").localeCompare(String(b?.type ?? ""));
+                })
+                .map((exp, i) => (
                   <TableRow key={i}>
                     <TableCell>{exp.type}</TableCell>
                     <TableCell>{exp.organisation}</TableCell>
                     <TableCell>{exp.designation}</TableCell>
-                    <TableCell>{exp.fromDate}</TableCell>
-                    <TableCell>{exp.currentlyWorking ? "Present" : exp.toDate}</TableCell>
+                    <TableCell>{toDateInputValue(exp.fromDate)}</TableCell>
+                    <TableCell>
+                      {exp.currentlyWorking ? "Present" : toDateInputValue(exp.toDate)}
+                    </TableCell>
                   </TableRow>
                 ))
-              : <EmptyRow colSpan={5} />}
+            ) : (
+              <EmptyRow colSpan={5} />
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -248,7 +309,9 @@ export default function FacultyProfileDocument({ profileData = {} }) {
       <SectionTitle>5. Research Identifiers</SectionTitle>
       <Typography>Scopus ID: {profile.Scopus_ID || "—"}</Typography>
       <Typography>ORCID ID: {profile.ORCID_ID || "—"}</Typography>
-      <Typography>Google Scholar: {profile.Google_Scholar_ID || "—"}</Typography>
+      <Typography>
+        Google Scholar: {profile.Google_Scholar_ID || "—"}
+      </Typography>
       <Typography>Vidwan ID: {profile.Vidwan_ID || "—"}</Typography>
 
       {/* SPECIALIZATION */}
@@ -258,19 +321,16 @@ export default function FacultyProfileDocument({ profileData = {} }) {
       {/* PUBLICATIONS */}
       <SectionTitle>7. Publications</SectionTitle>
       {publications && publications.length > 0 ? (
-        <ol style={{ paddingLeft: 20 }}>
-            {publications.map((pub, i) => (
-                <li key={i}>
-                <Typography variant="body2">
-                    {printPublications(pub)}
-                </Typography>
-                </li>
-            ))}
+        <ol style={{ paddingLeft: '30px' }}>
+          {publications.map((pub, i) => (
+            <li key={i} style={{ fontWeight: 'bold'}}>
+              <Typography variant="body2">{printPublications(pub)}</Typography>
+            </li>
+          ))}
         </ol>
-        ) : (   
-      <TextList items={profile.Publications ?? []} />
-
-        )}
+      ) : (
+        <TextList items={profile.Publications ?? []} />
+      )}
       {/* PATENTS */}
       <SectionTitle>8. Patents</SectionTitle>
       <TextList items={profile.Patents ?? []} />
