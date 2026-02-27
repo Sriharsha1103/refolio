@@ -1,3 +1,5 @@
+import { getFullYearFromISO, toDateInputValue } from "./dateUtils";
+
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 export const getMonthName = (m) => {
     if (m === null || m === undefined) return "";
@@ -41,4 +43,9 @@ export {
     authorPositionOptions,
     cjbOptions,
     MONTH_NAMES
+}
+
+export const printPublications = (publication) => {
+    const { title, username, name_cjb, cjb, issue, doi, vol, year, starting_page, ending_page } = publication;
+    return `${title}, ${username},  ${name_cjb}, (${getCJBLabel(cjb)}, ${getFullYearFromISO(year)}), ISSN ${doi}, Volume ${vol}, Issue ${issue}, Pages ${starting_page}-${ending_page}.`;
 }

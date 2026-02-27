@@ -82,6 +82,7 @@ function reducer(state, action) {
 function Patent() {
   const dispatch = useDispatch();
   const loggedIn = useSelector((state) => state.logged);
+    const profileId = useSelector((state) => state.profileId);
   const verify = useSelector((state) => state.verify);
   const isSuperAdmin = useSelector((state) => state.isSuperAdmin);
   const isAdmin = useSelector((state) => state.isAdmin);
@@ -136,9 +137,14 @@ function Patent() {
   const handleConfirmSubmit = () => {
     setConfirmDialogOpen(false);
 
+    const payload = {
+      ...body,
+      userId: profileId
+    }
     if (isEditMode) {
+      
       service
-        .post("api/patents/update", body)
+        .post("api/patents/update", payload)
         .then(() => {
           showSnackbar(200, `Updated ${body.title} Patent.`);
           setTimeout(() => navigate("/patents"), 1000);
@@ -152,7 +158,7 @@ function Patent() {
         });
     } else {
       service
-        .post("api/patents/data", body)
+        .post("api/patents/data", payload)
         .then(() => {
           showSnackbar(200, `Successfully Added ${body.title}`);
           setTimeout(() => navigate("/patents"), 1000);

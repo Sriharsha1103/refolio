@@ -15,7 +15,8 @@ var patentSchema = new mongoose.Schema({
     design_utility      : { type: String, required: true, enum: ['Design','Utility']},
     published           : { type: Date},
     year                : { type: Date},
-    country             : { type: String, required: true}
+    country             : { type: String, required: true},
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', required: true }
 })
 patentSchema.plugin(mongoosePaginate);
 

@@ -2,6 +2,7 @@ const { json } = require("express");
 const dataModal = require("../db/ProfileSchema");
 const mongoose = require("mongoose");
 const PublicationsModal = require("../db/PublicationsSchema");
+const PatentsModal = require("../db/PatentsSchema");
 
 /* =====================================================
    CREATE PROFILE
@@ -297,16 +298,20 @@ module.exports.getProfileById = async function(req, res){
     }
     // console.log("Profile", profile)
     const userObjectId = new mongoose.Types.ObjectId(id);
-
-    const publications = await PublicationsModal
-      .find({ userId: userObjectId })
-      .sort({ createdAt: -1 })
-      .lean();
+    const [publications, patents] = await Promise.all([
+      PublicationsModal.find({ userId: userObjectId })
+        .sort({ createdAt: -1 })
+        .lean(),
+      PatentsModal.find({ userId: userObjectId })
+        .sort({ createdAt: -1 })
+        .lean(),
+    ]);
     
     return res.status(200).json({
       message: "Profile fetched successfully",
       profile,
       publications,
+      patents,
     });
   } catch (error) {
     console.error("getProfileById error:", error);

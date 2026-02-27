@@ -2,7 +2,6 @@ import * as React from "react";
 import {
   Box,
   Button,
-  Divider,
   Typography,
   Table,
   TableBody,
@@ -14,7 +13,7 @@ import {
 } from "@mui/material";
 import PrintIcon from "@mui/icons-material/Print";
 import { grey } from "@mui/material/colors";
-import { set } from "lodash";
+import { printPublications } from "../../utils/helper";
 
 /* ================= HELPER COMPONENT ================= */
 
@@ -39,7 +38,7 @@ function EmptyRow({ colSpan }) {
   return (
     <TableRow>
       <TableCell colSpan={colSpan} align="center" sx={{ py: 2, fontStyle: "italic" }}>
-        No records found.
+        {/* No records found. */}
       </TableCell>
     </TableRow>
   );
@@ -51,6 +50,7 @@ export default function FacultyProfileDocument({ profileData = {} }) {
 //   const profile = profileData || {};
   const [profile, setProfile] = React.useState(profileData);
   const [publications,setPublications] = React.useState(profileData.Publications || []);    
+  const [patents, setPatents] = React.useState(profileData.Patents || []);
 
   const educationList = profile.Education_Qualifications ?? [];
   const experienceList = profile.Experience ?? [];
@@ -69,12 +69,13 @@ export default function FacultyProfileDocument({ profileData = {} }) {
             console.log("Fetched profile data:", data);
             setProfile(data.profile);
             setPublications(data.publications || []);
+            setPatents(data.patents || []);
             }).catch((err) => {
                 console.error("Error fetching profile data:", err);
             });
   }, []);
 
-  console.log("ProfileData", publications)
+  console.log("Data", publications, patents)
   return (
     <Box
       sx={{
@@ -257,28 +258,15 @@ export default function FacultyProfileDocument({ profileData = {} }) {
       {/* PUBLICATIONS */}
       <SectionTitle>7. Publications</SectionTitle>
       {publications && publications.length > 0 ? (
-        <TableContainer component={Paper} variant="outlined" sx={{ mt: 1 }}>
-            <Table size="small">
-                <TableHead sx={{ bgcolor: grey[100] }}>
-                    <TableRow>
-                        <TableCell sx={{ fontWeight: 700 }}>Title</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Year</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Citation</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {publications.map((pub, i) => (
-                        <TableRow key={i}>
-                            <TableCell>{pub.title}</TableCell>
-                            <TableCell>{pub.type}</TableCell>
-                            <TableCell>{pub.year}</TableCell>
-                            <TableCell>{pub.citation}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <ol style={{ paddingLeft: 20 }}>
+            {publications.map((pub, i) => (
+                <li key={i}>
+                <Typography variant="body2">
+                    {printPublications(pub)}
+                </Typography>
+                </li>
+            ))}
+        </ol>
         ) : (   
       <TextList items={profile.Publications ?? []} />
 
@@ -296,14 +284,14 @@ export default function FacultyProfileDocument({ profileData = {} }) {
       <TextList items={profile.Academic_Responsibilities ?? []} />
 
       {/* SIGNATURE */}
-      <Box sx={{ mt: 8, display: "flex", justifyContent: "space-between" }}>
+      {/* <Box sx={{ mt: 8, display: "flex", justifyContent: "space-between" }}>
         <Typography sx={{ borderTop: "1px solid black", pt: 1, width: 200, textAlign: "center" }}>
           Signature of Faculty
         </Typography>
         <Typography sx={{ borderTop: "1px solid black", pt: 1, width: 200, textAlign: "center" }}>
           Principal Signature
         </Typography>
-      </Box>
+      </Box> */}
     </Box>
   );
 }

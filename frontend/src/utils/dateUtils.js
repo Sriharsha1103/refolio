@@ -22,6 +22,13 @@ export const toDateInputValue = (value) => {
   return "";
 };
 
+export const getFullYearFromISO = (iso) => {
+  const dateStr = toDateInputValue(iso);
+  if (!dateStr) return "";
+  const [year] = dateStr.split("-");
+  return year;
+};
+
 export const getTodayISO = () => new Date().toISOString().slice(0, 10);
 
 export const monthsBetweenISO = (fromISO, toISO) => {
