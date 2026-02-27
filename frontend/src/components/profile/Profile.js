@@ -85,12 +85,13 @@ function reducer(state, action) {
 
     case "ADD_QUAL": {
       const next = action.value ?? {
-        level: "",
+        // level: "",
         degree: "",
         specialization: "",
         university: "",
         yearOfPassing: "",
         percentageOrCGPA: "",
+        phdStatus: "",
         certificateFile: null,
       };
 
@@ -337,11 +338,12 @@ function Profile() {
     const qualErrors = (body.Education_Qualifications || []).map((q) => {
       const qErr = {};
       [
-        "level",
+        // "level",
         "degree",
         "specialization",
         "university",
         "yearOfPassing",
+        "phdStatus",
         "percentageOrCGPA",
         "certificateFile",
       ].forEach((k) => {

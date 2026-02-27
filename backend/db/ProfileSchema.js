@@ -35,6 +35,11 @@ const ExperienceSchema = new Schema(
       default: false,
     },
 
+    phdStatus: {
+      type: String,
+      enum: ["Registered", "Pursuing", "Completed"],
+    },
+
     // file upload
     experienceFile: String,
   },
