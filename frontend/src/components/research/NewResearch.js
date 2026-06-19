@@ -151,9 +151,12 @@ function NewResearch() {
     setIsSubmitting(true);
 
     const endpoint = isEdit ? "api/research/update" : "api/research/data";
+    const payload = isEdit
+      ? body
+      : (({ _id, __v, ...rest }) => rest)(body);
 
     service
-      .post(endpoint, body)
+      .post(endpoint, payload)
       .then(() => {
         setSnackbarConfig({
           open: true,

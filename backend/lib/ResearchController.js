@@ -3,17 +3,16 @@ const dataModal = require('../db/ResearchSchema')
 
 module.exports.postData =async function(req,res) {
     try{
-        const myobj = req.body;
-        // console.log(myobj)
-        // myobj.year = myobj.year ? new Date(myobj.year) : null;
-        // myobj.filed = new Date(myobj.filed)
-        // myobj.published = myobj.published ? new Date(myobj.published) : null;
-        dataModal.create(myobj, function(err, result) {  
-            if (err) throw err;
+        const myobj = { ...req.body };
+        if (!myobj._id) {
+            delete myobj._id;
+            delete myobj.__v;
+        }
+        dataModal.create(myobj, function(err, result) {
+            if (err) return res.status(500).json({ message: err.message });
             console.log("success her")
             return res.status(200).json(result);
-        }
-        )
+        })
     }
     catch(error){
         return res.status(500).json(error)
