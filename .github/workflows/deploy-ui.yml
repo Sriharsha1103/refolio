@@ -26,6 +26,8 @@ jobs:
 
       - name: Build UI
         working-directory: frontend
+        env:
+          REACT_APP_BACKEND_URL: https://bvrithcloud.com/ref
         run: CI=false npm run build
 
       - name: Upload build to /refolio
